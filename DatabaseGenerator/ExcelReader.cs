@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using DatabaseGenerator.Models;
+using System.Diagnostics;
 
 
 namespace DatabaseGenerator
@@ -20,6 +21,8 @@ namespace DatabaseGenerator
             DataTable dt = ds.Tables[sheetName];
             if (dt == null)
                 throw new ApplicationException($"Cannot find sheet [{sheetName}] in excel file");
+
+            TrimStringFields(dt);
 
             var allColumns = dt.Columns.Cast<DataColumn>().ToList();
             var weightsColumns = allColumns.Where(c => c.ColumnName.StartsWith("W_"));
@@ -111,6 +114,23 @@ namespace DatabaseGenerator
             return outList;
         }
 
+
+        private static void TrimStringFields(DataTable dt)
+        {
+            foreach (DataColumn column in dt.Columns)
+            {
+                if (column.DataType == typeof(string))
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        if (row[column] != DBNull.Value)
+                        {
+                            row[column] = ((string)row[column]).Trim();
+                        }
+                    }
+                }
+            }
+        }
 
 
         private static DataSet ReadExcelAsDataSet(string fileName)
