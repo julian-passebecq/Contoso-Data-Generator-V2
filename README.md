@@ -3,6 +3,12 @@
 
 DataGenerator is a tool for generating sample data, ready to be imported into PowerBI or Fabric OneLake for analysis. This is the V2 version, evolution of the [older one](https://github.com/sql-bi/Contoso-Data-Generator).
 
+## Contoso Forge architecture presets
+
+New Studio projects default to `free-gcp-lab`: GitHub + Minikube/Airflow 3/Helm/GitSync + interactive Colab Spark + BigQuery + OpenTofu. Presets are editable configuration for the neutral C# `project.json` / `pipeline.json` contracts. Engine, runtime, storage, format, warehouse, and IaC remain separate choices. BigQuery Sandbox and billing-enabled free usage have distinct capability gates.
+
+See [the preset and compiler guide](docs/free-gcp-lab.md) for initialization, compilation, Colab work orders, reconciliation, and validation limits. The original V1 commands and backends below remain available without modification.
+
 ## Contoso Forge V1
 
 Contoso Forge is an additive, deterministic project-generation workflow in the existing C#/.NET codebase. The upstream engine and legacy positional CLI remain intact and keep their CSV, Parquet, Delta-oriented, distribution, seasonality, and spike contracts; Forge adds a separate ProjectSpec-driven workflow around them. V1's first vertical slice generates a Customer Satisfaction scenario with `Shipment`, `ShipmentEvent`, `Return`, `SupportTicket`, and `Review` data, plus reproducible duplicate, CDC, late-arrival, SCD2, and quality-rule cases.

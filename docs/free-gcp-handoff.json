@@ -1,0 +1,91 @@
+{
+  "contractVersion": "1.2",
+  "date": "2026-09-04",
+  "baselineCommit": "ea03fc6ed39693cf9bdd7444fa6b052abfcc1009",
+  "planningPackageSha256": "f6c44407d23fd2d7e7942e953fc83cad6d99ba34d0e71619382a47956bb49817",
+  "defaultPreset": "free-gcp-lab",
+  "status": "implemented-with-runtime-validation-pending",
+  "preservation": {
+    "originalTestsUnmodified": true,
+    "originalTestCount": 48,
+    "sourceGeneratorUnmodified": true,
+    "originalRuntimeTemplatesUnmodified": true,
+    "legacyCliPreserved": true
+  },
+  "checks": {
+    "dotnet": {
+      "passed": 121,
+      "failed": 0,
+      "skipped": 0,
+      "report": "artifacts/test-results/final/final.trx"
+    },
+    "bigqueryColab": {
+      "passed": 20,
+      "failed": 0,
+      "cloudRequests": 0,
+      "description": "17 stdlib tests plus actual client configuration, translated SQL on V1 Parquet, and local package-to-result round trip"
+    },
+    "pipelineRuntime": {
+      "passed": 7,
+      "failed": 0,
+      "evidenceType": "actual Python subprocesses with synthetic offline warehouse results"
+    },
+    "determinism": {
+      "matchingFiles": 109,
+      "datasetFingerprint": "9dffebc2987043f92c937e07dfee52eebb348d26d6e94156e7fa9514cb1d3609"
+    },
+    "syntax": {
+      "jsonFiles": 20,
+      "pythonFiles": 10,
+      "notebooks": 1,
+      "status": "passed"
+    },
+    "infrastructure": {
+      "staticValidation": "passed",
+      "hclSha256": "e80b4d4b29a4ee389960438a388afe92f7a07ff5debbd06336de57fa4b2e8848",
+      "isolatedEngineDirectories": true,
+      "openTofu": "1.12.6",
+      "terraform": "1.13.4",
+      "googleProvider": "7.45.0",
+      "helm": "3.19.0",
+      "airflowChart": "1.22.0",
+      "airflow": "3.2.2",
+      "report": "artifacts/final-infrastructure-validation.json"
+    },
+    "composeConfig": "passed",
+    "cloudApplied": false,
+    "cloudExecuted": false,
+    "colabExecuted": false,
+    "minikubeInstalled": false,
+    "airflowDagBag": "configured-in-Linux-CI-not-executed-locally",
+    "dockerSpark": "not-rerun-docker-linux-engine-unavailable"
+  },
+  "toolchain": {
+    "dotnetSdk": "9.0.101",
+    "targetFramework": "net8.0",
+    "python": "3.13.1",
+    "googleCloudBigquery": "3.44.0",
+    "duckdb": "1.5.5",
+    "pyarrow": "19.0.1",
+    "sqlglot": "30.18.0"
+  },
+  "observedLocalKpis": {
+    "average_review_rating": 3.842105,
+    "gross_sales_amount": 51284.73,
+    "on_time_delivery_rate": 0.610169,
+    "order_count": 60,
+    "return_rate": 0.116667
+  },
+  "artifactBoundaries": {
+    "bigquery": "generated-reference",
+    "colab": "experimental",
+    "minikube": "generated-reference",
+    "alternativeProviderExecution": "unsupported-where-no-adapter",
+    "graphicalStudio": "deferred",
+    "biglake": "deferred",
+    "dbtBigquery": "deferred",
+    "bigqueryMl": "deferred"
+  },
+  "guide": "docs/free-gcp-lab.md",
+  "handoff": "HANDOFF.md"
+}

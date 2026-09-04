@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contoso-forge.local/schemas/colab-work-order-1.2.json",
+  "title": "Contoso Forge issued interactive work order 1.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "artifactStatus", "status", "workOrderId", "runId", "issuedAt", "expiresAt", "datasetFingerprint", "sourceFileSha256", "truthManifestSha256", "packageFileSha256", "warehouse", "gcp", "resultPath"],
+  "properties": {
+    "contractVersion": {"const": "1.2"},
+    "artifactStatus": {"const": "experimental"},
+    "status": {"const": "issued"},
+    "workOrderId": {"type": "string", "format": "uuid"},
+    "runId": {"type": "string", "minLength": 1, "maxLength": 250},
+    "issuedAt": {"type": "string", "format": "date-time"},
+    "expiresAt": {"type": "string", "format": "date-time"},
+    "datasetFingerprint": {"$ref": "#/$defs/sha256"},
+    "sourceFileSha256": {"$ref": "#/$defs/hashMap"},
+    "truthManifestSha256": {"$ref": "#/$defs/sha256"},
+    "packageFileSha256": {"$ref": "#/$defs/hashMap"},
+    "warehouse": {"const": "bigquery"},
+    "gcp": {
+      "type": "object",
+      "required": ["projectId", "dataset", "location", "maximumBytesBilled"],
+      "properties": {
+        "projectId": {"type": "string", "minLength": 1},
+        "dataset": {"type": "string", "minLength": 1},
+        "location": {"type": "string", "minLength": 1},
+        "maximumBytesBilled": {"type": "integer", "minimum": 1}
+      }
+    },
+    "resultPath": {"const": "colab/result_manifest.json"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "hashMap": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/sha256"}}
+  }
+}

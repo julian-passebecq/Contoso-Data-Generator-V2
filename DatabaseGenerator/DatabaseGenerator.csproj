@@ -21,6 +21,8 @@
     <None Remove="Forge\Templates\**\target\**" />
     <None Remove="Forge\Templates\**\logs\**" />
     <None Remove="Forge\Templates\**\dbt_packages\**" />
+    <None Remove="Forge\Templates\**\__pycache__\**" />
+    <None Remove="Forge\Templates\**\*.pyc" />
     <None Update="Forge\Templates\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

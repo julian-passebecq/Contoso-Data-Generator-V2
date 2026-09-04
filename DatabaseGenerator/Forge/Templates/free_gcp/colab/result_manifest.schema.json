@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contoso-forge.local/schemas/colab-result-manifest-1.2.json",
+  "title": "Contoso Forge observed interactive result 1.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "status", "executionRuntime", "workOrderId", "runId", "datasetFingerprint", "truthManifestSha256", "startedAt", "completedAt", "sourceFileSha256", "sourceRowCounts", "silverRowCounts", "warehouseRowCounts", "kpis", "loadJobs", "queryJobs", "warehouse"],
+  "properties": {
+    "contractVersion": {"const": "1.2"},
+    "status": {"const": "completed"},
+    "executionRuntime": {"const": "google-colab-interactive"},
+    "workOrderId": {"type": "string", "format": "uuid"},
+    "runId": {"type": "string", "minLength": 1, "maxLength": 250},
+    "datasetFingerprint": {"$ref": "#/$defs/sha256"},
+    "truthManifestSha256": {"$ref": "#/$defs/sha256"},
+    "startedAt": {"type": "string", "format": "date-time"},
+    "completedAt": {"type": "string", "format": "date-time"},
+    "sourceFileSha256": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/sha256"}},
+    "sourceRowCounts": {"$ref": "#/$defs/counts"},
+    "silverRowCounts": {"$ref": "#/$defs/counts"},
+    "warehouseRowCounts": {"$ref": "#/$defs/counts"},
+    "kpis": {"type": "object", "minProperties": 1, "additionalProperties": {"type": ["number", "string"]}},
+    "loadJobs": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {
+        "type": "object", "additionalProperties": false,
+        "required": ["jobId", "tableId", "state", "inputSha256", "sourceFormat", "outputRows"],
+        "properties": {
+          "jobId": {"type": "string", "pattern": "^forge_load_[a-f0-9]{48}$"},
+          "tableId": {"type": "string", "minLength": 1},
+          "state": {"const": "DONE"},
+          "inputSha256": {"$ref": "#/$defs/sha256"},
+          "sourceFormat": {"enum": ["CSV", "NEWLINE_DELIMITED_JSON", "AVRO", "ORC", "PARQUET"]},
+          "outputRows": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "queryJobs": {"type": "object", "minProperties": 2, "additionalProperties": {"type": "string", "minLength": 1}},
+    "warehouse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider", "projectId", "dataset", "location"],
+      "properties": {
+        "provider": {"const": "bigquery"},
+        "projectId": {"type": "string", "minLength": 1},
+        "dataset": {"type": "string", "minLength": 1},
+        "location": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "counts": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "integer", "minimum": 0}}
+  }
+}

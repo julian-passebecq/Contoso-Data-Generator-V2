@@ -1,0 +1,11 @@
+# LocalExecutor task state shared across retries and scheduler pod replacements.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: contoso-forge-state
+  namespace: contoso-forge
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi

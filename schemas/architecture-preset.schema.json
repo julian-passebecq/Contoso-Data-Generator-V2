@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contoso.example/schemas/forge/architecture-preset-v1.json",
+  "title": "Editable architecture preset",
+  "type": "object", "additionalProperties": false,
+  "required": ["contractVersion", "presetId", "displayName", "defaults", "capabilityRequirements"],
+  "properties": {
+    "contractVersion": {"const": "1.0"},
+    "presetId": {"type": "string", "minLength": 1},
+    "displayName": {"type": "string", "minLength": 1},
+    "artifactStatus": {"enum": ["validated", "generated-reference", "unsupported"]},
+    "defaults": {"$ref": "studio-project-v1.2.json#/$defs/settings"},
+    "capabilityRequirements": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

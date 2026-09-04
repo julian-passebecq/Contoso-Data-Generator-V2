@@ -1,0 +1,119 @@
+# Official apache-airflow/airflow 1.22.0, Airflow 3.2.2; Helm >=3.19.0.
+executor: LocalExecutor
+defaultAirflowRepository: apache/airflow
+defaultAirflowTag: "3.2.2"
+airflowVersion: "3.2.2"
+allowPodLaunching: false
+allowJobLaunching: false
+images:
+  gitSync:
+    repository: registry.k8s.io/git-sync/git-sync
+    tag: v4.4.2
+config:
+  core:
+    load_examples: "False"
+    parallelism: "2"
+    max_active_tasks_per_dag: "2"
+    max_active_runs_per_dag: "1"
+    auth_manager: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+    simple_auth_manager_users: "admin:admin"
+    simple_auth_manager_passwords_file: /opt/airflow/forge-auth/simple_auth_manager_passwords.json
+  api:
+    workers: "1"
+  dag_processor:
+    parsing_processes: "1"
+data:
+  metadataSecretName: contoso-forge-metadata
+env:
+  - name: FORGE_PROJECT_ROOT
+    value: __PROJECT_ROOT_JSON__
+  - name: FORGE_STATE_ROOT
+    value: /opt/airflow/forge-state
+postgresql:
+  enabled: false
+redis:
+  enabled: false
+statsd:
+  enabled: false
+pgbouncer:
+  enabled: false
+flower:
+  enabled: false
+triggerer:
+  enabled: false
+createUserJob:
+  useHelmHooks: false
+webserver:
+  defaultUser:
+    enabled: false
+apiServer:
+  replicas: 1
+  service:
+    type: ClusterIP
+  resources:
+    requests: {cpu: "100m", memory: "384Mi"}
+    limits: {cpu: "1", memory: "768Mi"}
+  extraInitContainers: &forgeAuthInit
+    - name: initialize-forge-auth
+      image: apache/airflow:3.2.2
+      command: [python, -c]
+      args:
+        - "from pathlib import Path; import shutil; shutil.copyfile('/opt/airflow/forge-secret-input/simple_auth_manager_passwords.json', '/opt/airflow/forge-auth/simple_auth_manager_passwords.json'); Path('/opt/airflow/forge-auth/simple_auth_manager_passwords.json').chmod(0o600)"
+      securityContext:
+        runAsUser: 50000
+        runAsGroup: 0
+      volumeMounts:
+        - name: forge-auth-input
+          mountPath: /opt/airflow/forge-secret-input
+          readOnly: true
+        - name: forge-auth
+          mountPath: /opt/airflow/forge-auth
+scheduler:
+  replicas: 1
+  resources:
+    requests: {cpu: "200m", memory: "512Mi"}
+    limits: {cpu: "1", memory: "1Gi"}
+  extraInitContainers: *forgeAuthInit
+dagProcessor:
+  enabled: true
+  replicas: 1
+  resources:
+    requests: {cpu: "100m", memory: "384Mi"}
+    limits: {cpu: "1", memory: "768Mi"}
+  extraInitContainers: *forgeAuthInit
+migrateDatabaseJob:
+  extraInitContainers: *forgeAuthInit
+dags:
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: true
+    repo: __GIT_REPOSITORY_JSON__
+    branch: __GIT_BRANCH_JSON__
+    ref: __GIT_BRANCH_JSON__
+    subPath: __GIT_SUBPATH_JSON__
+    depth: 1
+    period: 30s
+    resources:
+      requests: {cpu: "10m", memory: "32Mi"}
+      limits: {cpu: "100m", memory: "128Mi"}
+volumes:
+  - name: forge-auth-input
+    secret:
+      secretName: contoso-forge-metadata
+      items:
+        - key: simple_auth_manager_passwords.json
+          path: simple_auth_manager_passwords.json
+  - name: forge-auth
+    emptyDir: {}
+  - name: forge-state
+    persistentVolumeClaim:
+      claimName: contoso-forge-state
+volumeMounts:
+  - name: forge-auth
+    mountPath: /opt/airflow/forge-auth
+  - name: forge-state
+    mountPath: /opt/airflow/forge-state
+logs:
+  persistence:
+    enabled: false

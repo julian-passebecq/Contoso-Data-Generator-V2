@@ -49,7 +49,8 @@ internal static class ForgeIo
         foreach (var sourcePath in Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories)
                      .Where(path => !Path.GetRelativePath(sourceRoot, path)
                          .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                         .Any(segment => segment is "target" or "logs" or "dbt_packages"))
+                         .Any(segment => segment is "target" or "logs" or "dbt_packages" or "__pycache__"))
+                     .Where(path => !path.EndsWith(".pyc", StringComparison.OrdinalIgnoreCase))
                      .OrderBy(path => path, StringComparer.Ordinal))
         {
             var relative = Path.GetRelativePath(sourceRoot, sourcePath);

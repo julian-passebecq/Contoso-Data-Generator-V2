@@ -1,0 +1,584 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contoso-forge.local/schemas/pipeline-studio.schema.json",
+  "title": "Contoso Forge neutral Pipeline Studio contract",
+  "description": "Editable pipeline source of truth. Compiler additionally validates graph cycles, all references, typed defaults, credential literals and resolved runtime compatibility. Unknown exporter mappings remain explicitly unsupported.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "name"
+  ],
+  "properties": {
+    "contractVersion": {
+      "enum": [
+        "1.1",
+        "1.2"
+      ]
+    },
+    "id": {
+      "$ref": "#/$defs/id",
+      "default": "contoso_forge"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parameters": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,127}$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/parameter"
+      }
+    },
+    "variables": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,127}$"
+      },
+      "additionalProperties": true
+    },
+    "connections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/connection"
+      }
+    },
+    "datasets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dataset"
+      }
+    },
+    "activities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/activity"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/activity"
+      },
+      "description": "Read compatibility with early Studio examples; canonical output uses activities."
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "activities"
+      ],
+      "not": {
+        "required": [
+          "nodes"
+        ]
+      }
+    },
+    {
+      "required": [
+        "nodes"
+      ],
+      "not": {
+        "required": [
+          "activities"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,127}$"
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "string",
+            "int",
+            "float",
+            "bool",
+            "array",
+            "object",
+            "secretReference"
+          ]
+        },
+        "default": {},
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "default"
+          ]
+        },
+        {
+          "required": [
+            "required"
+          ],
+          "properties": {
+            "required": {
+              "const": true
+            }
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "string"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "int"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "float"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bool"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "array"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "array"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "object"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "secretReference"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "default": {
+                "type": "string",
+                "pattern": "^(env|airflow|secret-manager|keyvault)://[^\\s]+$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "displayName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secretProvider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secretRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nonSecretProperties": {
+          "type": "object",
+          "description": "Nonsecret metadata only; passwords, token/key fields, credential JSON and authenticated URLs are rejected by the compiler."
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "connectionRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "query": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "enum": [
+            "parquet",
+            "csv",
+            "json",
+            "jsonl",
+            "avro",
+            "orc",
+            null
+          ]
+        },
+        "tableFormat": {
+          "enum": [
+            "none",
+            "delta",
+            "iceberg",
+            null
+          ]
+        },
+        "schemaRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "partitioning": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "options": {
+          "type": "object"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "path"
+          ]
+        },
+        {
+          "required": [
+            "table"
+          ]
+        },
+        {
+          "required": [
+            "query"
+          ]
+        }
+      ]
+    },
+    "activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "source",
+            "extract",
+            "copy",
+            "transform",
+            "spark",
+            "sql",
+            "dbt",
+            "validate",
+            "ml",
+            "notebook",
+            "handoff",
+            "sink",
+            "load",
+            "manual-checkpoint"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "implementation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "connector": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "connectionRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sink": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "engine": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtime": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fileFormat": {
+          "enum": [
+            "parquet",
+            "csv",
+            "json",
+            "jsonl",
+            "avro",
+            "orc",
+            null
+          ]
+        },
+        "tableFormat": {
+          "enum": [
+            "none",
+            "delta",
+            "iceberg",
+            null
+          ]
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "retry": {
+          "$ref": "#/$defs/retry"
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 604800,
+          "default": 3600
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "maximumAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 1
+        },
+        "backoffSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400,
+          "default": 15
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/id"
+        },
+        "to": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    }
+  }
+}

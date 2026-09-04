@@ -1,0 +1,3 @@
+# BigQuery client and observed Parquet metadata. Notebook installs Spark separately.
+google-cloud-bigquery==3.44.0
+pyarrow==19.0.1

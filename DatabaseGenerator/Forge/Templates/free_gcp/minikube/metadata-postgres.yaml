@@ -1,0 +1,67 @@
+# Local metadata database only. Credentials are created by bootstrap_secrets.py.
+apiVersion: v1
+kind: Service
+metadata:
+  name: contoso-forge-postgres
+  namespace: contoso-forge
+spec:
+  type: ClusterIP
+  selector:
+    app: contoso-forge-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: contoso-forge-postgres
+  namespace: contoso-forge
+spec:
+  serviceName: contoso-forge-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: contoso-forge-postgres
+  template:
+    metadata:
+      labels:
+        app: contoso-forge-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16.15-bookworm
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: airflow
+            - name: POSTGRES_DB
+              value: airflow
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: contoso-forge-metadata
+                  key: postgres-password
+          resources:
+            requests: {cpu: "100m", memory: "128Mi"}
+            limits: {cpu: "500m", memory: "384Mi"}
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, airflow, -d, airflow]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: metadata
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: metadata
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 1Gi
