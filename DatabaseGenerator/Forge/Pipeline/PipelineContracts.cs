@@ -71,6 +71,10 @@ public sealed class PipelineActivity
     public string? Sink { get; set; }
     public string? Engine { get; set; }
     public string? Runtime { get; set; }
+    public string? SparkApiMode { get; set; }
+    public string? SparkVersionPolicy { get; set; }
+    public string? SparkVersion { get; set; }
+    public string? SparkRemote { get; set; }
     public string? FileFormat { get; set; }
     public string? TableFormat { get; set; }
     public List<string> Inputs { get; set; } = new();
@@ -114,6 +118,10 @@ public sealed class PipelinePlannedActivity
     public string Reason { get; set; } = "";
     public string? Engine { get; set; }
     public string? Runtime { get; set; }
+    public string? SparkApiMode { get; set; }
+    public string? SparkVersionPolicy { get; set; }
+    public string? SparkVersion { get; set; }
+    public string? SparkRemote { get; set; }
     public string? Source { get; set; }
     public string? Sink { get; set; }
     public List<string> DependsOn { get; set; } = new();

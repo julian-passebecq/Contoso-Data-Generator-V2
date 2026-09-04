@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using DatabaseGenerator.Forge.Architecture;
 
 namespace DatabaseGenerator.Forge.Pipeline;
 
@@ -102,6 +103,7 @@ internal static class PipelineValidation
                 if (activity.Retry.BackoffSeconds is < 0 or > 86400) errors.Add($"Activity '{activity.Id}' retry.backoffSeconds must be between 0 and 86400.");
                 if (activity.TimeoutSeconds is < 1 or > 604800) errors.Add($"Activity '{activity.Id}' timeoutSeconds must be between 1 and 604800.");
                 CheckCompatibility(activity.Engine, activity.Runtime, activity.FileFormat, activity.TableFormat, activity.Id, errors);
+                CheckSpark(activity, errors);
             }
             foreach (var edge in pipeline.Edges)
             {
@@ -146,10 +148,36 @@ internal static class PipelineValidation
     internal static void CheckCompatibility(string? engine, string? runtime, string? format, string? tableFormat, string id, List<string> errors)
     {
         CheckFormats(format, tableFormat, $"Activity '{id}'", errors);
-        if (runtime is "google-colab" or "databricks" or "fabric-spark" && engine is not null && engine != "spark")
+        if (runtime is "google-colab" or "google-colab-connect-local" or "google-colab-connect-remote" or "databricks" or "fabric-spark" && engine is not null && engine != "spark")
             errors.Add($"Activity '{id}': runtime '{runtime}' requires engine 'spark'.");
         if (engine is "pandas" or "polars" && tableFormat == "delta")
             errors.Add($"Activity '{id}': engine '{engine}' with Delta is not a supported contract combination.");
+    }
+
+    internal static void CheckSpark(PipelineActivity activity, List<string> errors, Dictionary<string, string>? settings = null)
+    {
+        // Source verification and result checkpoints do not execute Spark or access its storage.
+        if (activity.Kind is "source" or "validate" or "manual-checkpoint" && activity.SparkApiMode is null &&
+            activity.SparkVersionPolicy is null && activity.SparkVersion is null && activity.SparkRemote is null && activity.Runtime is null)
+            return;
+        var runtime = activity.Runtime ?? settings?.GetValueOrDefault("runtime");
+        var mode = activity.SparkApiMode ?? (runtime switch
+        {
+            "google-colab-connect-local" => "connect-local", "google-colab-connect-remote" => "connect-remote",
+            _ => settings?.GetValueOrDefault("sparkApiMode")
+        });
+        try
+        {
+            ArchitecturePresets.ValidateSpark(new ArchitectureSettings
+            {
+                Runtime = runtime, SparkApiMode = mode ?? (settings is null && activity.SparkRemote is not null ? "connect-remote" : null),
+                Storage = activity.Source ?? settings?.GetValueOrDefault("storage"),
+                SparkVersionPolicy = activity.SparkVersionPolicy ?? settings?.GetValueOrDefault("sparkVersionPolicy"),
+                SparkVersion = activity.SparkVersion ?? settings?.GetValueOrDefault("sparkVersion"),
+                SparkRemote = activity.SparkRemote ?? settings?.GetValueOrDefault("sparkRemote")
+            }, requireEndpoint: settings is not null);
+        }
+        catch (ArgumentException ex) { errors.Add($"Activity '{activity.Id}': {ex.Message}"); }
     }
 
     private static void CheckFormats(string? format, string? tableFormat, string owner, List<string> errors)

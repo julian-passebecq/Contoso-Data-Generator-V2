@@ -542,6 +542,27 @@
         "enabled": {
           "type": "boolean",
           "default": true
+        },
+        "sparkApiMode": {
+          "enum": [
+            "classic",
+            "connect-local",
+            "connect-remote"
+          ]
+        },
+        "sparkVersionPolicy": {
+          "enum": [
+            "colab-native",
+            "pinned"
+          ]
+        },
+        "sparkVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "sparkRemote": {
+          "type": "string",
+          "pattern": "^sc://"
         }
       }
     },

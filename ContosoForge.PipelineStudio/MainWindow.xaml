@@ -1,0 +1,116 @@
+<Window x:Class="ContosoForge.PipelineStudio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Contoso Forge · Pipeline Studio" Width="1500" Height="1000" MinWidth="1150" MinHeight="780"
+        FontFamily="Segoe UI" FontSize="13" Background="#F2F6F8">
+  <Grid x:Name="RootGrid" Background="#F2F6F8">
+    <Grid.RowDefinitions><RowDefinition Height="110" /><RowDefinition Height="*" /><RowDefinition Height="35" /></Grid.RowDefinitions>
+    <Border Background="#123347" Padding="23,14">
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="39" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="Contoso Forge" Foreground="White" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="PIPELINE STUDIO  /  V1.3" Foreground="#A3CDD1" Margin="21,10,0,0" FontSize="11" />
+        </StackPanel>
+        <TextBlock HorizontalAlignment="Right" Text="LOCAL AUTHORING · LIVE EVIDENCE TRACKED SEPARATELY" Foreground="#A3CDD1" FontSize="10" Margin="0,11,0,0" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Content="Open project" Click="OpenProject_Click" /><Button Content="Open pipeline" Click="OpenPipeline_Click" />
+          <Button Content="Save bundle" Click="Save_Click" />
+          <TextBlock Text="Preset" Foreground="#B4D0DB" Margin="17,10,8,0" />
+          <ComboBox x:Name="PresetBox" Width="175" Margin="0" />
+          <TextBlock Text="Profile" Foreground="#B4D0DB" Margin="14,10,8,0" />
+          <ComboBox x:Name="CostBox" Width="190" Margin="0" />
+          <Button Content="Apply preset/profile" Click="ApplyArchitecture_Click" Margin="10,0,15,0" />
+          <Button Content="Validate" Click="Validate_Click" />
+          <Button Content="Compile" Click="Compile_Click" Background="#B4E5DE" BorderBrush="#B4E5DE" FontWeight="SemiBold" />
+          <Button Content="Discard pending edits" Click="Discard_Click" Margin="8,0,0,0" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Grid Grid.Row="1" Margin="16">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="158" /><ColumnDefinition Width="*" /><ColumnDefinition Width="336" /></Grid.ColumnDefinitions>
+      <Border Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7" Padding="14">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top"><TextBlock Text="ACTIVITY TOOLBOX" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Muted}" Margin="0,2,0,16" />
+            <StackPanel x:Name="Toolbox" />
+          </StackPanel>
+          <StackPanel VerticalAlignment="Bottom"><TextBlock Text="Add a node, then edit its properties and dependencies." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" />
+            <TextBlock Text="Execution support is shown by the compiler plan." TextWrapping="Wrap" Margin="0,12,0,0" Foreground="{StaticResource Muted}" FontSize="12" /></StackPanel>
+        </DockPanel>
+      </Border>
+      <Grid Grid.Column="1" Margin="12,0">
+        <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="305" /><RowDefinition Height="12" /><RowDefinition Height="330" /></Grid.RowDefinitions>
+        <Border Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" BorderBrush="#E1E9ED" BorderThickness="0,0,0,1" Padding="17,12">
+              <Grid><StackPanel><TextBlock x:Name="PipelineTitle" FontWeight="SemiBold" FontSize="17" /><TextBlock x:Name="GraphSubtitle" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,4,0,0" /></StackPanel>
+                <Button Content="Remove selected" HorizontalAlignment="Right" VerticalAlignment="Center" Click="Remove_Click" /></Grid>
+            </Border>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><Canvas x:Name="Graph" Background="#F8FBFC" /></ScrollViewer>
+          </DockPanel>
+        </Border>
+        <TabControl x:Name="PreviewTabs" Grid.Row="2" BorderBrush="#D9E4E9" Background="White">
+          <TabItem Header="pipeline.json"><TextBox x:Name="PipelinePreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
+          <TabItem Header="Parameters"><DockPanel><Button Content="Apply pipeline parameters" DockPanel.Dock="Top" HorizontalAlignment="Left" Click="Parameters_Click" Margin="9" /><TextBox x:Name="ParametersEditor" Style="{StaticResource Code}" /></DockPanel></TabItem>
+          <TabItem Header="Resolved"><TextBox x:Name="ResolvedPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
+          <TabItem Header="Airflow"><TextBox x:Name="AirflowPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
+          <TabItem Header="IaC"><TextBox x:Name="IacPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
+          <TabItem Header="Validation"><TextBox x:Name="ValidationPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
+          <TabItem Header="Run manifest"><TextBox x:Name="ManifestPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
+        </TabControl>
+      </Grid>
+      <Border Grid.Column="2" Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7" Padding="12">
+        <TabControl BorderThickness="0">
+          <TabItem Header="Selected activity">
+            <DockPanel Margin="4,12,4,0">
+              <Button DockPanel.Dock="Bottom" Content="Apply activity changes" Click="ApplyNode_Click" Background="#D8EEEB" Margin="0,8,0,0" />
+              <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
+                <TextBlock x:Name="NodeId" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,10" />
+                <TextBlock Text="Name" /><TextBox x:Name="NameBox" />
+                <TextBlock Text="Kind / implementation" /><ComboBox x:Name="KindBox" /><TextBox x:Name="ImplementationBox" />
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="10" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                  <StackPanel><TextBlock Text="Source" /><TextBox x:Name="SourceBox" /></StackPanel>
+                  <StackPanel Grid.Column="2"><TextBlock Text="Sink" /><TextBox x:Name="SinkBox" /></StackPanel>
+                </Grid>
+                <TextBlock Text="Engine" /><ComboBox x:Name="EngineBox" IsEditable="True" />
+                <TextBlock Text="Runtime" /><ComboBox x:Name="RuntimeBox" IsEditable="True" />
+                <TextBlock Text="Spark API mode" /><ComboBox x:Name="ModeBox" />
+                <TextBlock Text="Spark version policy / version" /><ComboBox x:Name="VersionPolicyBox" /><TextBox x:Name="VersionBox" />
+                <TextBlock Text="Remote endpoint (credential-free)" /><TextBox x:Name="RemoteBox" />
+                <TextBlock Text="Table" /><TextBox x:Name="TableBox" />
+                <TextBlock Text="Connection reference ID" /><TextBox x:Name="ConnectionBox" />
+                <TextBlock Text="Input / output dataset IDs (comma-separated)" /><TextBox x:Name="InputsBox" /><TextBox x:Name="OutputsBox" />
+                <TextBlock Text="Depends on activity IDs (comma-separated)" /><TextBox x:Name="DependsBox" />
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="10" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                  <StackPanel><TextBlock Text="Max attempts" /><TextBox x:Name="RetryBox" /></StackPanel>
+                  <StackPanel Grid.Column="2"><TextBlock Text="Timeout (seconds)" /><TextBox x:Name="TimeoutBox" /></StackPanel>
+                </Grid>
+                <TextBlock Text="Parameters (JSON object; references only)" /><TextBox x:Name="NodeParametersBox" AcceptsReturn="True" MinHeight="70" FontFamily="Consolas" />
+              </StackPanel></ScrollViewer>
+            </DockPanel>
+          </TabItem>
+          <TabItem Header="Destination">
+            <DockPanel Margin="4,12,4,0">
+              <Button DockPanel.Dock="Bottom" Content="Apply destination / dataset" Click="ApplyDestination_Click" Background="#D8EEEB" Margin="0,8,0,0" />
+              <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
+                <TextBlock Text="Project destination" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,13" />
+                <TextBlock Text="Warehouse" /><ComboBox x:Name="WarehouseBox" />
+                <TextBlock Text="GCP project ID" /><TextBox x:Name="ProjectIdBox" />
+                <TextBlock Text="BigQuery dataset" /><TextBox x:Name="BigQueryDatasetBox" />
+                <TextBlock Text="Location" /><TextBox x:Name="LocationBox" />
+                <TextBlock Text="Maximum bytes billed per query" /><TextBox x:Name="MaxBytesBox" />
+                <TextBlock Text="Neutral dataset binding" FontSize="16" FontWeight="SemiBold" Margin="0,18,0,10" />
+                <TextBlock Text="Dataset" /><ComboBox x:Name="DatasetBox" SelectionChanged="Dataset_SelectionChanged" />
+                <TextBlock Text="Path / shared URI" /><TextBox x:Name="DatasetPathBox" />
+                <TextBlock Text="Table" /><TextBox x:Name="DatasetTableBox" />
+                <TextBlock Text="Connection reference ID" /><TextBox x:Name="DatasetConnectionBox" />
+                <TextBlock Text="Authentication stays in external credential providers. This editor saves references only." TextWrapping="Wrap" Foreground="{StaticResource Muted}" Margin="0,16,0,0" />
+              </StackPanel></ScrollViewer>
+            </DockPanel>
+          </TabItem>
+        </TabControl>
+      </Border>
+    </Grid>
+    <Border Grid.Row="2" Background="#E4EEF1" Padding="20,8"><TextBlock x:Name="StatusText" FontSize="11" Text="Open a project to begin." /></Border>
+  </Grid>
+</Window>

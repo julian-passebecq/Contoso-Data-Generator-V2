@@ -1,6 +1,6 @@
 # Native BigQuery and interactive Colab
 
-These are additive V1.2 adapters. BigQuery artifacts are **generated-reference**;
+These are additive V1.3 adapters on the existing V1.2 contracts. BigQuery artifacts are **generated-reference**;
 the Colab runtime is **experimental** until actually executed in your account.
 The original V1 Spark Docker and dbt/DuckDB artifacts remain available.
 
@@ -24,6 +24,7 @@ The original V1 Spark Docker and dbt/DuckDB artifacts remain available.
 
    ```sh
    python colab/work_order.py reconcile --root . --work-order colab/work_order.json --result colab/result_manifest.json
+   python colab/work_order.py import-evidence --root . --work-order colab/work_order.json --result colab/result_manifest.json --output runs/demo-001/evidence.json
    ```
 
 Airflow uses `package --work-order <run-state>/work_order.json --package
@@ -33,7 +34,22 @@ An explicit run ID owns an issued work order for 24 hours by default (configurab
 1–168 hours). A scheduler retry reuses that identity. A new run needs a new state
 directory, for example `--work-order runs/demo-002/work_order.json --package
 runs/demo-002/work_package.zip`. Expired orders fail instead of accepting stale
-results. Compiling alone emits an **unstarted template**, never a completed result.
+results during execution. The evidence importer permits later archival import only when recorded completion was within the issued window. Compiling alone emits an **unstarted template**, never a completed result.
+
+To test Spark before Google sign-in, issue a separately scoped package with
+`--scope spark`. The generated notebook returns `spark_result_manifest.json`
+without attempting BigQuery. For a full work order the same intermediate Spark
+result can be imported as partial evidence, but cannot complete its Airflow
+checkpoint. The requested scope and requested/actual API modes are recorded.
+
+The default classic mode detects Colab's installed PySpark before installing.
+It preserves supported native 4.0.4 rather than downgrading it. Set the project
+override `sparkApiMode` to `connect-local` for true local Spark Connect using
+DataFrame/SQL only. `spark_config.json` carries the resolved request; the runtime
+checks `is_remote()` and writes exact versions/session class and physical
+Bronze/Silver fingerprints to `spark_runtime.json`. It never labels classic
+fallback as successful Connect. Remote Connect requires shared object-store
+paths; its transformation storage adapter remains explicitly unsupported.
 
 The notebook runs existing V1 transformation functions, changing only Bronze IO
 to Parquet for the `tableFormat:none` preset. It retains CDC deduplication, SCD2
@@ -47,6 +63,12 @@ pip install -r gcp/requirements.txt
 gcloud auth application-default login
 python gcp/bigquery_runtime.py load --file data.csv --format csv --table my-project.contoso_forge.my_table
 ```
+
+`python gcp/bigquery_runtime.py preflight --config gcp/bigquery_config.json`
+checks credentials and dataset location before upload. Add `--create-dataset`
+only to explicitly create a missing dataset with a 60-day default expiration.
+No billing account or GCS bucket is created. Completed jobs record native
+destination, IDs, timestamps, location and processed/billed query bytes.
 
 Supported `--format`: `csv`, `jsonl` (newline-delimited JSON), `avro`, `orc`,
 `parquet`. CSV has a header and supports quoted newlines. CSV/JSONL can use
@@ -65,7 +87,11 @@ unique destination tables; dataset expiration controls their lifecycle.
 BigQuery results are measured from actual `COUNT(*)` queries and GoogleSQL business
 facts in `reconcile_kpis.sql`. This SQL retains the V1 temporal customer joins and
 fact grains for sales, shipments, returns and order counts. It is a runnable KPI
-projection, not a claim that the full dbt/DuckDB semantic project has been ported.
+projection. The separate `dbt_bigquery/` project ports all 24 staging/Gold models;
+its runner requires native load evidence and independently reconciles the five
+Gold KPIs. The existing `dbt/` project is preserved. Optional `bqml/` commands
+preview/train leakage-aware models only after measured BigQuery Gold, with an
+explicit ML cost opt-in and chronological holdout sufficiency checks.
 Results also contain observed Parquet counts and successful load/query job IDs.
 Local reconciliation checks those results against every expected source/Silver
 count and KPI, the work-order/run identity, destination, timestamps, source bytes,

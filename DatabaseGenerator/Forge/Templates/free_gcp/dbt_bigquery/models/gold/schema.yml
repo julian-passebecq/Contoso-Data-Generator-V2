@@ -1,0 +1,214 @@
+# artifactStatus: generated-reference
+version: 2
+
+models:
+  - name: dim_date
+    description: Conformed calendar dates observed in Customer Satisfaction events.
+    columns:
+      - name: date_key
+        data_tests: [not_null, unique]
+      - name: full_date
+        data_tests: [not_null, unique]
+
+  - name: dim_customer
+    description: Customer dimension preserving Spark-produced SCD2 versions.
+    columns:
+      - name: customer_sk
+        data_tests: [not_null, unique]
+      - name: customer_key
+        data_tests: [not_null]
+      - name: valid_from
+        data_tests: [not_null]
+      - name: valid_to
+        data_tests: [not_null]
+      - name: is_current
+        data_tests: [not_null]
+      - name: is_deleted
+        data_tests: [not_null]
+
+  - name: dim_product
+    columns:
+      - name: product_key
+        data_tests: [not_null, unique]
+
+  - name: dim_store
+    columns:
+      - name: store_key
+        data_tests: [not_null, unique]
+
+  - name: dim_carrier
+    columns:
+      - name: carrier_key
+        data_tests: [not_null, unique]
+      - name: carrier_name
+        data_tests: [not_null, unique]
+
+  - name: fact_sales
+    description: One row per order line.
+    columns:
+      - name: sales_key
+        data_tests: [not_null, unique]
+      - name: order_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_date')"
+                field: date_key
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_customer')"
+                field: customer_sk
+      - name: product_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_product')"
+                field: product_key
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_store')"
+                field: store_key
+
+  - name: fact_shipment
+    description: One row per valid shipment after Silver quarantine rules.
+    columns:
+      - name: shipment_key
+        data_tests: [not_null, unique]
+      - name: delivered_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_date')"
+                field: date_key
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_customer')"
+                field: customer_sk
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_store')"
+                field: store_key
+      - name: carrier_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_carrier')"
+                field: carrier_key
+
+  - name: fact_return
+    description: One row per return request.
+    columns:
+      - name: return_key
+        data_tests: [not_null, unique]
+      - name: requested_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_date')"
+                field: date_key
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_customer')"
+                field: customer_sk
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_store')"
+                field: store_key
+
+  - name: fact_support
+    description: One row per support ticket.
+    columns:
+      - name: ticket_key
+        data_tests: [not_null, unique]
+      - name: opened_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_date')"
+                field: date_key
+      - name: closed_date_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: "ref('dim_date')"
+                field: date_key
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_customer')"
+                field: customer_sk
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_store')"
+                field: store_key
+
+  - name: fact_customer_experience
+    description: Conformed order-level customer experience fact.
+    columns:
+      - name: order_key
+        data_tests: [not_null, unique]
+      - name: order_date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_date')"
+                field: date_key
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_customer')"
+                field: customer_sk
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: "ref('dim_store')"
+                field: store_key
+
+  - name: kpi_customer_satisfaction
+    description: One-row KPI reconciliation surface.
+    columns:
+      - name: order_count
+        data_tests: [not_null]
+      - name: gross_sales_amount
+        data_tests: [not_null]
+      - name: on_time_delivery_rate
+        data_tests: [not_null]
+      - name: return_rate
+        data_tests: [not_null]
+      - name: average_review_rating
+        data_tests: [not_null]
+

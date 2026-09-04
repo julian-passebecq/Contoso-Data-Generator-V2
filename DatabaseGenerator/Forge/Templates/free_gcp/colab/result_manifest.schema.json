@@ -1,54 +1,651 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://contoso-forge.local/schemas/colab-result-manifest-1.2.json",
-  "title": "Contoso Forge observed interactive result 1.2",
+  "$id": "https://contoso-forge.local/schemas/colab-result-manifest-1.3.json",
+  "title": "Contoso Forge observed interactive result 1.2/1.3",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contractVersion", "status", "executionRuntime", "workOrderId", "runId", "datasetFingerprint", "truthManifestSha256", "startedAt", "completedAt", "sourceFileSha256", "sourceRowCounts", "silverRowCounts", "warehouseRowCounts", "kpis", "loadJobs", "queryJobs", "warehouse"],
+  "required": [
+    "contractVersion",
+    "status",
+    "executionRuntime",
+    "workOrderId",
+    "runId",
+    "datasetFingerprint",
+    "truthManifestSha256",
+    "startedAt",
+    "completedAt",
+    "sourceFileSha256",
+    "sourceRowCounts",
+    "silverRowCounts"
+  ],
   "properties": {
-    "contractVersion": {"const": "1.2"},
-    "status": {"const": "completed"},
-    "executionRuntime": {"const": "google-colab-interactive"},
-    "workOrderId": {"type": "string", "format": "uuid"},
-    "runId": {"type": "string", "minLength": 1, "maxLength": 250},
-    "datasetFingerprint": {"$ref": "#/$defs/sha256"},
-    "truthManifestSha256": {"$ref": "#/$defs/sha256"},
-    "startedAt": {"type": "string", "format": "date-time"},
-    "completedAt": {"type": "string", "format": "date-time"},
-    "sourceFileSha256": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/sha256"}},
-    "sourceRowCounts": {"$ref": "#/$defs/counts"},
-    "silverRowCounts": {"$ref": "#/$defs/counts"},
-    "warehouseRowCounts": {"$ref": "#/$defs/counts"},
-    "kpis": {"type": "object", "minProperties": 1, "additionalProperties": {"type": ["number", "string"]}},
-    "loadJobs": {
-      "type": "object", "minProperties": 1,
+    "contractVersion": {
+      "enum": [
+        "1.2",
+        "1.3"
+      ]
+    },
+    "status": {
+      "const": "completed"
+    },
+    "executionRuntime": {
+      "enum": [
+        "google-colab-interactive",
+        "local-python"
+      ]
+    },
+    "workOrderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 250
+    },
+    "datasetFingerprint": {
+      "$ref": "#/$defs/sha256"
+    },
+    "truthManifestSha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sourceFileSha256": {
+      "type": "object",
+      "minProperties": 1,
       "additionalProperties": {
-        "type": "object", "additionalProperties": false,
-        "required": ["jobId", "tableId", "state", "inputSha256", "sourceFormat", "outputRows"],
+        "$ref": "#/$defs/sha256"
+      }
+    },
+    "sourceRowCounts": {
+      "$ref": "#/$defs/counts"
+    },
+    "silverRowCounts": {
+      "$ref": "#/$defs/counts"
+    },
+    "warehouseRowCounts": {
+      "$ref": "#/$defs/counts"
+    },
+    "kpis": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": [
+          "number",
+          "string"
+        ]
+      }
+    },
+    "loadJobs": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "jobId",
+          "tableId",
+          "state",
+          "inputSha256",
+          "sourceFormat",
+          "outputRows"
+        ],
         "properties": {
-          "jobId": {"type": "string", "pattern": "^forge_load_[a-f0-9]{48}$"},
-          "tableId": {"type": "string", "minLength": 1},
-          "state": {"const": "DONE"},
-          "inputSha256": {"$ref": "#/$defs/sha256"},
-          "sourceFormat": {"enum": ["CSV", "NEWLINE_DELIMITED_JSON", "AVRO", "ORC", "PARQUET"]},
-          "outputRows": {"type": "integer", "minimum": 0}
+          "jobId": {
+            "type": "string",
+            "pattern": "^forge_load_[a-f0-9]{48}$"
+          },
+          "tableId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "const": "DONE"
+          },
+          "inputSha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "sourceFormat": {
+            "enum": [
+              "CSV",
+              "NEWLINE_DELIMITED_JSON",
+              "AVRO",
+              "ORC",
+              "PARQUET"
+            ]
+          },
+          "outputRows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "projectId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "errors": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "maxItems": 0
+          },
+          "totalBytesProcessed": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "totalBytesBilled": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
         }
       }
     },
-    "queryJobs": {"type": "object", "minProperties": 2, "additionalProperties": {"type": "string", "minLength": 1}},
+    "queryJobs": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "warehouse": {
-      "type": "object", "additionalProperties": false,
-      "required": ["provider", "projectId", "dataset", "location"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "projectId",
+        "dataset",
+        "location"
+      ],
       "properties": {
-        "provider": {"const": "bigquery"},
-        "projectId": {"type": "string", "minLength": 1},
-        "dataset": {"type": "string", "minLength": 1},
-        "location": {"type": "string", "minLength": 1}
+        "provider": {
+          "const": "bigquery"
+        },
+        "projectId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dataset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "resultScope": {
+      "enum": [
+        "spark",
+        "spark-and-bigquery"
+      ]
+    },
+    "truthReconciled": {
+      "const": true
+    },
+    "packageFileSha256": {
+      "$ref": "#/$defs/hashMap"
+    },
+    "runtimeEvidence": {
+      "type": "object",
+      "required": [
+        "contractVersion",
+        "status",
+        "executionRuntime",
+        "workOrderId",
+        "runId",
+        "datasetFingerprint",
+        "truthManifestSha256",
+        "packageFileSha256",
+        "sourceFileSha256",
+        "sourceRowCounts",
+        "startedAt",
+        "completedAt",
+        "pythonVersion",
+        "javaVersion",
+        "pysparkVersion",
+        "sparkVersion",
+        "requestedSparkApiMode",
+        "sparkVersionPolicy",
+        "requestedSparkVersion",
+        "actualSparkApiMode",
+        "sparkSessionClass",
+        "isRemote",
+        "masterOrRemote",
+        "cpuCount",
+        "memorySummary",
+        "inputTransport",
+        "inputFingerprint",
+        "bronzeFingerprint",
+        "silverFingerprint",
+        "bronzeFileSha256",
+        "silverFileSha256",
+        "bronzeRowCounts",
+        "silverRowCounts",
+        "truthReconciled"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": "1.3"
+        },
+        "status": {
+          "const": "succeeded"
+        },
+        "isRemote": {
+          "type": "boolean"
+        },
+        "cpuCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memorySummary": {
+          "type": "object",
+          "minProperties": 1
+        },
+        "truthReconciled": {
+          "const": true
+        },
+        "fallbackReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pythonVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "javaVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pysparkVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sparkVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sparkSessionClass": {
+          "type": "string",
+          "minLength": 1
+        },
+        "masterOrRemote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputTransport": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workOrderId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requestedSparkApiMode": {
+          "enum": [
+            "classic",
+            "connect-local",
+            "connect-remote"
+          ]
+        },
+        "sparkVersionPolicy": {"enum": ["colab-native", "pinned"]},
+        "requestedSparkVersion": {"type": "string", "minLength": 1},
+        "actualSparkApiMode": {
+          "enum": [
+            "classic",
+            "connect-local",
+            "connect-remote"
+          ]
+        },
+        "datasetFingerprint": {
+          "$ref": "#/$defs/sha256"
+        },
+        "truthManifestSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "inputFingerprint": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bronzeFingerprint": {
+          "$ref": "#/$defs/sha256"
+        },
+        "silverFingerprint": {
+          "$ref": "#/$defs/sha256"
+        },
+        "packageFileSha256": {
+          "$ref": "#/$defs/hashMap"
+        },
+        "sourceFileSha256": {
+          "$ref": "#/$defs/hashMap"
+        },
+        "bronzeFileSha256": {
+          "$ref": "#/$defs/hashMap"
+        },
+        "silverFileSha256": {
+          "$ref": "#/$defs/hashMap"
+        },
+        "sourceRowCounts": {
+          "$ref": "#/$defs/counts"
+        },
+        "bronzeRowCounts": {
+          "$ref": "#/$defs/counts"
+        },
+        "silverRowCounts": {
+          "$ref": "#/$defs/counts"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "executionRuntime": {
+          "enum": [
+            "google-colab-interactive",
+            "local-python"
+          ]
+        },
+        "dataframeSmoke": {
+          "type": "object",
+          "properties": {
+            "dataframe": {
+              "type": "boolean"
+            },
+            "window": {
+              "type": "boolean"
+            },
+            "dedup": {
+              "type": "boolean"
+            },
+            "parquetRoundTrip": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "bigQueryEvidence": {
+      "type": "object",
+      "required": [
+        "executionOrigin",
+        "preflight",
+        "maximumBytesBilled",
+        "queryJobs"
+      ],
+      "properties": {
+        "executionOrigin": {
+          "enum": [
+            "google-bigquery-api",
+            "injected-client"
+          ]
+        },
+        "preflight": {
+          "type": "object",
+          "required": [
+            "status",
+            "datasetId",
+            "location"
+          ],
+          "properties": {
+            "status": {
+              "const": "ready"
+            },
+            "datasetId": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            }
+          }
+        },
+        "maximumBytesBilled": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "queryJobs": {
+          "type": "object",
+          "minProperties": 2,
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "jobId",
+              "state",
+              "projectId",
+              "location",
+              "totalBytesProcessed",
+              "totalBytesBilled"
+            ],
+            "properties": {
+              "jobId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "const": "DONE"
+              },
+              "projectId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "location": {
+                "type": "string",
+                "minLength": 1
+              },
+              "errors": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "maxItems": 0
+              },
+              "totalBytesProcessed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "totalBytesBilled": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "createdAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "startedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "completedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            }
+          }
+        }
       }
     }
   },
   "$defs": {
-    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "counts": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "integer", "minimum": 0}}
-  }
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "counts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "hashMap": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "contractVersion": {
+            "const": "1.2"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "warehouseRowCounts",
+          "kpis",
+          "loadJobs",
+          "queryJobs",
+          "warehouse"
+        ],
+        "properties": {
+          "executionRuntime": {
+            "const": "google-colab-interactive"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "contractVersion": {
+            "const": "1.3"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "resultScope",
+          "truthReconciled",
+          "packageFileSha256",
+          "runtimeEvidence"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "resultScope"
+        ],
+        "properties": {
+          "resultScope": {
+            "const": "spark-and-bigquery"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "warehouseRowCounts",
+          "kpis",
+          "loadJobs",
+          "queryJobs",
+          "warehouse",
+          "bigQueryEvidence"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "resultScope"
+        ],
+        "properties": {
+          "resultScope": {
+            "const": "spark"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "warehouseRowCounts"
+              ]
+            },
+            {
+              "required": [
+                "kpis"
+              ]
+            },
+            {
+              "required": [
+                "loadJobs"
+              ]
+            },
+            {
+              "required": [
+                "queryJobs"
+              ]
+            },
+            {
+              "required": [
+                "warehouse"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
 }

@@ -35,6 +35,18 @@ public sealed class FreeGcpInfrastructureTests : IDisposable
     }
 
     [Fact]
+    public void MinikubeMigration_IsNotAPostInstallHookThatDeadlocksHelmWait()
+    {
+        FreeGcpInfrastructureExporter.Export(root, Project(), "{}");
+        var values = File.ReadAllText(Path.Combine(root, "minikube", "values.yaml"));
+        var migration = values.Split("migrateDatabaseJob:", StringSplitOptions.None)[1].Split("dags:", StringSplitOptions.None)[0];
+        Assert.Contains("useHelmHooks: false", migration);
+        var bootstrap = File.ReadAllText(Path.Combine(root, "minikube", "bootstrap_secrets.py"));
+        Assert.Contains("--context", bootstrap);
+        Assert.Contains("--kubectl", bootstrap);
+    }
+
+    [Fact]
     public void ReplacingGcpDestinationAndMinikube_DoesNotForceGcpArtifacts()
     {
         FreeGcpInfrastructureExporter.Export(root, Project(warehouse: "sqlserver", orchestrator: "local-sequential"), "{}");

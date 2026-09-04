@@ -4,52 +4,217 @@
   "title": "Contoso Forge Studio project envelope",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "sourceProject"],
+  "required": [
+    "version",
+    "sourceProject"
+  ],
   "properties": {
-    "version": {"const": "1.2.0"},
-    "sourceProject": {"$ref": "project-spec-v1.json"},
+    "version": {
+      "const": "1.2.0"
+    },
+    "sourceProject": {
+      "$ref": "project-spec.schema.json"
+    },
     "architecture": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "presetId": {"type": "string", "default": "free-gcp-lab", "enum": ["free-gcp-lab", "free-gcp-full", "local-spark", "local-fast", "azure-adls-airflow", "fabric-lakehouse", "databricks-free", "sqlserver-bi", "open-lakehouse-iceberg"]},
-        "overrides": {"$ref": "#/$defs/settings"}
+        "presetId": {
+          "type": "string",
+          "default": "free-gcp-lab",
+          "enum": [
+            "free-gcp-lab",
+            "free-gcp-full",
+            "local-spark",
+            "local-fast",
+            "azure-adls-airflow",
+            "fabric-lakehouse",
+            "databricks-free",
+            "sqlserver-bi",
+            "open-lakehouse-iceberg"
+          ]
+        },
+        "overrides": {
+          "$ref": "#/$defs/settings"
+        }
       }
     },
     "gcp": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "projectId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"},
-        "dataset": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,1023}$"},
-        "location": {"type": "string", "minLength": 1},
-        "maximumBytesBilled": {"type": "integer", "minimum": 1},
-        "bucketName": {"type": "string", "minLength": 3},
-        "iamMembers": {"type": "array", "items": {"type": "string"}}
+        "projectId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+        },
+        "dataset": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,1023}$"
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumBytesBilled": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bucketName": {
+          "type": "string",
+          "minLength": 3
+        },
+        "iamMembers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "git": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "repository": {"type": "string", "pattern": "^https://"},
-        "branch": {"type": "string", "minLength": 1},
-        "subPath": {"type": "string", "minLength": 1},
-        "projectSubPath": {"type": "string", "minLength": 1, "default": "generated"}
+        "repository": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projectSubPath": {
+          "type": "string",
+          "minLength": 1,
+          "default": "generated"
+        }
       }
     }
   },
   "$defs": {
     "settings": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "engine": {"enum": ["spark", "duckdb", "polars", "pandas"]},
-        "runtime": {"enum": ["google-colab", "google-colab-connect-local", "google-colab-connect-remote", "docker", "local-process", "databricks-spark", "fabric-spark", "kubernetes"]},
-        "orchestrator": {"enum": ["none", "local-sequential", "airflow-docker", "airflow-minikube", "gcp-workflows", "databricks-jobs", "fabric", "adf"]},
-        "dagSource": {"enum": ["github-gitsync", "local"]},
-        "storage": {"enum": ["local", "gcs", "azure-adls", "fabric-onelake", "r2", "seaweedfs", "b2", "s3"]},
-        "fileFormat": {"enum": ["csv", "jsonl", "avro", "orc", "parquet"]},
-        "tableFormat": {"enum": ["none", "delta", "iceberg"]},
-        "warehouse": {"enum": ["none", "bigquery", "biglake", "sqlserver", "duckdb", "motherduck", "fabric", "databricks"]},
-        "iac": {"enum": ["none", "opentofu", "terraform-community", "dual-validate"]},
-        "costProfile": {"enum": ["local", "external", "gcp-sandbox-no-card", "gcp-free-tier-billing-enabled"]}
+        "engine": {
+          "enum": [
+            "spark",
+            "duckdb",
+            "polars",
+            "pandas"
+          ]
+        },
+        "runtime": {
+          "enum": [
+            "google-colab",
+            "google-colab-connect-local",
+            "google-colab-connect-remote",
+            "docker",
+            "local-process",
+            "databricks-spark",
+            "fabric-spark",
+            "kubernetes"
+          ]
+        },
+        "orchestrator": {
+          "enum": [
+            "none",
+            "local-sequential",
+            "airflow-docker",
+            "airflow-minikube",
+            "gcp-workflows",
+            "databricks-jobs",
+            "fabric",
+            "adf"
+          ]
+        },
+        "dagSource": {
+          "enum": [
+            "github-gitsync",
+            "local"
+          ]
+        },
+        "storage": {
+          "enum": [
+            "local",
+            "gcs",
+            "azure-adls",
+            "fabric-onelake",
+            "r2",
+            "seaweedfs",
+            "b2",
+            "s3"
+          ]
+        },
+        "fileFormat": {
+          "enum": [
+            "csv",
+            "jsonl",
+            "avro",
+            "orc",
+            "parquet"
+          ]
+        },
+        "tableFormat": {
+          "enum": [
+            "none",
+            "delta",
+            "iceberg"
+          ]
+        },
+        "warehouse": {
+          "enum": [
+            "none",
+            "bigquery",
+            "biglake",
+            "sqlserver",
+            "duckdb",
+            "motherduck",
+            "fabric",
+            "databricks"
+          ]
+        },
+        "iac": {
+          "enum": [
+            "none",
+            "opentofu",
+            "terraform-community",
+            "dual-validate"
+          ]
+        },
+        "costProfile": {
+          "enum": [
+            "local",
+            "external",
+            "gcp-sandbox-no-card",
+            "gcp-free-tier-billing-enabled"
+          ]
+        },
+        "sparkApiMode": {
+          "enum": [
+            "classic",
+            "connect-local",
+            "connect-remote"
+          ]
+        },
+        "sparkVersionPolicy": {
+          "enum": [
+            "colab-native",
+            "pinned"
+          ]
+        },
+        "sparkVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "sparkRemote": {
+          "type": "string",
+          "pattern": "^sc://"
+        }
       }
     }
   }

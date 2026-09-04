@@ -40,7 +40,7 @@ public static class PipelineCompiler
     {
         using var document = JsonDocument.Parse(resolvedProjectJson);
         var settings = ReadSettings(document.RootElement);
-        var colab = Get(settings, "runtime") == "google-colab";
+        var colab = Get(settings, "runtime").StartsWith("google-colab", StringComparison.Ordinal);
         var pipeline = new PipelineDefinition
         {
             Id = "contoso_forge_pipeline",
@@ -151,6 +151,10 @@ public static class PipelineCompiler
         {
             Id = activity.Id, Kind = activity.Kind,
             Engine = activity.Engine ?? Get(settings, "engine"), Runtime = activity.Runtime ?? Get(settings, "runtime"),
+            SparkApiMode = activity.SparkApiMode ?? SparkMode(activity.Runtime ?? Get(settings, "runtime"), settings),
+            SparkVersionPolicy = activity.SparkVersionPolicy ?? settings.GetValueOrDefault("sparkVersionPolicy"),
+            SparkVersion = activity.SparkVersion ?? settings.GetValueOrDefault("sparkVersion"),
+            SparkRemote = activity.SparkRemote ?? settings.GetValueOrDefault("sparkRemote"),
             Source = activity.Source ?? Get(settings, "storage"), Sink = activity.Sink ?? Get(settings, "warehouse"),
             DependsOn = activity.DependsOn.ToList(), MaximumAttempts = activity.Retry.MaximumAttempts,
             BackoffSeconds = activity.Retry.BackoffSeconds, TimeoutSeconds = activity.TimeoutSeconds,
@@ -173,7 +177,8 @@ public static class PipelineCompiler
             mapped.Reason = "Verify every generated source file against truth_manifest.json SHA-256 values.";
             return mapped;
         }
-        var colabBigQuery = mapped.Engine == "spark" && mapped.Runtime == "google-colab" && mapped.Sink == "bigquery" && mapped.Source == "local"
+        var colabBigQuery = mapped.Engine == "spark" && mapped.Runtime is "google-colab" or "google-colab-connect-local"
+            && mapped.SparkApiMode is "classic" or "connect-local" && mapped.Sink == "bigquery" && mapped.Source == "local"
             && (activity.FileFormat ?? Get(settings, "fileFormat")) == "parquet" && (activity.TableFormat ?? Get(settings, "tableFormat")) == "none";
         if (!colabBigQuery) return mapped;
         if (activity.Kind is "handoff" or "notebook" && activity.Implementation == "colab-work-order")
@@ -257,9 +262,18 @@ public static class PipelineCompiler
     private static void ValidateResolvedCompatibility(PipelineDefinition pipeline, Dictionary<string, string> settings, List<string> errors)
     {
         foreach (var activity in pipeline.Activities)
+        {
             PipelineValidation.CheckCompatibility(activity.Engine ?? Get(settings, "engine"), activity.Runtime ?? Get(settings, "runtime"),
                 activity.FileFormat ?? Get(settings, "fileFormat"), activity.TableFormat ?? Get(settings, "tableFormat"), activity.Id, errors);
+            PipelineValidation.CheckSpark(activity, errors, settings);
+        }
     }
+
+    private static string? SparkMode(string runtime, Dictionary<string, string> settings) => runtime switch
+    {
+        "google-colab-connect-local" => "connect-local", "google-colab-connect-remote" => "connect-remote",
+        _ => settings.GetValueOrDefault("sparkApiMode") ?? (runtime == "google-colab" ? "classic" : null)
+    };
 
     private static string Get(Dictionary<string, string> settings, string key) => settings.TryGetValue(key, out var value) ? value : "none";
     private static void Write(string root, string relative, string text)

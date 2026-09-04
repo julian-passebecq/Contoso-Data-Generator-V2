@@ -28,10 +28,13 @@ jobs:
           diff -qr out/free-gcp out/free-gcp-second
       - name: Validate schemas, notebooks and Python syntax
         run: |
-          python -m pip install jsonschema==4.23.0 nbformat==5.10.4
+          python -m pip install jsonschema==4.23.0 nbformat==5.10.4 PyYAML==6.0.3
           python scripts/validate_studio_artifacts.py --project out/free-gcp
           python scripts/test_free_gcp_runtime.py
           python scripts/test_pipeline_runtime.py --project out/free-gcp
+          python scripts/test_colab_spark_modes.py
+          python scripts/test_v13_evidence.py
+          python scripts/test_bigquery_analytics.py
       - uses: opentofu/setup-opentofu@v2
         with:
           tofu_version: 1.12.6
@@ -56,3 +59,45 @@ jobs:
         with:
           name: free-gcp-validation
           path: out/free-gcp/validation/
+
+  spark-and-dbt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Generate isolated Forge input
+        run: dotnet run --project DatabaseGenerator --configuration Release -- forge generate --project examples/free-gcp-classic-native.project.json --output out/v13-runtime
+      - name: Execute classic and true local Spark Connect
+        run: |
+          python -m venv .venv-spark
+          .venv-spark/bin/python -m pip install 'pyspark[connect]==4.0.4'
+          .venv-spark/bin/python scripts/run_colab_spark_smoke.py --project out/v13-runtime --output artifacts/spark-classic --mode classic
+          .venv-spark/bin/python scripts/run_colab_spark_smoke.py --project out/v13-runtime --output artifacts/spark-connect --mode connect-local
+      - name: Parse dbt-bigquery with no cloud execution
+        env:
+          FORGE_GCP_PROJECT: example-project
+          FORGE_BQ_DATASET: contoso_forge
+          FORGE_BQ_PREFIX: forge_ci_parse_
+          DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'
+        run: |
+          python -m venv .venv-dbt
+          .venv-dbt/bin/python -m pip install -r out/v13-runtime/dbt_bigquery/requirements.txt
+          .venv-dbt/bin/dbt parse --project-dir out/v13-runtime/dbt_bigquery --profiles-dir out/v13-runtime/dbt_bigquery --no-partial-parse
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v13-local-runtime-evidence
+          path: |
+            artifacts/spark-classic/
+            artifacts/spark-connect/
+            out/v13-runtime/dbt_bigquery/target/

@@ -1,0 +1,38 @@
+name: pipeline-studio-windows
+
+on:
+  push:
+    paths:
+      - 'ContosoForge.PipelineStudio/**'
+      - 'DatabaseGenerator/Forge/**'
+      - '.github/workflows/pipeline-studio-windows.yml'
+  pull_request:
+    paths:
+      - 'ContosoForge.PipelineStudio/**'
+      - 'DatabaseGenerator/Forge/**'
+      - '.github/workflows/pipeline-studio-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wpf-editor:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build optional Windows editor without changing the core solution
+        run: dotnet build ContosoForge.PipelineStudio/ContosoForge.PipelineStudio.csproj --configuration Release
+      - name: Generate a neutral pipeline for editor loading
+        run: dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge pipeline compile --project examples/free-gcp-lab.project.json --output out/studio-input
+      - name: Execute editor round-trip, validation, compilation and WPF rendering
+        run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/free-gcp-lab.project.json --pipeline out/studio-input/pipeline.json --smoke-output out/studio-smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pipeline-studio-windows-smoke
+          path: out/studio-smoke/

@@ -43,6 +43,8 @@ public sealed class ProjectSpec
             throw new ArgumentException("generation.seed must be zero or greater.");
         if (Generation.Orders < 12)
             throw new ArgumentException("generation.orders must be at least 12 so every V1 injector has a stable target.");
+        if (Generation.TimeSpanDays is < 1 or > 3650)
+            throw new ArgumentException("generation.timeSpanDays must be between 1 and 3650 when specified; omission preserves the 60-day horizon.");
         if (Generation.Customers < 8)
             throw new ArgumentException("generation.customers must be at least 8.");
         if (Generation.Products < 4)
@@ -102,6 +104,9 @@ public sealed class GenerationSpec
     public int Stores { get; set; } = 4;
     [JsonRequired]
     public string StartDate { get; set; } = "2024-01-01T00:00:00Z";
+    // Omission preserves both the V1 date horizon and its serialized project fingerprint.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? TimeSpanDays { get; set; }
     [JsonRequired]
     public List<string> Formats { get; set; } = new() { "CSV" };
 }

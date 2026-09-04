@@ -1,0 +1,29 @@
+<Application x:Class="ContosoForge.PipelineStudio.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Application.Resources>
+    <SolidColorBrush x:Key="Ink" Color="#163044" />
+    <SolidColorBrush x:Key="Muted" Color="#587080" />
+    <SolidColorBrush x:Key="Accent" Color="#087E83" />
+    <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Ink}" /></Style>
+    <Style TargetType="Button">
+      <Setter Property="Padding" Value="13,8" /><Setter Property="Margin" Value="0,0,7,0" />
+      <Setter Property="Background" Value="White" /><Setter Property="Foreground" Value="{StaticResource Ink}" />
+      <Setter Property="BorderBrush" Value="#CCDADF" /><Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Padding" Value="7,5" /><Setter Property="BorderBrush" Value="#CCDADF" />
+      <Setter Property="Foreground" Value="{StaticResource Ink}" /><Setter Property="Margin" Value="0,3,0,9" />
+    </Style>
+    <Style TargetType="ComboBox">
+      <Setter Property="Padding" Value="7,5" /><Setter Property="Margin" Value="0,3,0,9" />
+      <Setter Property="MinHeight" Value="31" /><Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+    <Style x:Key="Code" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+      <Setter Property="FontFamily" Value="Consolas" /><Setter Property="FontSize" Value="12" />
+      <Setter Property="AcceptsReturn" Value="True" /><Setter Property="AcceptsTab" Value="True" />
+      <Setter Property="HorizontalScrollBarVisibility" Value="Auto" /><Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+      <Setter Property="Margin" Value="0" /><Setter Property="Padding" Value="14" /><Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </Application.Resources>
+</Application>

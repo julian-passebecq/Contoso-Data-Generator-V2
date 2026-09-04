@@ -101,6 +101,9 @@ public static class FreeGcpInfrastructureExporter
             ["airflowVersion"] = AirflowVersion,
             ["googleProviderVersion"] = GoogleProviderVersion,
             ["validationCommand"] = "python scripts/validate_free_gcp_infra.py --project <generated-project> --iac " + iac,
+            ["liveValidationCommand"] = target == "airflow-minikube"
+                ? "python scripts/run_minikube_smoke.py --project <generated-project> --context contoso-forge --install --trigger --output artifacts/minikube-runtime.json"
+                : null,
             ["note"] = "Run the validation command to record separate CLI evidence; rendering and provider validation do not prove a deployment."
         };
         ForgeIo.WriteText(path, status.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));

@@ -1,14 +1,26 @@
 """Explicit local cluster setup. Generates credentials in memory; writes only a Kubernetes Secret."""
+import argparse
 import json
 import secrets
 import subprocess
 
 
+KUBECTL = "kubectl"
+CONTEXT = None
+
+
 def kubectl(*args, input_text=None, check=True):
-    return subprocess.run(["kubectl", *args], input=input_text, text=True, capture_output=True, check=check)
+    context = ["--context", CONTEXT] if CONTEXT else []
+    return subprocess.run([KUBECTL, *context, *args], input=input_text, text=True, capture_output=True, check=check)
 
 
 def main():
+    global KUBECTL, CONTEXT
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--kubectl", default="kubectl")
+    parser.add_argument("--context", help="Explicit local cluster context; never changes the user's current context")
+    args = parser.parse_args()
+    KUBECTL, CONTEXT = args.kubectl, args.context
     namespace = "contoso-forge"
     # Fail on unreachable clusters; an absent secret is different from a connection error.
     kubectl("cluster-info")

@@ -1,0 +1,15 @@
+name: contoso_forge_bigquery
+version: '1.3.0'
+config-version: 2
+profile: contoso_forge_bigquery
+model-paths: [models]
+test-paths: [tests]
+macro-paths: [macros]
+models:
+  contoso_forge_bigquery:
+    +materialized: view
+    +persist_docs: {relation: false, columns: false}
+    staging:
+      +tags: [staging]
+    gold:
+      +tags: [gold]

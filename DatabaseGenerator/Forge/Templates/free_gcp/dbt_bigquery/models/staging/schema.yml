@@ -1,0 +1,129 @@
+# artifactStatus: generated-reference
+version: 2
+
+models:
+  - name: stg_customers
+    description: Deduplicated base customers before CDC/SCD2 enrichment.
+    columns:
+      - name: customer_key
+        data_tests: [not_null, unique]
+
+  - name: stg_customer_cdc
+    description: Deduplicated CDC events in deterministic application order.
+    columns:
+      - name: event_id
+        data_tests: [not_null, unique]
+      - name: operation
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["I", "U", "D"]
+
+  - name: stg_customer_scd2
+    description: Customer SCD2 versions built by Spark from base and CDC records.
+    columns:
+      - name: customer_key
+        data_tests: [not_null]
+      - name: valid_from
+        data_tests: [not_null]
+      - name: source_event_id
+        description: CDC event id, or the stable BASE-<customer key> id for a generated starting version.
+        data_tests: [not_null, unique]
+      - name: is_current
+        data_tests: [not_null]
+      - name: is_deleted
+        data_tests: [not_null]
+
+  - name: stg_products
+    columns:
+      - name: product_key
+        data_tests: [not_null, unique]
+
+  - name: stg_stores
+    columns:
+      - name: store_key
+        data_tests: [not_null, unique]
+
+  - name: stg_orders
+    columns:
+      - name: order_key
+        data_tests: [not_null, unique]
+      - name: customer_key
+        data_tests: [not_null]
+      - name: store_key
+        data_tests: [not_null]
+
+  - name: stg_order_rows
+    columns:
+      - name: order_key
+        data_tests: [not_null]
+      - name: line_number
+        data_tests: [not_null]
+      - name: product_key
+        data_tests: [not_null]
+      - name: quantity
+        data_tests: [not_null]
+
+  - name: stg_shipments
+    columns:
+      - name: shipment_key
+        data_tests: [not_null, unique]
+      - name: order_key
+        data_tests: [not_null]
+      - name: tracking_number
+        data_tests: [not_null]
+
+  - name: stg_shipment_events
+    columns:
+      - name: shipment_event_key
+        data_tests: [not_null, unique]
+      - name: shipment_key
+        data_tests: [not_null]
+      - name: is_late_arrival
+        data_tests: [not_null]
+
+  - name: stg_returns
+    columns:
+      - name: return_key
+        data_tests: [not_null, unique]
+      - name: order_key
+        data_tests: [not_null]
+
+  - name: stg_support_tickets
+    columns:
+      - name: ticket_key
+        data_tests: [not_null, unique]
+      - name: order_key
+        data_tests: [not_null]
+      - name: satisfaction_score
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+
+  - name: stg_reviews
+    columns:
+      - name: review_key
+        data_tests: [not_null, unique]
+      - name: order_key
+        data_tests: [not_null]
+      - name: rating
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+
+  - name: stg_quality_issues
+    description: Quarantine evidence emitted by the deterministic quality rules.
+    columns:
+      - name: evidence_id
+        data_tests: [not_null, unique]
+      - name: entity
+        data_tests: [not_null]
+      - name: record_key
+        data_tests: [not_null]

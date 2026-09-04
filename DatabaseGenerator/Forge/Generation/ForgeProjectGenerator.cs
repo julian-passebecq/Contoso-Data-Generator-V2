@@ -175,7 +175,7 @@ public sealed class ForgeProjectGenerator
             var orderKey = 100_001L + index;
             var customerKey = 1 + rng.NextInt(spec.Generation.Customers);
             var storeKey = 1 + rng.NextInt(spec.Generation.Stores);
-            var orderDate = epoch.AddDays(index % 60).AddHours(8 + rng.NextInt(10));
+            var orderDate = epoch.AddDays(index % (spec.Generation.TimeSpanDays ?? 60)).AddHours(8 + rng.NextInt(10));
             data.Orders.Add(new OrderRow(orderKey, customerKey, storeKey, orderDate, "USD", "Completed"));
 
             var lineCount = 1 + rng.NextInt(3);

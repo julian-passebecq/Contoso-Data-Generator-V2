@@ -4,6 +4,7 @@ using DatabaseGenerator.Forge.Generation;
 using DatabaseGenerator.Forge.Architecture;
 using DatabaseGenerator.Forge.Pipeline;
 using DatabaseGenerator.Forge.Specs;
+using DatabaseGenerator.Forge.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,6 +37,14 @@ public static class ForgeCommand
                 ForgeStudioCommand.Initialize(initOutput, init.GetValueOrDefault("preset", ArchitecturePresets.DefaultPresetId));
                 Console.WriteLine($"Created editable project.json and pipeline.json in {Path.GetFullPath(initOutput)}.");
                 return 0;
+            }
+            if (args.Length >= 2 && args[0] == "evidence" && args[1] == "import")
+            {
+                var evidenceOptions = ParseOptions(args[2..]);
+                foreach (var name in new[] { "root", "work-order", "result", "output" })
+                    if (!evidenceOptions.ContainsKey(name)) throw new ArgumentException($"--{name} is required.");
+                return await ForgeEvidenceCommand.ImportAsync(evidenceOptions["root"], evidenceOptions["work-order"],
+                    evidenceOptions["result"], evidenceOptions["output"], evidenceOptions.GetValueOrDefault("python", "python"));
             }
             var compile = args.Length >= 2 && args[0] == "pipeline" && args[1] == "compile";
             var validate = args[0] == "validate";
@@ -127,6 +136,7 @@ public static class ForgeCommand
         Console.WriteLine("       databasegenerator forge project init --output project [--preset free-gcp-lab]");
         Console.WriteLine("       databasegenerator forge validate --project project.json [--pipeline pipeline.json]");
         Console.WriteLine("       databasegenerator forge pipeline compile --project project.json --output compiled [--preset free-gcp-lab] [--pipeline pipeline.json]");
+        Console.WriteLine("       databasegenerator forge evidence import --root generated --work-order work_order.json --result result_manifest.json --output validation/evidence.json [--python python]");
         Console.WriteLine("The legacy four-argument DatabaseGenerator CLI remains unchanged.");
     }
 }

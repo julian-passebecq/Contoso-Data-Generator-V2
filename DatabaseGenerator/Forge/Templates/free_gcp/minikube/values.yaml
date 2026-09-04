@@ -82,6 +82,9 @@ dagProcessor:
     limits: {cpu: "1", memory: "768Mi"}
   extraInitContainers: *forgeAuthInit
 migrateDatabaseJob:
+  # Helm --wait waits for pods; those pods wait for these migrations. A post-install
+  # hook would never start until its own dependent pods became Ready.
+  useHelmHooks: false
   extraInitContainers: *forgeAuthInit
 dags:
   persistence:

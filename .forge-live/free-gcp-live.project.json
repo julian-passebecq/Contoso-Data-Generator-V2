@@ -1,0 +1,67 @@
+﻿{
+    "version":  "1.2.0",
+    "sourceProject":  {
+                          "version":  "1.0.0",
+                          "name":  "customer-satisfaction-local",
+                          "scenario":  "retail.customer_satisfaction",
+                          "generation":  {
+                                             "legacyContosoMode":  true,
+                                             "seed":  20260904,
+                                             "orders":  60,
+                                             "customers":  32,
+                                             "products":  12,
+                                             "stores":  4,
+                                             "startDate":  "2024-01-01T00:00:00Z",
+                                             "formats":  [
+                                                             "CSV"
+                                                         ]
+                                         },
+                          "extensions":  {
+                                             "shipments":  true,
+                                             "shipmentEvents":  true,
+                                             "returns":  true,
+                                             "supportTickets":  true,
+                                             "reviews":  true
+                                         },
+                          "problems":  {
+                                           "duplicates":  true,
+                                           "cdc":  true,
+                                           "lateArrivals":  true,
+                                           "scd2":  true,
+                                           "qualityIssues":  true
+                                       },
+                          "outputs":  {
+                                          "sql":  true,
+                                          "pyspark":  true,
+                                          "dbt":  true,
+                                          "airflow":  true,
+                                          "semanticModel":  true,
+                                          "mlSpec":  true
+                                      },
+                          "lab":  {
+                                      "docker":  true,
+                                      "airflow":  true,
+                                      "spark":  true,
+                                      "dbtDuckdb":  true,
+                                      "kubernetesKind":  true,
+                                      "openTofu":  true
+                                  }
+                      },
+    "architecture":  {
+                         "presetId":  "free-gcp-lab",
+                         "overrides":  {
+
+                                       }
+                     },
+    "gcp":  {
+                "projectId":  "psychic-sun-415817",
+                "dataset":  "contoso_forge",
+                "location":  "US",
+                "maximumBytesBilled":  1000000000
+            },
+    "git":  {
+                "repository":  "https://github.com/your-account/your-repository.git",
+                "branch":  "main",
+                "subPath":  "generated/airflow/dags"
+            }
+}

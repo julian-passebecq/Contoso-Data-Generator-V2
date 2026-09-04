@@ -1,0 +1,33 @@
+version: 2
+sources:
+  - name: silver
+    description: Native BigQuery tables loaded from measured Spark Silver Parquet.
+    database: "{{ env_var('FORGE_GCP_PROJECT') }}"
+    schema: "{{ env_var('FORGE_BQ_DATASET') }}"
+    tables:
+      - name: customers
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}customers"
+      - name: customer_cdc
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}customer_cdc"
+      - name: customer_scd2
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}customer_scd2"
+      - name: products
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}products"
+      - name: stores
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}stores"
+      - name: orders
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}orders"
+      - name: order_rows
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}order_rows"
+      - name: shipments
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}shipments"
+      - name: shipment_events
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}shipment_events"
+      - name: returns
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}returns"
+      - name: support_tickets
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}support_tickets"
+      - name: reviews
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}reviews"
+      - name: quality_issues
+        identifier: "{{ env_var('FORGE_BQ_PREFIX') }}quality_issues"

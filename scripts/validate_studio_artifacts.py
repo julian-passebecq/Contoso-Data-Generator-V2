@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Offline schema, notebook and Python syntax validation for a generated Studio project."""
 import argparse
+import ast
 import json
 from pathlib import Path
 import py_compile
 import tempfile
+from urllib.parse import urljoin
 
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
@@ -26,6 +28,14 @@ def main():
         registry = registry.with_resource(path.resolve().as_uri(), resource)
         if "$id" in schema:
             registry = registry.with_resource(schema["$id"], resource)
+    # Schema identities are stable public URLs, while checked-in filenames can
+    # differ from their versioned IDs. Resolve sibling filename references from
+    # every known public base without a network fetch; keep both original IDs
+    # and file URIs available for older references and local editors.
+    bases = {urljoin(schema["$id"], ".") for schema in schemas.values() if "$id" in schema}
+    for base in bases:
+        for filename, schema in schemas.items():
+            registry = registry.with_resource(urljoin(base, filename), Resource.from_contents(schema))
     for artifact, schema_name in (("project.json", "studio-project.schema.json"),
                                   ("pipeline.json", "pipeline-studio.schema.json")):
         path = args.project / artifact
@@ -47,7 +57,11 @@ def main():
                 py_compile.compile(str(path), cfile=str(Path(temporary) / f"{python_count}.pyc"), doraise=True)
                 python_count += 1
             if path.suffix == ".ipynb":
-                nbformat.validate(nbformat.read(path, as_version=4))
+                notebook = nbformat.read(path, as_version=4)
+                nbformat.validate(notebook)
+                for index, cell in enumerate(notebook.cells):
+                    if cell.cell_type == 'code':
+                        ast.parse(cell.source, filename=f'{path}:cell-{index}')
                 notebook_count += 1
     print(json.dumps({"status": "static-validated", "jsonFiles": json_count,
                       "pythonFiles": python_count, "notebooks": notebook_count,

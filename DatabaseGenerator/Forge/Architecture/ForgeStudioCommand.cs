@@ -71,6 +71,7 @@ public static class ForgeStudioCommand
                 "\n\nEdit project.json and pipeline.json, then recompile. See local_plan.json for each activity's implementation/status, pipeline/graph.mmd for dependencies, and infra/gcp for the infrastructure preview when selected.\n");
             var canonical = File.ReadAllText(Path.Combine(stage, "pipeline.json"));
             BigQueryColabExporter.Export(stage, resolved, canonical);
+            BigQueryAnalyticsExporter.Export(stage, resolved);
             FreeGcpInfrastructureExporter.Export(stage, resolved, canonical);
             var files = Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories)
                 .Select(p => Path.GetRelativePath(stage, p).Replace('\\', '/'))

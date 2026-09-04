@@ -62,9 +62,12 @@ internal static class PipelineRuntimeTemplates
             return True
 
 
-        def reconcile(root, order, result, timeout):
+        def reconcile(root, order, result, timeout, execution_scope="spark-and-bigquery"):
             if not order.is_file():
                 raise RuntimeError("This run has no work order; execute its package activity first")
+            issued_scope = json.loads(order.read_text(encoding="utf-8-sig")).get("executionScope", "spark-and-bigquery")
+            if issued_scope != execution_scope:
+                raise ValueError("Requested execution scope does not match this run's issued work order")
             if not result.is_file():
                 return False
             # Existing malformed/stale/wrong-run results fail instead of silently waiting.
@@ -73,7 +76,10 @@ internal static class PipelineRuntimeTemplates
             return True
 
 
-        def execute_activity(activity, root=None, run_id=None, pipeline_id="contoso_forge_pipeline"):
+        def execute_activity(activity, root=None, run_id=None, pipeline_id="contoso_forge_pipeline",
+                             execution_scope="spark-and-bigquery"):
+            if execution_scope not in ("spark", "spark-and-bigquery"):
+                raise ValueError("Execution scope must be spark or spark-and-bigquery")
             root = project_root(root)
             operation = activity["operation"]
             timeout = activity["timeoutSeconds"]
@@ -85,11 +91,12 @@ internal static class PipelineRuntimeTemplates
             if operation == "prepare-colab":
                 # The helper validates identity, source/runtime hashes and expiry before reusing state.
                 invoke(root, "colab/work_order.py", ["package", "--root", root, "--run-id", run_id,
-                                                   "--work-order", order, "--package", package], timeout)
+                                                   "--work-order", order, "--package", package,
+                                                   "--scope", execution_scope], timeout)
                 print(f"Manual Colab package: {package}\nReturn result to: {result}")
                 return True
             if operation in ("await-colab", "reconcile-colab"):
-                if not reconcile(root, order, result, min(timeout, 300)):
+                if not reconcile(root, order, result, min(timeout, 300), execution_scope):
                     if operation == "await-colab":
                         raise ManualCheckpointPending(f"Run Colab with {package}; return its result manifest to {result}")
                     raise RuntimeError(f"Required reconciled result is missing: {result}")
@@ -97,15 +104,17 @@ internal static class PipelineRuntimeTemplates
             raise NotImplementedError(f"Unknown compiled operation: {operation}")
 
 
-        def sensor_activity(activity, root=None, run_id=None, pipeline_id="contoso_forge_pipeline"):
+        def sensor_activity(activity, root=None, run_id=None, pipeline_id="contoso_forge_pipeline",
+                            execution_scope="spark-and-bigquery"):
             try:
-                return execute_activity(activity, root=root, run_id=run_id, pipeline_id=pipeline_id)
+                return execute_activity(activity, root=root, run_id=run_id, pipeline_id=pipeline_id,
+                                        execution_scope=execution_scope)
             except ManualCheckpointPending as pending:
                 print(str(pending))
                 return False
 
 
-        def run_sequential(plan, root, run_id):
+        def run_sequential(plan, root, run_id, execution_scope="spark-and-bigquery"):
             completed = set()
             for activity in plan["activities"]:
                 if not set(activity["dependsOn"]).issubset(completed):
@@ -113,7 +122,8 @@ internal static class PipelineRuntimeTemplates
                 for attempt in range(1, activity["maximumAttempts"] + 1):
                     started = time.monotonic()
                     try:
-                        execute_activity(activity, root=root, run_id=run_id, pipeline_id=plan["pipelineId"])
+                        execute_activity(activity, root=root, run_id=run_id, pipeline_id=plan["pipelineId"],
+                                         execution_scope=execution_scope)
                         if time.monotonic() - started > activity["timeoutSeconds"]:
                             raise TimeoutError(f"Activity {activity['id']} exceeded its timeout")
                         completed.add(activity["id"])
@@ -141,11 +151,13 @@ internal static class PipelineRuntimeTemplates
             parser = argparse.ArgumentParser(description="Execute a compiled neutral plan; exit 75 means a human result is required")
             parser.add_argument("--root", default=str(Path(__file__).resolve().parents[1]))
             parser.add_argument("--run-id", required=True, help="Unique execution ID; reuse only to resume the same work order")
+            parser.add_argument("--scope", choices=("spark", "spark-and-bigquery"), default="spark-and-bigquery",
+                                help="Explicit Spark-only proof or the full default BigQuery work order")
             args = parser.parse_args()
             root = Path(args.root).resolve()
             plan = json.loads((root / "local_plan.json").read_text(encoding="utf-8-sig"))
             try:
-                run_sequential(plan, root, args.run_id)
+                run_sequential(plan, root, args.run_id, execution_scope=args.scope)
             except ManualCheckpointPending as pending:
                 print(str(pending), file=sys.stderr)
                 return 75
@@ -185,7 +197,8 @@ internal static class PipelineRuntimeTemplates
             for activity in PLAN["activities"]:
                 options = dict(
                     task_id=activity["id"],
-                    op_kwargs={"activity": activity, "run_id": "{{ run_id }}", "pipeline_id": PLAN["pipelineId"]},
+                    op_kwargs={"activity": activity, "run_id": "{{ run_id }}", "pipeline_id": PLAN["pipelineId"],
+                               "execution_scope": "{{ dag_run.conf.get('executionScope', 'spark-and-bigquery') }}"},
                     retries=activity["maximumAttempts"] - 1,
                     retry_delay=timedelta(seconds=activity["backoffSeconds"]),
                     execution_timeout=timedelta(seconds=activity["timeoutSeconds"]),

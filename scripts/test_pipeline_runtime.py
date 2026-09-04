@@ -86,7 +86,7 @@ class PipelineRuntimeTests(unittest.TestCase):
         prefix = self.handoff.table_prefix(order)
         counts = self.truth["expectedSilverRowCounts"]
         gcp = order["gcp"]
-        return {
+        result = {
             "contractVersion": "1.2", "status": "completed", "executionRuntime": "google-colab-interactive",
             **{key: order[key] for key in ("workOrderId", "runId", "datasetFingerprint", "truthManifestSha256")},
             "startedAt": now, "completedAt": now,
@@ -101,6 +101,37 @@ class PipelineRuntimeTests(unittest.TestCase):
             "queryJobs": {**{table: "synthetic_query_" + table for table in counts},
                           "kpis": "synthetic_query_kpis"},
         }
+        if order["contractVersion"] == "1.3":
+            mode = order["requestedSparkApiMode"]
+            runtime = {key: copy.deepcopy(order[key]) for key in ("workOrderId", "runId", "datasetFingerprint",
+                       "truthManifestSha256", "packageFileSha256", "sourceFileSha256")}
+            runtime.update(contractVersion="1.3", status="succeeded", executionRuntime="google-colab-interactive",
+                startedAt=now, completedAt=now, requestedSparkApiMode=mode, actualSparkApiMode=mode,
+                sparkVersionPolicy=order["sparkVersionPolicy"], requestedSparkVersion=order["requestedSparkVersion"],
+                sparkSessionClass="pyspark.sql.connect.session.SparkSession" if mode.startswith("connect-") else "pyspark.sql.session.SparkSession",
+                isRemote=mode.startswith("connect-"), masterOrRemote="sc://synthetic.example:15002" if mode == "connect-remote" else "local[2]",
+                fallbackReason=None, pythonVersion="3.13.5", javaVersion="openjdk 17.0.16",
+                pysparkVersion=order["requestedSparkVersion"], sparkVersion=order["requestedSparkVersion"],
+                cpuCount=2, memorySummary={"physicalBytes": 10000000000}, inputTransport="work-package-zip",
+                inputFingerprint=order["datasetFingerprint"], sourceRowCounts=self.truth["sourceRowCounts"],
+                bronzeRowCounts=self.truth["sourceRowCounts"], silverRowCounts=counts, truthReconciled=True,
+                dataframeSmoke={"dataframe": True, "window": True, "dedup": True, "parquetRoundTrip": True})
+            for layer, tables in (("bronze", self.truth["sourceRowCounts"]), ("silver", counts)):
+                runtime[layer + "FileSha256"] = {table + "/part-00000.parquet": "b" * 64 for table in tables}
+                runtime[layer + "Fingerprint"] = self.handoff.hash_mapping(runtime[layer + "FileSha256"])
+            for job in result["loadJobs"].values():
+                job.update(projectId=gcp["projectId"], location=gcp["location"], errors=[],
+                           createdAt=now, startedAt=now, completedAt=now)
+            result.update(contractVersion="1.3", resultScope="spark-and-bigquery", truthReconciled=True,
+                packageFileSha256=order["packageFileSha256"], runtimeEvidence=runtime,
+                bigQueryEvidence={"executionOrigin": "injected-client", "maximumBytesBilled": gcp["maximumBytesBilled"],
+                    "preflight": {"status": "ready", "datasetId": f"{gcp['projectId']}.{gcp['dataset']}", "location": gcp["location"]},
+                    "queryJobs": {key: {"jobId": job, "state": "DONE", "errors": [],
+                        "projectId": gcp["projectId"], "location": gcp["location"],
+                        "totalBytesProcessed": 100, "totalBytesBilled": 100,
+                        "createdAt": now, "startedAt": now, "completedAt": now}
+                        for key, job in result["queryJobs"].items()}})
+        return result
 
     def test_actual_runner_stops_75_at_missing_human_result_and_preserves_run_identity(self):
         command = [sys.executable, str(self.root / "pipeline/run_local.py"),
@@ -116,6 +147,32 @@ class PipelineRuntimeTests(unittest.TestCase):
         second = subprocess.run(command, capture_output=True, text=True, timeout=60)
         self.assertEqual(second.returncode, 75, second.stderr)
         self.assertEqual(json.loads(order.read_text()), original)
+
+    def test_explicit_spark_scope_packages_without_gcp_project_and_waits(self):
+        config_path = self.root / "gcp/bigquery_config.json"
+        original = config_path.read_bytes()
+        config = json.loads(original)
+        config["gcp"]["projectId"] = "your-gcp-project"
+        try:
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            completed = subprocess.run([sys.executable, str(self.root / "pipeline/run_local.py"),
+                "--root", str(self.root), "--run-id", self.run_id, "--scope", "spark"],
+                capture_output=True, text=True, timeout=60)
+            self.assertEqual(completed.returncode, 75, completed.stderr)
+            order = json.loads(self.paths()[1].read_text())
+            self.assertEqual(order["executionScope"], "spark")
+            self.assertFalse(self.paths()[3].exists())
+            with self.assertRaisesRegex(ValueError, "scope does not match"):
+                self.execute("await-colab")
+        finally:
+            config_path.write_bytes(original)
+
+    def test_invalid_execution_scope_is_rejected_before_creating_work_order(self):
+        for scope in ("", "bigquery", "auto", None):
+            with self.subTest(scope=scope), self.assertRaisesRegex(ValueError, "Execution scope"):
+                self.runtime.execute_activity(self.activity("prepare-colab"), root=self.root,
+                    run_id=self.run_id, pipeline_id=self.plan["pipelineId"], execution_scope=scope)
+        self.assertFalse(self.paths()[1].exists())
 
     def test_sensor_waits_for_absence_and_accepts_only_reconciled_synthetic_fixture(self):
         self.execute("prepare-colab")

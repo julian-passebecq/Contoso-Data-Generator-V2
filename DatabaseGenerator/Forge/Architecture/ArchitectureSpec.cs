@@ -38,6 +38,10 @@ public sealed class ArchitectureSettings
     public string? Warehouse { get; set; }
     public string? Iac { get; set; }
     public string? CostProfile { get; set; }
+    public string? SparkApiMode { get; set; }
+    public string? SparkVersionPolicy { get; set; }
+    public string? SparkVersion { get; set; }
+    public string? SparkRemote { get; set; }
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]

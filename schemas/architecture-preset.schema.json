@@ -9,7 +9,7 @@
     "presetId": {"type": "string", "minLength": 1},
     "displayName": {"type": "string", "minLength": 1},
     "artifactStatus": {"enum": ["validated", "generated-reference", "unsupported"]},
-    "defaults": {"$ref": "studio-project-v1.2.json#/$defs/settings"},
+    "defaults": {"$ref": "studio-project.schema.json#/$defs/settings"},
     "capabilityRequirements": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
   }
 }

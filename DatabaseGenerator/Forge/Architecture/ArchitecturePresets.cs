@@ -41,7 +41,16 @@ public static class ArchitecturePresets
             Orchestrator = o.Orchestrator ?? d.Orchestrator, DagSource = o.DagSource ?? d.DagSource,
             Storage = o.Storage ?? d.Storage, FileFormat = o.FileFormat ?? d.FileFormat,
             TableFormat = o.TableFormat ?? d.TableFormat, Warehouse = o.Warehouse ?? d.Warehouse,
-            Iac = o.Iac ?? d.Iac, CostProfile = o.CostProfile ?? d.CostProfile
+            Iac = o.Iac ?? d.Iac, CostProfile = o.CostProfile ?? d.CostProfile,
+            SparkApiMode = o.SparkApiMode ?? ((o.Runtime ?? d.Runtime) switch
+            {
+                "google-colab-connect-local" => "connect-local", "google-colab-connect-remote" => "connect-remote", _ => d.SparkApiMode
+            }),
+            SparkVersionPolicy = o.SparkVersionPolicy ?? (o.Runtime is null ? d.SparkVersionPolicy :
+                o.Runtime.StartsWith("google-colab", StringComparison.Ordinal) ? "colab-native" : o.Runtime == "docker" ? "pinned" : null),
+            SparkVersion = o.SparkVersion ?? (o.Runtime is null ? d.SparkVersion :
+                o.Runtime.StartsWith("google-colab", StringComparison.Ordinal) ? "4.0.4" : o.Runtime == "docker" ? "3.5.9" : null),
+            SparkRemote = o.SparkRemote ?? d.SparkRemote
         };
         Validate(settings, project.Gcp, project.Git);
         var result = new ResolvedProject
@@ -70,7 +79,10 @@ public static class ArchitecturePresets
             Engine = engine, Runtime = runtime, Orchestrator = orchestration,
             DagSource = orchestration == "airflow-minikube" ? "github-gitsync" : "local",
             Storage = storage, FileFormat = "parquet", TableFormat = tableFormat,
-            Warehouse = warehouse, Iac = "opentofu", CostProfile = cost
+            Warehouse = warehouse, Iac = "opentofu", CostProfile = cost,
+            SparkApiMode = engine == "spark" ? "classic" : null,
+            SparkVersionPolicy = runtime == "google-colab" ? "colab-native" : runtime == "docker" ? "pinned" : null,
+            SparkVersion = runtime == "google-colab" ? "4.0.4" : runtime == "docker" ? "3.5.9" : null
         },
         CapabilityRequirements = runtime == "google-colab"
             ? new() { "batch", "manual-external-checkpoint", "truth-reconciliation" }
@@ -95,6 +107,7 @@ public static class ArchitecturePresets
         Choice(s.Warehouse, "warehouse", "none", "bigquery", "biglake", "sqlserver", "duckdb", "motherduck", "fabric", "databricks");
         Choice(s.Iac, "iac", "none", "opentofu", "terraform-community", "dual-validate");
         Choice(s.CostProfile, "costProfile", "local", "external", "gcp-sandbox-no-card", "gcp-free-tier-billing-enabled");
+        ValidateSpark(s);
         if (s.Orchestrator == "airflow-minikube" && s.DagSource != "github-gitsync")
             throw new ArgumentException("The implemented airflow-minikube preset requires dagSource=github-gitsync.");
         if (s.Engine != "spark" && (s.Runtime!.StartsWith("google-colab", StringComparison.Ordinal) || s.Runtime is "databricks-spark" or "fabric-spark"))
@@ -123,5 +136,27 @@ public static class ArchitecturePresets
             !Regex.IsMatch(git.SubPath ?? "", "^[A-Za-z0-9][A-Za-z0-9._/-]{0,255}$") || git.SubPath!.Split('/').Contains("..") ||
             !Regex.IsMatch(git.ProjectSubPath ?? "", "^[A-Za-z0-9][A-Za-z0-9._/-]{0,255}$") || git.ProjectSubPath!.Split('/').Contains(".."))
             throw new ArgumentException("Git branch/subPath must be safe relative references without traversal.");
+    }
+
+    public static void ValidateSpark(ArchitectureSettings s, bool requireEndpoint = true)
+    {
+        if (s.SparkApiMode is not null) Choice(s.SparkApiMode, "sparkApiMode", "classic", "connect-local", "connect-remote");
+        if (s.SparkVersionPolicy is not null) Choice(s.SparkVersionPolicy, "sparkVersionPolicy", "colab-native", "pinned");
+        if (s.SparkVersion is not null && !Regex.IsMatch(s.SparkVersion, "^[0-9]+\\.[0-9]+\\.[0-9]+$"))
+            throw new ArgumentException("sparkVersion must be an exact numeric release such as 4.0.4.");
+        if (s.SparkApiMode is "connect-local" or "connect-remote" && s.SparkVersion is not null && !s.SparkVersion.StartsWith("4.", StringComparison.Ordinal))
+            throw new ArgumentException("The Colab Connect adapter requires Spark 4.x; classic Docker retains Spark 3.5.9.");
+        if (s.Runtime == "google-colab-connect-local" && s.SparkApiMode != "connect-local" ||
+            s.Runtime == "google-colab-connect-remote" && s.SparkApiMode != "connect-remote")
+            throw new ArgumentException("Spark API mode must match the explicitly selected Connect runtime.");
+        if (s.SparkApiMode == "connect-remote")
+        {
+            if (s.Storage == "local") throw new ArgumentException("connect-remote requires shared object-store paths; client-local files are not visible to the server.");
+            if (requireEndpoint && s.SparkRemote is null) throw new ArgumentException("connect-remote requires sparkRemote=sc://host:port.");
+        }
+        if (s.SparkRemote is not null && (s.SparkApiMode != "connect-remote" || !Uri.TryCreate(s.SparkRemote, UriKind.Absolute, out var remote) ||
+            remote.Scheme != "sc" || string.IsNullOrEmpty(remote.Host) || remote.UserInfo.Length != 0 || remote.Query.Length != 0 ||
+            remote.Fragment.Length != 0 || remote.AbsolutePath is not ("" or "/")))
+            throw new ArgumentException("sparkRemote must be a credential-free sc://host:port endpoint for connect-remote.");
     }
 }
