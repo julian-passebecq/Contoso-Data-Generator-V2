@@ -1,0 +1,26 @@
+# artifactStatus: validated
+version: 2
+
+sources:
+  - name: silver
+    description: Spark-curated Parquet registered as DuckDB views by register_silver_sources.
+    schema: silver
+    loader: Contoso Forge Spark Bronze/Silver
+    meta:
+      artifactStatus: validated
+      externalRoot: /workspace/lake/silver
+    tables:
+      - name: customers
+      - name: customer_cdc
+      - name: customer_scd2
+      - name: products
+      - name: stores
+      - name: orders
+      - name: order_rows
+      - name: shipments
+      - name: shipment_events
+      - name: returns
+      - name: support_tickets
+      - name: reviews
+      - name: quality_issues
+

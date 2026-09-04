@@ -1,0 +1,4 @@
+# artifactStatus: validated
+# The local reference project deliberately has no package/network dependency.
+packages: []
+

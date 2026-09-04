@@ -22,9 +22,16 @@ namespace DatabaseGenerator
             Console.WriteLine();
 
 
+            if (args.Length > 0 && string.Equals(args[0], "forge", StringComparison.OrdinalIgnoreCase))
+            {
+                Environment.ExitCode = await Forge.ForgeCommand.RunAsync(args.Skip(1).ToArray());
+                return;
+            }
+
             if (args.Length == 0)
             {
                 Console.WriteLine("USAGE:  databasegenerator.exe  configfile  datafile  outputfolder  cachefolder  [param:OrdersCount=nnnnnnn] ");
+                Console.WriteLine("        databasegenerator.exe  forge generate --project project.json --output out [--lake lake]");
                 return;
             }
 

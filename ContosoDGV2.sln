@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34701.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatabaseGenerator", "DatabaseGenerator\DatabaseGenerator.csproj", "{4391CC1A-71BD-4826-A40B-FA304D35176F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseGenerator.Tests", "DatabaseGenerator.Tests\DatabaseGenerator.Tests.csproj", "{E58C39B2-D490-499D-83D1-4D45C5A04A23}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4C8AFF47-8F42-421F-B077-F1DC116929A5}"
 	ProjectSection(SolutionItems) = preProject
 		_test_data\IN\config_test.json = _test_data\IN\config_test.json
@@ -21,6 +23,10 @@ Global
 		{4391CC1A-71BD-4826-A40B-FA304D35176F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4391CC1A-71BD-4826-A40B-FA304D35176F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4391CC1A-71BD-4826-A40B-FA304D35176F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E58C39B2-D490-499D-83D1-4D45C5A04A23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E58C39B2-D490-499D-83D1-4D45C5A04A23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E58C39B2-D490-499D-83D1-4D45C5A04A23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E58C39B2-D490-499D-83D1-4D45C5A04A23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,243 @@
+{
+  "version": "1.0.0",
+  "artifactStatus": "validated",
+  "projectName": "__PROJECT_NAME__",
+  "scenario": "__SCENARIO__",
+  "modelType": "source-contract",
+  "description": "Authoritative raw source contract for the Contoso Forge customer-satisfaction vertical slice.",
+  "locations": {
+    "generatedSource": "data/source",
+    "runtimeRaw": "/workspace/lake/raw",
+    "runtimeSilver": "/workspace/lake/silver"
+  },
+  "conventions": {
+    "fileFormat": "csv",
+    "encoding": "UTF-8 without BOM",
+    "header": true,
+    "delimiter": ",",
+    "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss'Z'",
+    "timezone": "UTC",
+    "decimalScale": 2,
+    "nullEncoding": "empty field"
+  },
+  "entities": [
+    {
+      "name": "Customer",
+      "file": "customers.csv",
+      "grain": "one row per source customer",
+      "primaryKey": ["CustomerKey"],
+      "columns": [
+        { "name": "CustomerKey", "type": "int32", "nullable": false },
+        { "name": "GivenName", "type": "string", "nullable": false },
+        { "name": "Surname", "type": "string", "nullable": false },
+        { "name": "Email", "type": "string", "nullable": false },
+        { "name": "City", "type": "string", "nullable": false },
+        { "name": "CountryCode", "type": "string", "nullable": false },
+        { "name": "LoyaltyTier", "type": "string", "nullable": false },
+        { "name": "ValidFrom", "type": "timestamp_utc", "nullable": false }
+      ]
+    },
+    {
+      "name": "Product",
+      "file": "products.csv",
+      "grain": "one row per product",
+      "primaryKey": ["ProductKey"],
+      "columns": [
+        { "name": "ProductKey", "type": "int32", "nullable": false },
+        { "name": "ProductName", "type": "string", "nullable": false },
+        { "name": "Category", "type": "string", "nullable": false },
+        { "name": "Brand", "type": "string", "nullable": false },
+        { "name": "UnitPrice", "type": "decimal(18,2)", "nullable": false },
+        { "name": "UnitCost", "type": "decimal(18,2)", "nullable": false }
+      ]
+    },
+    {
+      "name": "Store",
+      "file": "stores.csv",
+      "grain": "one row per store or channel",
+      "primaryKey": ["StoreKey"],
+      "columns": [
+        { "name": "StoreKey", "type": "int32", "nullable": false },
+        { "name": "StoreName", "type": "string", "nullable": false },
+        { "name": "Channel", "type": "string", "nullable": false },
+        { "name": "CountryCode", "type": "string", "nullable": false }
+      ]
+    },
+    {
+      "name": "Order",
+      "file": "orders.csv",
+      "grain": "one row per order",
+      "primaryKey": ["OrderKey"],
+      "foreignKeys": [
+        { "columns": ["CustomerKey"], "references": "Customer(CustomerKey)" },
+        { "columns": ["StoreKey"], "references": "Store(StoreKey)" }
+      ],
+      "columns": [
+        { "name": "OrderKey", "type": "int64", "nullable": false },
+        { "name": "CustomerKey", "type": "int32", "nullable": false },
+        { "name": "StoreKey", "type": "int32", "nullable": false },
+        { "name": "OrderDate", "type": "timestamp_utc", "nullable": false },
+        { "name": "CurrencyCode", "type": "string", "nullable": false },
+        { "name": "OrderStatus", "type": "string", "nullable": false }
+      ]
+    },
+    {
+      "name": "OrderRow",
+      "file": "order_rows.csv",
+      "grain": "one row per order line",
+      "primaryKey": ["OrderKey", "LineNumber"],
+      "foreignKeys": [
+        { "columns": ["OrderKey"], "references": "Order(OrderKey)" },
+        { "columns": ["ProductKey"], "references": "Product(ProductKey)" }
+      ],
+      "columns": [
+        { "name": "OrderKey", "type": "int64", "nullable": false },
+        { "name": "LineNumber", "type": "int32", "nullable": false },
+        { "name": "ProductKey", "type": "int32", "nullable": false },
+        { "name": "Quantity", "type": "int32", "nullable": false },
+        { "name": "UnitPrice", "type": "decimal(18,2)", "nullable": false },
+        { "name": "NetPrice", "type": "decimal(18,2)", "nullable": false },
+        { "name": "UnitCost", "type": "decimal(18,2)", "nullable": false }
+      ]
+    },
+    {
+      "name": "Shipment",
+      "file": "shipments.csv",
+      "grain": "one row per shipment",
+      "primaryKey": ["ShipmentKey"],
+      "foreignKeys": [
+        { "columns": ["OrderKey"], "references": "Order(OrderKey)" }
+      ],
+      "qualityRules": [
+        { "id": "shipment_tracking_not_null", "expression": "TrackingNumber is not null or blank", "onFailure": "quarantine", "evidenceId": "EV-QUALITY-NULL" }
+      ],
+      "columns": [
+        { "name": "ShipmentKey", "type": "int64", "nullable": false },
+        { "name": "OrderKey", "type": "int64", "nullable": false },
+        { "name": "Carrier", "type": "string", "nullable": false },
+        { "name": "TrackingNumber", "type": "string", "nullable": true },
+        { "name": "ShippedAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "PromisedAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "DeliveredAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "ShipmentStatus", "type": "string", "nullable": false }
+      ]
+    },
+    {
+      "name": "ShipmentEvent",
+      "file": "shipment_events.csv",
+      "grain": "one source row per emitted shipment event; deliberate duplicates may violate the business key",
+      "primaryKey": ["ShipmentEventKey"],
+      "foreignKeys": [
+        { "columns": ["ShipmentKey"], "references": "Shipment(ShipmentKey)" }
+      ],
+      "processingRules": [
+        { "id": "shipment_event_deduplicate", "expression": "retain one row per ShipmentEventKey ordered by IngestedAt", "evidenceId": "EV-DUP-SHIPMENT-EVENT" },
+        { "id": "shipment_event_late_arrival", "expression": "IngestedAt - EventTime > 24 hours", "evidenceId": "EV-LATE-ARRIVAL" }
+      ],
+      "columns": [
+        { "name": "ShipmentEventKey", "type": "int64", "nullable": false },
+        { "name": "ShipmentKey", "type": "int64", "nullable": false },
+        { "name": "EventType", "type": "string", "nullable": false },
+        { "name": "EventTime", "type": "timestamp_utc", "nullable": false },
+        { "name": "IngestedAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "Location", "type": "string", "nullable": false }
+      ]
+    },
+    {
+      "name": "Return",
+      "file": "returns.csv",
+      "grain": "one row per return request",
+      "primaryKey": ["ReturnKey"],
+      "foreignKeys": [
+        { "columns": ["OrderKey"], "references": "Order(OrderKey)" },
+        { "columns": ["CustomerKey"], "references": "Customer(CustomerKey)" }
+      ],
+      "columns": [
+        { "name": "ReturnKey", "type": "int64", "nullable": false },
+        { "name": "OrderKey", "type": "int64", "nullable": false },
+        { "name": "CustomerKey", "type": "int32", "nullable": false },
+        { "name": "RequestedAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "Reason", "type": "string", "nullable": false },
+        { "name": "ReturnStatus", "type": "string", "nullable": false },
+        { "name": "RefundAmount", "type": "decimal(18,2)", "nullable": false }
+      ]
+    },
+    {
+      "name": "SupportTicket",
+      "file": "support_tickets.csv",
+      "grain": "one row per support ticket",
+      "primaryKey": ["TicketKey"],
+      "foreignKeys": [
+        { "columns": ["OrderKey"], "references": "Order(OrderKey)" },
+        { "columns": ["CustomerKey"], "references": "Customer(CustomerKey)" }
+      ],
+      "columns": [
+        { "name": "TicketKey", "type": "int64", "nullable": false },
+        { "name": "OrderKey", "type": "int64", "nullable": false },
+        { "name": "CustomerKey", "type": "int32", "nullable": false },
+        { "name": "OpenedAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "ClosedAt", "type": "timestamp_utc", "nullable": true },
+        { "name": "Channel", "type": "string", "nullable": false },
+        { "name": "Topic", "type": "string", "nullable": false },
+        { "name": "Priority", "type": "string", "nullable": false },
+        { "name": "SatisfactionScore", "type": "int32", "nullable": false }
+      ]
+    },
+    {
+      "name": "Review",
+      "file": "reviews.csv",
+      "grain": "one row per product review for an order",
+      "primaryKey": ["ReviewKey"],
+      "foreignKeys": [
+        { "columns": ["OrderKey"], "references": "Order(OrderKey)" },
+        { "columns": ["CustomerKey"], "references": "Customer(CustomerKey)" },
+        { "columns": ["ProductKey"], "references": "Product(ProductKey)" }
+      ],
+      "qualityRules": [
+        { "id": "review_rating_range", "expression": "Rating between 1 and 5", "onFailure": "quarantine", "evidenceId": "EV-QUALITY-RANGE" }
+      ],
+      "columns": [
+        { "name": "ReviewKey", "type": "int64", "nullable": false },
+        { "name": "OrderKey", "type": "int64", "nullable": false },
+        { "name": "CustomerKey", "type": "int32", "nullable": false },
+        { "name": "ProductKey", "type": "int32", "nullable": false },
+        { "name": "ReviewedAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "Rating", "type": "int32", "nullable": false },
+        { "name": "ReviewText", "type": "string", "nullable": false },
+        { "name": "VerifiedPurchase", "type": "boolean", "nullable": false }
+      ]
+    },
+    {
+      "name": "CustomerCdc",
+      "file": "customer_cdc.csv",
+      "grain": "one source row per CDC event; deliberate duplicates may violate EventId uniqueness",
+      "primaryKey": ["EventId"],
+      "foreignKeys": [],
+      "processingRules": [
+        { "id": "customer_cdc_deduplicate", "expression": "retain one row per EventId ordered by IngestedAt and Sequence", "evidenceId": "EV-DUP-CDC" },
+        { "id": "customer_cdc_operations", "expression": "apply I/U/D in Sequence order", "evidenceIds": ["EV-CDC-I", "EV-CDC-U", "EV-CDC-D"] },
+        { "id": "customer_scd2", "expression": "close the previous version at EventTime and open the changed version", "evidenceId": "EV-SCD2" }
+      ],
+      "columns": [
+        { "name": "EventId", "type": "string", "nullable": false },
+        { "name": "Operation", "type": "string", "nullable": false },
+        { "name": "Sequence", "type": "int32", "nullable": false },
+        { "name": "CustomerKey", "type": "int32", "nullable": false },
+        { "name": "EventTime", "type": "timestamp_utc", "nullable": false },
+        { "name": "IngestedAt", "type": "timestamp_utc", "nullable": false },
+        { "name": "GivenName", "type": "string", "nullable": false },
+        { "name": "Surname", "type": "string", "nullable": false },
+        { "name": "Email", "type": "string", "nullable": false },
+        { "name": "City", "type": "string", "nullable": false },
+        { "name": "CountryCode", "type": "string", "nullable": false },
+        { "name": "LoyaltyTier", "type": "string", "nullable": false }
+      ]
+    }
+  ],
+  "evidenceContract": {
+    "manifest": "truth_manifest.json",
+    "requiresSourceHashes": true,
+    "requiresRowCounts": true,
+    "requiresInjectorEvidence": true
+  }
+}

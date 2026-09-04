@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "name": "Contoso Forge V1",
+  "image": "mcr.microsoft.com/devcontainers/base:1-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "26.1",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "8.0"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "os-provided",
+      "installTools": false
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17"
+    }
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "forwardPorts": [
+    8080
+  ],
+  "portsAttributes": {
+    "8080": {
+      "label": "Contoso Forge Airflow",
+      "protocol": "http",
+      "onAutoForward": "notify",
+      "requireLocalPort": false
+    }
+  },
+  "postCreateCommand": "python3 scripts/lab.py validate",
+  "waitFor": "postCreateCommand",
+  "remoteUser": "vscode"
+}

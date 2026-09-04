@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contoso.example/schemas/forge/project-spec-v1.json",
+  "title": "Contoso Forge ProjectSpec V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "name", "scenario", "generation", "extensions", "problems", "outputs", "lab"],
+  "properties": {
+    "version": { "const": "1.0.0" },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "scenario": { "const": "retail.customer_satisfaction" },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["legacyContosoMode", "seed", "orders", "customers", "products", "stores", "startDate", "formats"],
+      "properties": {
+        "legacyContosoMode": {
+          "const": true,
+          "description": "Makes the V1 upstream-compatibility contract explicit; the legacy positional CLI remains the path for legacy formats."
+        },
+        "seed": { "type": "integer", "minimum": 0 },
+        "orders": { "type": "integer", "minimum": 12 },
+        "customers": { "type": "integer", "minimum": 8 },
+        "products": { "type": "integer", "minimum": 4 },
+        "stores": { "type": "integer", "minimum": 2 },
+        "startDate": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        "formats": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": { "const": "CSV" },
+          "description": "Forge V1 materializes its deterministic source contract as CSV. Legacy PARQUET and DELTATABLE output remains available through the unchanged positional CLI."
+        }
+      }
+    },
+    "extensions": { "$ref": "#/$defs/extensions" },
+    "problems": { "$ref": "#/$defs/problems" },
+    "outputs": { "$ref": "#/$defs/outputs" },
+    "lab": { "$ref": "#/$defs/lab" }
+  },
+  "$defs": {
+    "extensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shipments", "shipmentEvents", "returns", "supportTickets", "reviews"],
+      "properties": {
+        "shipments": { "const": true },
+        "shipmentEvents": { "const": true },
+        "returns": { "const": true },
+        "supportTickets": { "const": true },
+        "reviews": { "const": true }
+      }
+    },
+    "problems": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duplicates", "cdc", "lateArrivals", "scd2", "qualityIssues"],
+      "properties": {
+        "duplicates": { "const": true },
+        "cdc": { "const": true },
+        "lateArrivals": { "const": true },
+        "scd2": { "const": true },
+        "qualityIssues": { "const": true }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sql", "pyspark", "dbt", "airflow", "semanticModel", "mlSpec"],
+      "properties": {
+        "sql": { "const": true },
+        "pyspark": { "const": true },
+        "dbt": { "const": true },
+        "airflow": { "const": true },
+        "semanticModel": { "const": true },
+        "mlSpec": { "const": true }
+      }
+    },
+    "lab": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["docker", "airflow", "spark", "dbtDuckdb", "kubernetesKind", "openTofu"],
+      "properties": {
+        "docker": { "const": true },
+        "airflow": { "const": true },
+        "spark": { "const": true },
+        "dbtDuckdb": { "const": true },
+        "kubernetesKind": { "const": true },
+        "openTofu": { "const": true }
+      }
+    }
+  }
+}

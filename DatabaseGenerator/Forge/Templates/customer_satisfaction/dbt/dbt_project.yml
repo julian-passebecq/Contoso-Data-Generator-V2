@@ -1,0 +1,32 @@
+# artifactStatus: validated
+name: contoso_forge_customer_satisfaction
+version: 1.0.0
+config-version: 2
+
+profile: contoso_forge_customer_satisfaction
+require-dbt-version: [">=1.11.0", "<1.12.0"]
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages", "logs"]
+
+vars:
+  silver_root: "{{ env_var('FORGE_LAKE_ROOT', '/workspace/lake') }}/silver"
+  truth_manifest_path: "{{ env_var('FORGE_TRUTH_MANIFEST', '/workspace/out/truth_manifest.json') }}"
+  expected_order_count: "__EXPECTED_ORDER_COUNT__"
+
+on-run-start:
+  - "{{ register_silver_sources() }}"
+
+models:
+  contoso_forge_customer_satisfaction:
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ["silver-contract"]
+    gold:
+      +materialized: table
+      +schema: gold
+      +tags: ["gold"]

@@ -1,0 +1,13 @@
+.git
+.github
+.vs
+.idea
+**/bin
+**/obj
+**/TestResults
+lake
+out
+_test_data/OUT
+_test_data/CACHE
+*.user
+*.suo

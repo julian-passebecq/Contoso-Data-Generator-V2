@@ -1,0 +1,56 @@
+{
+  "version": "1.0.0",
+  "artifactStatus": "starter/reference",
+  "projectName": "__PROJECT_NAME__",
+  "scenario": "__SCENARIO__",
+  "handoffType": "tool-neutral-semantic-model",
+  "source": {
+    "engine": "DuckDB",
+    "database": "/workspace/lake/gold/contoso_forge.duckdb",
+    "schema": "gold"
+  },
+  "defaultDateDimension": "dim_date",
+  "tables": [
+    { "name": "dim_date", "role": "dimension", "key": "date_key", "labelColumn": "full_date", "hiddenColumns": ["date_key"] },
+    { "name": "dim_customer", "role": "dimension", "key": "customer_sk", "labelColumn": "full_name", "hiddenColumns": ["customer_sk"], "defaultFilter": "is_current = true and is_deleted = false" },
+    { "name": "dim_product", "role": "dimension", "key": "product_key", "labelColumn": "product_name", "hiddenColumns": ["product_key"] },
+    { "name": "dim_store", "role": "dimension", "key": "store_key", "labelColumn": "store_name", "hiddenColumns": ["store_key"] },
+    { "name": "dim_carrier", "role": "dimension", "key": "carrier_key", "labelColumn": "carrier_name", "hiddenColumns": ["carrier_key"] },
+    { "name": "fact_sales", "role": "fact", "key": "sales_key" },
+    { "name": "fact_shipment", "role": "fact", "key": "shipment_key" },
+    { "name": "fact_return", "role": "fact", "key": "return_key" },
+    { "name": "fact_support", "role": "fact", "key": "ticket_key" },
+    { "name": "fact_customer_experience", "role": "fact", "key": "order_key" }
+  ],
+  "relationships": [
+    { "from": "fact_sales.order_date_key", "to": "dim_date.date_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_sales.customer_sk", "to": "dim_customer.customer_sk", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_sales.product_key", "to": "dim_product.product_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_sales.store_key", "to": "dim_store.store_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_shipment.delivered_date_key", "to": "dim_date.date_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_shipment.customer_sk", "to": "dim_customer.customer_sk", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_shipment.store_key", "to": "dim_store.store_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_shipment.carrier_key", "to": "dim_carrier.carrier_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_return.requested_date_key", "to": "dim_date.date_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_return.customer_sk", "to": "dim_customer.customer_sk", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_support.opened_date_key", "to": "dim_date.date_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_support.customer_sk", "to": "dim_customer.customer_sk", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_customer_experience.order_date_key", "to": "dim_date.date_key", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_customer_experience.customer_sk", "to": "dim_customer.customer_sk", "cardinality": "many-to-one", "active": true },
+    { "from": "fact_customer_experience.store_key", "to": "dim_store.store_key", "cardinality": "many-to-one", "active": true }
+  ],
+  "measures": [
+    { "name": "Order Count", "table": "fact_customer_experience", "expression": "COUNTROWS(fact_customer_experience)", "format": "0" },
+    { "name": "Gross Sales Amount", "table": "fact_sales", "expression": "SUM(fact_sales[sales_amount])", "format": "$#,0.00" },
+    { "name": "On-time Delivery Rate", "table": "fact_shipment", "expression": "DIVIDE(SUM(fact_shipment[is_on_time_int]), COUNTROWS(fact_shipment))", "format": "0.00%" },
+    { "name": "Return Rate", "table": "fact_customer_experience", "expression": "DIVIDE(SUM(fact_customer_experience[return_count]), COUNTROWS(fact_customer_experience))", "format": "0.00%" },
+    { "name": "Average Review Rating", "table": "fact_customer_experience", "expression": "DIVIDE(SUMX(fact_customer_experience, fact_customer_experience[average_review_rating] * fact_customer_experience[review_count]), SUM(fact_customer_experience[review_count]))", "format": "0.00" },
+    { "name": "Average Delivery Delay Hours", "table": "fact_shipment", "expression": "AVERAGE(fact_shipment[delivery_delay_hours])", "format": "0.0" },
+    { "name": "Support Ticket Count", "table": "fact_support", "expression": "COUNTROWS(fact_support)", "format": "0" }
+  ],
+  "implementationNotes": [
+    "Expressions use DAX-like notation as an interchange reference and must be translated for non-DAX tools.",
+    "Role-playing shipped, promised, delivered and closed dates should be implemented as inactive or duplicated date relationships in the target semantic engine.",
+    "Validate security, incremental refresh and tool-specific metadata after import; those are intentionally outside the V1 local acceptance path."
+  ]
+}

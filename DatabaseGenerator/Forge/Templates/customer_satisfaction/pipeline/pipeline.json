@@ -1,0 +1,109 @@
+{
+  "version": "1.0.0",
+  "artifactStatus": "validated",
+  "projectName": "__PROJECT_NAME__",
+  "scenario": "__SCENARIO__",
+  "specType": "logical-data-pipeline",
+  "engineNeutral": true,
+  "description": "Logical V1 flow shared by local Docker Compose and GitHub Codespaces; runtime packaging is deliberately outside this file.",
+  "parameters": {
+    "projectSpec": "project.json",
+    "truthManifest": "truth_manifest.json",
+    "lakeRoot": "lake",
+    "expectedOrderCount": "__EXPECTED_ORDER_COUNT__"
+  },
+  "dataZones": [
+    { "id": "source", "logicalPath": "out/data/source", "format": "CSV", "owner": "Contoso Forge" },
+    { "id": "raw", "logicalPath": "lake/raw", "format": "CSV", "owner": "Contoso Forge" },
+    { "id": "bronze", "logicalPath": "lake/bronze", "format": "Delta", "owner": "Spark" },
+    { "id": "silver", "logicalPath": "lake/silver", "format": "Parquet", "owner": "Spark" },
+    { "id": "gold", "logicalPath": "lake/gold", "format": "DuckDB", "owner": "dbt Core" }
+  ],
+  "steps": [
+    {
+      "id": "forge_generate",
+      "kind": "generate",
+      "implementation": "dotnet",
+      "artifact": "Contoso Forge",
+      "dependsOn": [],
+      "inputs": ["project.json"],
+      "outputs": ["out/data/source", "lake/raw", "truth_manifest.json", "generated artifacts"],
+      "qualityGates": ["project specification valid", "source foreign keys valid", "deterministic fingerprint emitted"],
+      "retry": { "maximumAttempts": 2, "backoffSeconds": 15 }
+    },
+    {
+      "id": "bronze_spark",
+      "kind": "transform",
+      "implementation": "pyspark",
+      "artifact": "pyspark/bronze_silver.py",
+      "entryPointArguments": ["--stage", "bronze"],
+      "dependsOn": ["forge_generate"],
+      "inputs": ["lake/raw"],
+      "outputs": ["lake/bronze"],
+      "qualityGates": ["explicit source schemas applied", "all required raw files readable"],
+      "retry": { "maximumAttempts": 2, "backoffSeconds": 15 }
+    },
+    {
+      "id": "silver_spark",
+      "kind": "transform",
+      "implementation": "pyspark",
+      "artifact": "pyspark/bronze_silver.py",
+      "entryPointArguments": ["--stage", "silver"],
+      "dependsOn": ["bronze_spark"],
+      "inputs": ["lake/bronze", "truth_manifest.json"],
+      "outputs": ["lake/silver"],
+      "qualityGates": ["CDC deduplicated and applied in sequence", "SCD2 intervals do not overlap", "shipment-event duplicate removed", "late arrival flagged", "bad shipment and review rows quarantined", "Silver row counts reconcile to truth manifest"],
+      "retry": { "maximumAttempts": 2, "backoffSeconds": 15 }
+    },
+    {
+      "id": "dbt_build_gold",
+      "kind": "build",
+      "implementation": "dbt-core",
+      "adapter": "dbt-duckdb",
+      "artifact": "dbt",
+      "dependsOn": ["silver_spark"],
+      "inputs": ["lake/silver"],
+      "outputs": ["lake/gold/contoso_forge.duckdb"],
+      "qualityGates": ["all requested dimensions materialized", "all requested facts materialized"],
+      "retry": { "maximumAttempts": 2, "backoffSeconds": 15 }
+    },
+    {
+      "id": "dbt_test",
+      "kind": "test",
+      "implementation": "dbt-core",
+      "artifact": "dbt",
+      "dependsOn": ["dbt_build_gold"],
+      "inputs": ["lake/gold/contoso_forge.duckdb", "truth_manifest.json"],
+      "outputs": ["dbt test results"],
+      "qualityGates": ["Gold keys unique and non-null", "fact-to-dimension relationships valid", "expected order count matches", "all five KPIs reconcile to truth manifest", "quality evidence reconciles"],
+      "retry": { "maximumAttempts": 1, "backoffSeconds": 0 }
+    },
+    {
+      "id": "semantic_handoff",
+      "kind": "handoff",
+      "implementation": "metadata",
+      "artifact": "models/semantic_model.json",
+      "dependsOn": ["dbt_test"],
+      "inputs": ["lake/gold/contoso_forge.duckdb", "models/semantic_model.json"],
+      "outputs": ["semantic implementation contract"],
+      "qualityGates": ["Gold tests passed"]
+    },
+    {
+      "id": "ml_handoff",
+      "kind": "handoff",
+      "implementation": "metadata",
+      "artifact": "models/ml_spec.json",
+      "dependsOn": ["dbt_test"],
+      "inputs": ["lake/gold/contoso_forge.duckdb", "models/ml_spec.json"],
+      "outputs": ["point-in-time ML contract"],
+      "qualityGates": ["Gold tests passed", "leakage exclusions documented"]
+    }
+  ],
+  "acceptance": {
+    "terminalSteps": ["semantic_handoff", "ml_handoff"],
+    "orchestratorReference": "airflow/dags/contoso_forge_customer_satisfaction.py",
+    "sameLogicalFlowRequiredInCodespaces": true,
+    "cloudCredentialsRequired": false
+  }
+}
+

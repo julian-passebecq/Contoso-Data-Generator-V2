@@ -3,6 +3,55 @@
 
 DataGenerator is a tool for generating sample data, ready to be imported into PowerBI or Fabric OneLake for analysis. This is the V2 version, evolution of the [older one](https://github.com/sql-bi/Contoso-Data-Generator).
 
+## Contoso Forge V1
+
+Contoso Forge is an additive, deterministic project-generation workflow in the existing C#/.NET codebase. The upstream engine and legacy positional CLI remain intact and keep their CSV, Parquet, Delta-oriented, distribution, seasonality, and spike contracts; Forge adds a separate ProjectSpec-driven workflow around them. V1's first vertical slice generates a Customer Satisfaction scenario with `Shipment`, `ShipmentEvent`, `Return`, `SupportTicket`, and `Review` data, plus reproducible duplicate, CDC, late-arrival, SCD2, and quality-rule cases.
+
+The reference path is:
+
+```text
+Contoso Forge -> lake/raw -> Spark Delta Bronze -> Spark Parquet Silver
+              -> dbt-duckdb Gold -> dbt tests -> Airflow 3
+```
+
+Docker is the canonical V1 runtime. It requires no cloud account or credentials. Kafka, production Kubernetes, and full Airflow-on-Kubernetes are intentionally outside V1.
+
+### Local quick start
+
+Prerequisites are Docker Desktop/Engine with Compose v2 and Python 3. PowerShell and POSIX-shell wrappers are provided; both delegate to the same Python command surface. The first build downloads pinned images and packages.
+
+```powershell
+.\lab.ps1 smoke
+```
+
+```bash
+sh ./lab.sh smoke
+```
+
+The smoke command builds the images, generates the sample project, checks Spark itself, runs Bronze/Silver, builds and tests Gold, starts Airflow, and runs the generated DAG. Airflow is then available at <http://localhost:8080> with the local-only credentials `admin` / `admin`.
+
+Useful incremental commands:
+
+```text
+lab prepare
+lab build
+lab generate
+lab run-spark --stage smoke|bronze|silver|all
+lab run-dbt
+lab up-airflow
+lab run-pipeline
+lab validate
+lab down
+```
+
+On Windows use `.\lab.ps1 <command>`; on Linux, macOS, and Codespaces use `sh ./lab.sh <command>`. Both wrappers call the same [`scripts/lab.py`](scripts/lab.py), [`compose.yaml`](compose.yaml), images, generated project, tests, and `lake/raw|bronze|silver|gold` layout. `lab down` removes the running containers and network but preserves the bind-backed workspace and named database/log volumes.
+
+Generated data and code land in `out/`; runtime lake files land in `lake/`. The generated `out/truth_manifest.json` records source hashes, deterministic evidence, expected Silver row counts, and expected KPIs. The checked-in small project is [`examples/customer-satisfaction.project.json`](examples/customer-satisfaction.project.json); the JSON contracts are in [`schemas/`](schemas/).
+
+The Airflow container mounts the local Docker socket so its generated DAG can launch the same short-lived Forge, Spark, and dbt images. This is a development-only trust boundary. Do not expose this lab as an always-on server or reuse its sample password outside a disposable local/Codespaces environment.
+
+See [`docs/codespaces.md`](docs/codespaces.md) for the same-stack Codespaces flow and [`docs/kubernetes.md`](docs/kubernetes.md) for the deliberately small V1C kind/OpenTofu target.
+
 If you are just interested in **ready to use sets of data** , [download them here.](https://github.com/sql-bi/Contoso-Data-Generator-V2-Data)
 
 Supported output formats:

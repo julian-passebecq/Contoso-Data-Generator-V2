@@ -1,0 +1,69 @@
+{
+  "version": "1.0.0",
+  "artifactStatus": "starter/reference",
+  "projectName": "__PROJECT_NAME__",
+  "scenario": "__SCENARIO__",
+  "problemType": "binary_classification",
+  "objective": "Predict whether a completed order will have a dissatisfied customer outcome within 14 days of delivery.",
+  "predictionGrain": {
+    "entity": "Order",
+    "key": "order_key",
+    "onePredictionPer": "completed order"
+  },
+  "timeSemantics": {
+    "eventTime": "delivered_at",
+    "predictionTime": "delivered_at",
+    "labelWindow": "(delivered_at, delivered_at + 14 days]",
+    "trainingSnapshotRule": "Features must be reproducible using only records whose event timestamp is on or before predictionTime.",
+    "lateArrivalPolicy": "Use event time for feature eligibility and ingestion time to audit availability; exclude events not ingested by the simulated scoring cutoff."
+  },
+  "target": {
+    "name": "is_dissatisfied_14d",
+    "definition": "1 when a valid review rating is at most 2 or a support satisfaction score is at most 2 during the label window; otherwise 0 after the label window closes.",
+    "positiveClass": 1,
+    "sourceModels": ["fact_customer_experience", "fact_support"],
+    "availability": "14 days after delivered_at"
+  },
+  "features": [
+    { "name": "sales_amount", "source": "fact_customer_experience.sales_amount", "availableAt": "order_date", "type": "numeric" },
+    { "name": "item_quantity", "source": "fact_customer_experience.item_quantity", "availableAt": "order_date", "type": "numeric" },
+    { "name": "store_channel", "source": "dim_store.channel", "availableAt": "order_date", "type": "categorical" },
+    { "name": "customer_loyalty_tier_as_of_order", "source": "dim_customer.loyalty_tier", "availableAt": "order_date", "type": "categorical", "pointInTimeJoin": true },
+    { "name": "promised_transit_hours", "source": "promised_at - shipped_at", "availableAt": "shipped_at", "type": "numeric" },
+    { "name": "actual_transit_hours", "source": "delivered_at - shipped_at", "availableAt": "delivered_at", "type": "numeric" },
+    { "name": "delivery_delay_hours", "source": "fact_customer_experience.delivery_delay_hours", "availableAt": "delivered_at", "type": "numeric" },
+    { "name": "is_on_time", "source": "fact_customer_experience.is_on_time", "availableAt": "delivered_at", "type": "boolean" },
+    { "name": "shipment_event_count_at_delivery", "source": "shipment events with event_time <= delivered_at and ingested_at <= delivered_at", "availableAt": "delivered_at", "type": "numeric" },
+    { "name": "customer_prior_order_count", "source": "historical fact_customer_experience", "availableAt": "order_date", "type": "numeric", "excludesCurrentOrder": true },
+    { "name": "customer_prior_return_rate", "source": "historical fact_customer_experience", "availableAt": "order_date", "type": "numeric", "excludesCurrentOrder": true },
+    { "name": "customer_prior_average_rating", "source": "historical valid reviews", "availableAt": "order_date", "type": "numeric", "excludesCurrentOrder": true }
+  ],
+  "leakageCandidates": [
+    { "field": "review_rating", "reason": "directly defines the target and occurs after predictionTime", "action": "exclude" },
+    { "field": "review_text", "reason": "post-outcome text directly reveals customer sentiment", "action": "exclude" },
+    { "field": "returned_flag_current_order", "reason": "return requests occur after delivery and may be inside the label window", "action": "exclude" },
+    { "field": "refund_amount_current_order", "reason": "post-outcome remediation information", "action": "exclude" },
+    { "field": "support_satisfaction_score_current_order", "reason": "directly defines the target", "action": "exclude" },
+    { "field": "support_closed_at_current_order", "reason": "often occurs after the prediction cutoff", "action": "exclude" },
+    { "field": "is_late_arrival_known_after_cutoff", "reason": "ingestion-time information may not have existed at scoring time", "action": "exclude unless ingested_at <= predictionTime" }
+  ],
+  "datasetSplit": {
+    "strategy": "chronological",
+    "orderingColumn": "order_date",
+    "train": "oldest 70%",
+    "validation": "next 15%",
+    "test": "newest 15%",
+    "groupConstraint": "All rows for an order remain in one split."
+  },
+  "evaluation": {
+    "primaryMetric": "area_under_precision_recall_curve",
+    "secondaryMetrics": ["roc_auc", "log_loss", "balanced_accuracy", "precision", "recall", "brier_score"],
+    "sliceMetrics": ["country_code", "loyalty_tier", "store_channel", "carrier_name"],
+    "baseline": "majority class plus a delivery_delay_hours threshold heuristic"
+  },
+  "limitations": [
+    "The default V1 sample is intentionally small and deterministic; it demonstrates feature/label contracts rather than production model quality.",
+    "Review and support outcomes are selectively observed, so missing labels must not be interpreted as satisfaction without an explicit policy.",
+    "No model training, registry, serving endpoint or cloud credential is required for V1."
+  ]
+}

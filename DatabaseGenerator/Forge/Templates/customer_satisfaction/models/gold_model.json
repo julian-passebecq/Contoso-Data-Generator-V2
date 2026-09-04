@@ -1,0 +1,112 @@
+{
+  "version": "1.0.0",
+  "artifactStatus": "validated",
+  "projectName": "__PROJECT_NAME__",
+  "scenario": "__SCENARIO__",
+  "modelType": "dimensional-star",
+  "physicalImplementation": "dbt Core with dbt-duckdb",
+  "databasePath": "/workspace/lake/gold/contoso_forge.duckdb",
+  "schema": "gold",
+  "dimensions": [
+    {
+      "name": "dim_date",
+      "grain": "one row per calendar date present in a business event",
+      "primaryKey": "date_key",
+      "source": "all Silver event timestamps",
+      "attributes": ["full_date", "calendar_year", "calendar_quarter", "calendar_month", "month_name", "day_of_month", "day_of_week", "day_name", "is_weekend"]
+    },
+    {
+      "name": "dim_customer",
+      "grain": "one row per customer SCD2 version",
+      "primaryKey": "customer_sk",
+      "naturalKey": "customer_key",
+      "source": "customer_scd2",
+      "scdType": 2,
+      "versionColumns": ["valid_from", "valid_to", "is_current", "is_deleted", "source_event_id"],
+      "attributes": ["given_name", "surname", "email", "city", "country_code", "loyalty_tier"]
+    },
+    {
+      "name": "dim_product",
+      "grain": "one row per product",
+      "primaryKey": "product_key",
+      "source": "products",
+      "attributes": ["product_name", "category", "brand", "list_unit_price", "standard_unit_cost"]
+    },
+    {
+      "name": "dim_store",
+      "grain": "one row per store or channel",
+      "primaryKey": "store_key",
+      "source": "stores",
+      "attributes": ["store_name", "channel", "country_code"]
+    },
+    {
+      "name": "dim_carrier",
+      "grain": "one row per carrier name",
+      "primaryKey": "carrier_key",
+      "naturalKey": "carrier_name",
+      "source": "shipments",
+      "attributes": ["carrier_name"]
+    }
+  ],
+  "facts": [
+    {
+      "name": "fact_sales",
+      "grain": "one row per order line",
+      "primaryKey": "sales_key",
+      "source": "orders joined to order_rows",
+      "foreignKeys": ["order_date_key", "customer_sk", "product_key", "store_key"],
+      "degenerateDimensions": ["order_key", "line_number", "currency_code", "order_status"],
+      "measures": ["quantity", "unit_price", "net_price", "unit_cost", "sales_amount", "cost_amount", "margin_amount"]
+    },
+    {
+      "name": "fact_shipment",
+      "grain": "one row per valid shipment",
+      "primaryKey": "shipment_key",
+      "source": "shipments joined to orders and aggregated shipment_events",
+      "foreignKeys": ["shipped_date_key", "promised_date_key", "delivered_date_key", "customer_sk", "store_key", "carrier_key"],
+      "degenerateDimensions": ["order_key", "tracking_number", "shipment_status"],
+      "measures": ["transit_hours", "delivery_delay_hours", "is_on_time", "shipment_event_count", "late_arrival_event_count"]
+    },
+    {
+      "name": "fact_return",
+      "grain": "one row per return request",
+      "primaryKey": "return_key",
+      "source": "returns joined to orders",
+      "foreignKeys": ["requested_date_key", "customer_sk", "store_key"],
+      "degenerateDimensions": ["order_key", "reason", "return_status"],
+      "measures": ["refund_amount"]
+    },
+    {
+      "name": "fact_support",
+      "grain": "one row per support ticket",
+      "primaryKey": "ticket_key",
+      "source": "support_tickets joined to orders",
+      "foreignKeys": ["opened_date_key", "closed_date_key", "customer_sk", "store_key"],
+      "degenerateDimensions": ["order_key", "channel", "topic", "priority"],
+      "measures": ["resolution_hours", "satisfaction_score"]
+    },
+    {
+      "name": "fact_customer_experience",
+      "grain": "one row per order",
+      "primaryKey": "order_key",
+      "source": "orders with order-level sales, shipment, return, support and review aggregates",
+      "foreignKeys": ["order_date_key", "customer_sk", "store_key"],
+      "measures": ["sales_amount", "item_quantity", "delivery_delay_hours", "is_on_time", "returned_flag", "return_count", "refund_amount", "support_ticket_count", "average_support_satisfaction", "review_count", "average_review_rating", "late_arrival_event_count"]
+    }
+  ],
+  "aggregateModels": [
+    {
+      "name": "kpi_customer_satisfaction",
+      "grain": "one row for the generated dataset",
+      "measures": ["order_count", "gross_sales_amount", "on_time_delivery_rate", "return_rate", "average_review_rating"],
+      "reconcilesTo": "truth_manifest.json.expectedKpis"
+    }
+  ],
+  "conformedRelationships": [
+    { "from": "fact_sales.customer_sk", "to": "dim_customer.customer_sk", "cardinality": "many-to-one" },
+    { "from": "fact_sales.product_key", "to": "dim_product.product_key", "cardinality": "many-to-one" },
+    { "from": "fact_sales.store_key", "to": "dim_store.store_key", "cardinality": "many-to-one" },
+    { "from": "fact_shipment.carrier_key", "to": "dim_carrier.carrier_key", "cardinality": "many-to-one" },
+    { "from": "fact_customer_experience.order_date_key", "to": "dim_date.date_key", "cardinality": "many-to-one" }
+  ]
+}

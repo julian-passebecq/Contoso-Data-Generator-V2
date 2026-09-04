@@ -1,0 +1,124 @@
+name: contoso-forge
+
+x-workspace: &workspace
+  volumes:
+    - forge-workspace:/workspace
+  working_dir: /workspace
+
+x-airflow-environment: &airflow-environment
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  AIRFLOW__CORE__PARALLELISM: "4"
+  AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "2"
+  AIRFLOW__CORE__DAGS_FOLDER: /workspace/out/airflow/dags
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+  AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: admin:admin
+  AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /workspace/lab/airflow/simple_auth_manager_passwords.json
+  AIRFLOW__API_AUTH__JWT_SECRET: contoso-forge-local-only-jwt-secret-not-for-production-use-20260904-abcdef
+  FORGE_WORKSPACE_VOLUME: contoso-forge-workspace
+
+services:
+  forge:
+    profiles: [jobs]
+    image: contoso-forge:local
+    build:
+      context: .
+      dockerfile: lab/docker/forge/Dockerfile
+    <<: *workspace
+    command:
+      - forge
+      - generate
+      - --project
+      - /workspace/examples/customer-satisfaction.project.json
+      - --output
+      - /workspace/out
+      - --lake
+      - /workspace/lake
+
+  spark-job:
+    profiles: [jobs]
+    image: contoso-forge-spark:local
+    build:
+      context: .
+      dockerfile: lab/docker/spark/Dockerfile
+    <<: *workspace
+    environment:
+      FORGE_LAKE_ROOT: /workspace/lake
+      FORGE_TRUTH_MANIFEST: /workspace/out/truth_manifest.json
+    command:
+      - /workspace/out/pyspark/bronze_silver.py
+      - --stage
+      - all
+
+  dbt:
+    profiles: [jobs]
+    image: contoso-forge-dbt:local
+    build:
+      context: .
+      dockerfile: lab/docker/dbt/Dockerfile
+    <<: *workspace
+    environment:
+      FORGE_LAKE_ROOT: /workspace/lake
+      FORGE_DUCKDB_PATH: /workspace/lake/gold/contoso_forge.duckdb
+    command:
+      - build
+      - --project-dir
+      - /workspace/out/dbt
+      - --profiles-dir
+      - /workspace/out/dbt
+      - --target
+      - local
+
+  postgres:
+    profiles: [airflow]
+    image: postgres:16.15-bookworm@sha256:bb3e1a57e5407e0a5280b4211980a5e537f4abd234a87014ac979849a78dd825
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U airflow -d airflow]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  airflow:
+    profiles: [airflow]
+    image: contoso-forge-airflow:local
+    build:
+      context: .
+      dockerfile: lab/docker/airflow/Dockerfile
+    user: "0:0"
+    group_add:
+      - "${FORGE_DOCKER_SOCKET_GID:-0}"
+    <<: *workspace
+    environment: *airflow-environment
+    command: standalone
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - forge-workspace:/workspace
+      - airflow-logs:/opt/airflow/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: [CMD-SHELL, curl --fail --silent http://localhost:8080/api/v2/monitor/health >/dev/null]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  forge-workspace:
+    name: contoso-forge-workspace
+    external: true
+  airflow-postgres:
+    name: contoso-forge-airflow-postgres
+  airflow-logs:
+    name: contoso-forge-airflow-logs

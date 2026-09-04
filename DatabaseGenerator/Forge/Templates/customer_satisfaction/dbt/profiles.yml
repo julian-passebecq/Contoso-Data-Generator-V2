@@ -1,0 +1,12 @@
+# artifactStatus: validated
+contoso_forge_customer_satisfaction:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('FORGE_DUCKDB_PATH', '/workspace/lake/gold/contoso_forge.duckdb') }}"
+      schema: main
+      threads: 4
+      settings:
+        TimeZone: UTC
+

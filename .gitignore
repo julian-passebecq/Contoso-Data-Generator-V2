@@ -347,3 +347,31 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Contoso Forge generated runtime artifacts
+/out/
+/lake/*
+!/lake/.contoso-forge-lake
+!/lake/raw/
+!/lake/bronze/
+!/lake/silver/
+!/lake/gold/
+!/lake/checkpoints/
+/lake/raw/*
+/lake/bronze/*
+/lake/silver/*
+/lake/gold/*
+/lake/checkpoints/*
+!/lake/raw/.gitkeep
+!/lake/bronze/.gitkeep
+!/lake/silver/.gitkeep
+!/lake/gold/.gitkeep
+!/lake/checkpoints/.gitkeep
+
+# Generated caches must never become Forge templates
+/DatabaseGenerator/Forge/Templates/**/target/
+/DatabaseGenerator/Forge/Templates/**/logs/
+/DatabaseGenerator/Forge/Templates/**/dbt_packages/
+
+# Optional repo-local V1C tool binaries
+/.tools/

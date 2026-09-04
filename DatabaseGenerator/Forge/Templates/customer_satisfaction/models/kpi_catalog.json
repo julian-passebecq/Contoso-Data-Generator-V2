@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "artifactStatus": "validated",
+  "projectName": "__PROJECT_NAME__",
+  "scenario": "__SCENARIO__",
+  "catalogType": "business-kpi",
+  "reconciliation": {
+    "expectedValues": "truth_manifest.json.expectedKpis",
+    "actualModel": "gold.kpi_customer_satisfaction",
+    "dbtTest": "tests/reconcile_kpis_with_truth_manifest.sql",
+    "numericTolerance": 0.000001,
+    "expectedOrderCount": "__EXPECTED_ORDER_COUNT__"
+  },
+  "kpis": [
+    {
+      "id": "order_count",
+      "name": "Order Count",
+      "description": "Distinct generated orders, including orders without a review, return or support interaction.",
+      "grain": "dataset",
+      "sourceModel": "fact_customer_experience",
+      "expression": "count(*)",
+      "format": "whole_number",
+      "additivity": "non_additive_across_overlapping_periods"
+    },
+    {
+      "id": "gross_sales_amount",
+      "name": "Gross Sales Amount",
+      "description": "Extended line amount using the generated post-discount NetPrice multiplied by Quantity; the historical truth-manifest name is retained for compatibility.",
+      "grain": "dataset",
+      "sourceModel": "fact_sales",
+      "expression": "sum(sales_amount)",
+      "format": "currency_2dp",
+      "additivity": "additive"
+    },
+    {
+      "id": "on_time_delivery_rate",
+      "name": "On-time Delivery Rate",
+      "description": "Share of valid shipments delivered on or before the promised timestamp.",
+      "grain": "dataset",
+      "sourceModel": "fact_shipment",
+      "expression": "sum(case when is_on_time then 1 else 0 end) / count(*)",
+      "format": "percentage_6dp",
+      "additivity": "ratio_recompute_from_components"
+    },
+    {
+      "id": "return_rate",
+      "name": "Return Rate",
+      "description": "Return requests divided by generated orders.",
+      "grain": "dataset",
+      "sourceModel": "fact_return and fact_customer_experience",
+      "expression": "count(fact_return.return_key) / count(fact_customer_experience.order_key)",
+      "format": "percentage_6dp",
+      "additivity": "ratio_recompute_from_components"
+    },
+    {
+      "id": "average_review_rating",
+      "name": "Average Review Rating",
+      "description": "Mean rating over valid Silver reviews only; the injected out-of-range review is quarantined.",
+      "grain": "dataset",
+      "sourceModel": "stg_reviews",
+      "expression": "avg(rating)",
+      "format": "decimal_6dp",
+      "additivity": "average_recompute_from_components"
+    }
+  ]
+}
