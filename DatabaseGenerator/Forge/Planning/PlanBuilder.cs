@@ -57,6 +57,7 @@ public static class PlanBuilder
 
         var source = new PlanStage
         {
+            LogicalStage = project.Product?.Version == "1.7" ? "generate" : null,
             Id = Unique("generate"), Name = "Generate business source and truth", Kind = "source-generation",
             Engine = "contoso-forge-csharp", Runtime = "local-process", Inputs = new() { "project.json" },
             Outputs = new() { "data/source", "truth_manifest.json", "models/semantic_model.json" },
@@ -120,7 +121,7 @@ public static class PlanBuilder
         AddCredentialsAndCosts(plan, project, definition);
         AddArtifacts(plan, source.Id);
         if (project.Product is not null) AddProduct(plan, project, Unique);
-        if (scenario.MlEnabled && preparation is null)
+        if (project.Product?.Version != "1.7" && scenario.MlEnabled && preparation is null)
             plan.Warnings.Add("ML semantic intent is preserved, but this selected architecture has no implemented native BigQuery ML execution path. No training is implied.");
         if (scenario.MlEnabled && (generation.TimeSpanDays ?? 60) < 365)
             plan.Warnings.Add("The selected ML scenario retains this custom generation profile. A short horizon may leave chronological partitions without both classes; use explicit scenario selection to apply the 365-day profile, then check actual label readiness.");
@@ -146,6 +147,32 @@ public static class PlanBuilder
     {
         var intent = project.Product!;
         var settings = plan.ResolvedSettings;
+        if (intent.Version == "1.7")
+        {
+            plan.Product = new ProductDesign { Version = "1.7", Goal = intent.Goal, StopAfter = intent.StopAfter,
+                Steps = ProductIntent.JourneySteps.ToList(), SelectedKpis = intent.SelectedKpis!.OrderBy(k => k, StringComparer.Ordinal).ToList(),
+                Analysis = intent.Analysis, PublishTargets = intent.PublishTargets, PipelineMode = intent.PipelineMode,
+                BiTarget = intent.BiTarget, Orchestrator = settings.Orchestrator!, AirflowHost = settings.AirflowHost,
+                Ml = intent.Goal is "specific-ml" or "automl" ? new MlExperimentDesign { RuntimeTarget = intent.Analysis!.Runtime, Framework = intent.Analysis.Kind } : null };
+            plan.BusinessScenario.MlEnabled = intent.Goal is "specific-ml" or "automl";
+            foreach (var stage in plan.Stages.Where(s => s.CompilerOperation.StartsWith("factory-", StringComparison.Ordinal)))
+            {
+                var op = stage.CompilerOperation[8..];
+                stage.LogicalStage = FactoryPipeline.JourneyOperations[op].Stage;
+                stage.ValidationLevel = "generated";
+                stage.Evidence.Clear();
+                stage.Engine = op switch { "bronze" or "silver" or "wrangle" => settings.Engine!, "dbt" => "dbt-duckdb", "analysis" => intent.Analysis!.Kind, "bi" => "evidence", _ => "python" };
+            }
+            plan.Warnings.Add("V1.7 stage evidence must be measured afresh. Legacy Spark/Colab/BQML and Cosmos evidence remains version-scoped; unsupported runtime mappings are explicit.");
+            plan.Warnings.Add("KPI semantic publication is scoped; shared source and dbt models can still build. No physical pruning is claimed.");
+            if (intent.Analysis!.Runtime == "kaggle")
+                plan.RequiredCredentials.Add(new() { Scope = "kaggle", RequiredAtExecutionTime = intent.Analysis.RequireExecution, Reason = "Optional official CLI authentication enables private dataset/notebook execution; missing authentication produces exported-not-executed unless required." });
+            if (intent.PublishTargets!.Any(p => p.Kind == "huggingface"))
+                plan.RequiredCredentials.Add(new() { Scope = "huggingface-write", RequiredAtExecutionTime = intent.PublishTargets!.Any(p => p.Kind == "huggingface" && p.RequireExecution), Reason = "Explicit repository IDs and write authentication enable model/results and static Space publication. Export requires no account." });
+            plan.CostAndQuotaNotes.Add("Kaggle notebook availability and account quotas are checked during execution. AutoML uses bounded CPU candidates. MotherDuck has account-specific quotas. Hugging Face exports a static Space with no model serving requirement.");
+            plan.Artifacts.Add(new() { Path = "factory/product_design.json", Purpose = "Goal, stage boundary and typed analysis/publish design.", StageId = plan.Stages[0].Id });
+            return;
+        }
         plan.Product = new ProductDesign
         {
             Version = intent.Version, PipelineMode = intent.PipelineMode, BiTarget = intent.BiTarget,
@@ -393,7 +420,7 @@ public static class PlanBuilder
         else if (s.CostProfile == "local") plan.CostAndQuotaNotes.Add("Local runtimes consume host compute, memory and disk. Cloud billing is not part of this local profile.");
         else plan.CostAndQuotaNotes.Add("External providers have separate account, quota and pricing requirements; the planner does not estimate or authorize charges.");
         if (s.Warehouse is "bigquery" or "biglake") plan.CostAndQuotaNotes.Add($"BigQuery query maximumBytesBilled is {project.Gcp.MaximumBytesBilled}; reported bytes billed are quota/accounting metrics, not a monetary charge estimate.");
-        if (plan.BusinessScenario.MlEnabled) plan.CostAndQuotaNotes.Add("BQML training can require billing and incur charges. Feature-readiness checks are distinct from training; no model is created by PLAN or COMPILE.");
+        if (plan.BusinessScenario.MlEnabled && project.Product?.Version != "1.7") plan.CostAndQuotaNotes.Add("BQML training can require billing and incur charges. Feature-readiness checks are distinct from training; no model is created by PLAN or COMPILE.");
     }
 
     private static void AddArtifacts(ResolvedPlan plan, string sourceId)

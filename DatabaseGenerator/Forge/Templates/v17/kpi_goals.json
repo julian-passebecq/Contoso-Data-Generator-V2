@@ -1,0 +1,59 @@
+{
+  "version": "1.7",
+  "governedCatalog": "models/kpi_catalog.json",
+  "dependencyResolution": "Traverse canonical dbt ref/source dependencies from the shared KPI mart; publish only selected columns.",
+  "physicalPruning": false,
+  "kpis": [
+    {
+      "id": "order_count",
+      "label": "Order Count",
+      "businessModels": [
+        "fact_customer_experience"
+      ],
+      "canonicalGoldModel": "gold.kpi_customer_satisfaction",
+      "column": "order_count",
+      "truthMetric": "order_count"
+    },
+    {
+      "id": "gross_sales_amount",
+      "label": "Gross Sales Amount",
+      "businessModels": [
+        "fact_sales"
+      ],
+      "canonicalGoldModel": "gold.kpi_customer_satisfaction",
+      "column": "gross_sales_amount",
+      "truthMetric": "gross_sales_amount"
+    },
+    {
+      "id": "return_rate",
+      "label": "Return Rate",
+      "businessModels": [
+        "fact_return",
+        "fact_customer_experience"
+      ],
+      "canonicalGoldModel": "gold.kpi_customer_satisfaction",
+      "column": "return_rate",
+      "truthMetric": "return_rate"
+    },
+    {
+      "id": "on_time_delivery_rate",
+      "label": "On-time Delivery Rate",
+      "businessModels": [
+        "fact_shipment"
+      ],
+      "canonicalGoldModel": "gold.kpi_customer_satisfaction",
+      "column": "on_time_delivery_rate",
+      "truthMetric": "on_time_delivery_rate"
+    },
+    {
+      "id": "average_review_rating",
+      "label": "Average Review Rating",
+      "businessModels": [
+        "stg_reviews"
+      ],
+      "canonicalGoldModel": "gold.kpi_customer_satisfaction",
+      "column": "average_review_rating",
+      "truthMetric": "average_review_rating"
+    }
+  ]
+}

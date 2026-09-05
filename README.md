@@ -1,6 +1,8 @@
 # Contoso Data Generator V2
 
-Contoso Forge V1.6 adds real local Polars and pandas engines alongside DuckDB, with measured logical parity across all 13 Silver tables and a separate actual Spark 4.0.4 parity gate. The shared dbt Gold, KPI reconciliation, ML Lab and Evidence flow remains intact, as do legacy deterministic generation, Spark classic/Connect and cloud boundaries. Start with the [V1.6 execution guide](docs/v1.6.md), [canonical parity contract](docs/v1.6-canonical-encoding.md), [release evidence](docs/v1.6-evidence.json), [planning and CLI usage](docs/planning.md), and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
+Contoso Forge V1.7 adds goal-driven journeys, first-class `stopAfter`, independent Bronze/Silver stages, selected KPI semantics, bounded MLJAR on Kaggle, optional MotherDuck and Hugging Face publication, and safe DuckDB/Polars wrangling. Start with the [V1.7 guide](docs/v1.7.md) and [current handoff](HANDOFF.md). The existing C# planner/compiler remains authoritative.
+
+Contoso Forge V1.6 added real local Polars and pandas engines alongside DuckDB, with measured logical parity across all 13 Silver tables and a separate actual Spark 4.0.4 parity gate. The shared dbt Gold, KPI reconciliation, ML Lab and Evidence flow remains intact, as do legacy deterministic generation, Spark classic/Connect and cloud boundaries. Start with the [V1.6 execution guide](docs/v1.6.md), [canonical parity contract](docs/v1.6-canonical-encoding.md), [release evidence](docs/v1.6-evidence.json), [planning and CLI usage](docs/planning.md), and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
 
 
 
@@ -8,7 +10,7 @@ DataGenerator is a tool for generating sample data, ready to be imported into Po
 
 ## Contoso Forge architecture presets
 
-New Studio projects default to `free-gcp-lab`: GitHub + Minikube/Airflow 3/Helm/GitSync + interactive Colab Spark + BigQuery + OpenTofu. Presets are editable configuration for the neutral C# `project.json` / `pipeline.json` contracts. Engine, runtime, storage, format, warehouse, and IaC remain separate choices. BigQuery Sandbox and billing-enabled free usage have distinct capability gates.
+Studio now opens a V1.7 goal-first local KPI example. The preserved `free-gcp-lab` preset provides: GitHub + Minikube/Airflow 3/Helm/GitSync + interactive Colab Spark + BigQuery + OpenTofu. Presets are editable configuration for the neutral C# `project.json` / `pipeline.json` contracts. Engine, runtime, storage, format, warehouse, and IaC remain separate choices. BigQuery Sandbox and billing-enabled free usage have distinct capability gates.
 
 See [the preset and compiler guide](docs/free-gcp-lab.md) for initialization, compilation, Colab work orders, reconciliation, and validation limits. The original V1 commands and backends below remain available without modification.
 

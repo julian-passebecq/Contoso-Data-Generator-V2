@@ -52,6 +52,7 @@ public sealed class PlanGenerationProfile
 
 public sealed class PlanStage
 {
+    public string? LogicalStage { get; set; }
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Kind { get; set; } = "";

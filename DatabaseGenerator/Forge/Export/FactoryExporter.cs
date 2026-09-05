@@ -83,5 +83,6 @@ internal static class FactoryExporter
             code = code.Replace("    if operation == \"unsupported\":", "    if operation.startswith(\"factory-\"):\n        invoke(root, \"factory/run.py\", [\"--root\", root, \"--run-id\", run_id, \"--stage\", operation[8:]], timeout)\n        return True\n    if operation == \"unsupported\":", StringComparison.Ordinal);
             ForgeIo.WriteText(path, code);
         }
+        if (project.Product.Version == "1.7") JourneyExporter.Export(root, project);
     }
 }

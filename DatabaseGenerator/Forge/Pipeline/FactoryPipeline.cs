@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace DatabaseGenerator.Forge.Pipeline;
 
-internal static class FactoryPipeline
+internal static partial class FactoryPipeline
 {
     internal static bool IsLocal(ArchitectureSettings s) => s.Engine is "duckdb" or "polars" or "pandas" && s.Runtime == "local-process"
         && s.Storage == "local" && s.FileFormat == "parquet" && s.TableFormat == "none" && s.Warehouse == "duckdb"
@@ -14,6 +14,7 @@ internal static class FactoryPipeline
 
     internal static PipelineDefinition Create(ResolvedProject project)
     {
+        if (project.Product?.Version == "1.7") return CreateJourney(project);
         var pipeline = new PipelineDefinition { Id = "contoso_forge_factory", Name = $"Contoso Forge V{project.Product!.Version} Data Factory, ML Lab & BI Validation" };
         var specs = new List<(string Id, string Kind, string Operation)>
         {
@@ -37,6 +38,7 @@ internal static class FactoryPipeline
 
     internal static bool Map(PipelineActivity activity, PipelinePlannedActivity mapped, Dictionary<string, string> settings)
     {
+        if (settings.GetValueOrDefault("productVersion") == "1.7") return MapJourney(activity, mapped, settings);
         if (settings.GetValueOrDefault("productVersion") is not ("1.5" or "1.6") || activity.Implementation?.StartsWith("factory-", StringComparison.Ordinal) != true) return false;
         var operation = activity.Implementation[8..];
         var expectedKind = operation switch { "verify" => "source", "silver" => "transform", "dbt" => "dbt", "ml" or "export-ml" => "ml", "validate-silver" or "reconcile" or "bi" => "validate", _ => "" };

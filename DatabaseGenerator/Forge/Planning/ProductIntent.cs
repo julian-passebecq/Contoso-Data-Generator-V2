@@ -9,7 +9,7 @@ namespace DatabaseGenerator.Forge.Planning;
 
 /// <summary>Opt-in V1.5 intent inside the existing project, never a second generation contract.</summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-public sealed class ProductIntent
+public sealed partial class ProductIntent
 {
     public string Version { get; set; } = "1.5";
     public string PipelineMode { get; set; } = "full-batch";
@@ -25,9 +25,10 @@ public sealed class ProductIntent
 
     public void Validate(StudioProjectSpec project, ArchitectureSettings settings)
     {
-        if (Version is not ("1.5" or "1.6") || !Modes.Contains(PipelineMode) || !MlTargets.Contains(MlTarget)
+        if (Version is not ("1.5" or "1.6" or "1.7") || !Modes.Contains(PipelineMode) || !MlTargets.Contains(MlTarget)
             || BiTarget is not ("evidence" or "evidence-and-dive") || DbtIntegration is not ("plain" or "cosmos"))
-            throw new ArgumentException("Invalid product version (1.5/1.6), pipeline mode, ML, BI or dbt target.");
+            throw new ArgumentException("Invalid product version (1.5/1.6/1.7), pipeline mode, ML, BI or dbt target.");
+        ValidateJourney(project, settings);
         if (MaterializationLimitMb is < 16 or > 4096) throw new ArgumentException("materializationLimitMb must be between 16 and 4096.");
         if (LabelAsOf is not null && (!LabelAsOf.EndsWith("Z", StringComparison.Ordinal) || !DateTimeOffset.TryParse(LabelAsOf, out _)))
             throw new ArgumentException("product.labelAsOf must be an explicit UTC timestamp ending in Z.");
@@ -42,6 +43,11 @@ public sealed class ProductIntent
 
 public sealed class ProductDesign
 {
+    public string? Goal { get; set; }
+    public string? StopAfter { get; set; }
+    public List<string>? SelectedKpis { get; set; }
+    public AnalysisIntent? Analysis { get; set; }
+    public List<PublishTarget>? PublishTargets { get; set; }
     public string Version { get; set; } = "1.5";
     public List<string> Steps { get; set; } = ProductIntent.Steps.ToList();
     public string Industry { get; set; } = "Retail / ecommerce / omnichannel";

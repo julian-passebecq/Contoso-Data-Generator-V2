@@ -1,16 +1,273 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://contoso.example/schemas/forge/product-intent-v1.5.json",
-  "title": "Contoso Forge V1.5 optional product intent",
+  "title": "Contoso Forge versioned product intent",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "version": { "enum": ["1.5", "1.6"] },
-    "pipelineMode": { "enum": ["full-batch", "incremental-cdc", "scd2", "late-arrival-backfill", "quality-quarantine", "ml-features"] },
-    "mlTarget": { "enum": ["local-sklearn", "colab-sklearn", "colab-spark-ml", "kaggle-sklearn", "bqml-export", "databricks-export"] },
-    "biTarget": { "enum": ["evidence", "evidence-and-dive"] },
-    "dbtIntegration": { "enum": ["plain", "cosmos"] },
-    "labelAsOf": { "type": ["string", "null"], "format": "date-time", "pattern": "Z$" },
-    "materializationLimitMb": { "type": "integer", "minimum": 16, "maximum": 4096 }
-  }
+    "version": {
+      "enum": [
+        "1.5",
+        "1.6",
+        "1.7"
+      ]
+    },
+    "pipelineMode": {
+      "enum": [
+        "full-batch",
+        "incremental-cdc",
+        "scd2",
+        "late-arrival-backfill",
+        "quality-quarantine",
+        "ml-features"
+      ]
+    },
+    "mlTarget": {
+      "enum": [
+        "local-sklearn",
+        "colab-sklearn",
+        "colab-spark-ml",
+        "kaggle-sklearn",
+        "bqml-export",
+        "databricks-export"
+      ]
+    },
+    "biTarget": {
+      "enum": [
+        "evidence",
+        "evidence-and-dive"
+      ]
+    },
+    "dbtIntegration": {
+      "enum": [
+        "plain",
+        "cosmos"
+      ]
+    },
+    "labelAsOf": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "materializationLimitMb": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 4096
+    },
+    "goal": {
+      "enum": [
+        "data-only",
+        "kpi-semantic",
+        "specific-ml",
+        "automl"
+      ]
+    },
+    "stopAfter": {
+      "enum": [
+        "generate",
+        "bronze",
+        "silver",
+        "gold",
+        "semantic",
+        "analysis",
+        "report",
+        "publish"
+      ]
+    },
+    "selectedKpis": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "order_count",
+          "gross_sales_amount",
+          "return_rate",
+          "on_time_delivery_rate",
+          "average_review_rating"
+        ]
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "none",
+            "sklearn",
+            "spark-ml",
+            "mljar"
+          ]
+        },
+        "runtime": {
+          "enum": [
+            "local",
+            "colab",
+            "kaggle",
+            "databricks-export"
+          ]
+        },
+        "problemType": {
+          "const": "binary_classification"
+        },
+        "target": {
+          "const": "is_dissatisfied_14d"
+        },
+        "algorithm": {
+          "enum": [
+            "dummy",
+            "logistic_regression",
+            "random_forest",
+            "histogram_gradient_boosting",
+            "gradient_boosting",
+            null
+          ]
+        },
+        "mode": {
+          "enum": [
+            "Explain",
+            "Perform",
+            "Compete"
+          ]
+        },
+        "totalTimeLimitSeconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 3600
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 90,
+          "maximum": 7200
+        },
+        "execute": {
+          "type": "boolean"
+        },
+        "requireExecution": {
+          "type": "boolean"
+        },
+        "datasetId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,95}/[A-Za-z0-9][A-Za-z0-9_-]{0,95}$"
+        },
+        "kernelId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,95}/[A-Za-z0-9][A-Za-z0-9_-]{0,95}$"
+        },
+        "versionDataset": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "publishTargets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "huggingface",
+              "motherduck"
+            ]
+          },
+          "execute": {
+            "type": "boolean"
+          },
+          "requireExecution": {
+            "type": "boolean"
+          },
+          "public": {
+            "type": "boolean"
+          },
+          "createDive": {
+            "type": "boolean"
+          },
+          "database": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,95}$"
+          },
+          "modelRepoId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,95}/[A-Za-z0-9][A-Za-z0-9_-]{0,95}$"
+          },
+          "spaceRepoId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,95}/[A-Za-z0-9][A-Za-z0-9_-]{0,95}$"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      }
+    },
+    "recipe": {
+      "$ref": "wrangling-recipe.schema.json"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "version": {
+            "const": "1.7"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "then": {
+        "required": [
+          "goal",
+          "stopAfter",
+          "selectedKpis",
+          "analysis",
+          "publishTargets"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "goal"
+              ]
+            },
+            {
+              "required": [
+                "stopAfter"
+              ]
+            },
+            {
+              "required": [
+                "selectedKpis"
+              ]
+            },
+            {
+              "required": [
+                "analysis"
+              ]
+            },
+            {
+              "required": [
+                "publishTargets"
+              ]
+            },
+            {
+              "required": [
+                "recipe"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
 }
