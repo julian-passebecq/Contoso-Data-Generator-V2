@@ -1,8 +1,10 @@
-# V1.3.1 runtime and source-control evidence
+# V1.4.0 planning implementation evidence
 
 The audited baseline is `407c1d250addb7b3f0cc3f9ce21f5ae676c2132d`.
-The V1.3.1 implementation is verified locally; baseline GitHub results do not
-describe unpushed changes.
+This records the local planning audit before publication as V1.4.0 in
+`ec1ea2d6bb2e408480277ef11eef46333de00939`. The baseline GitHub results below
+are historical; see [the V1.4.0 release-fix report](v1.4-release-fix.md) for the
+subsequent compatibility diagnosis and focused validation.
 
 ## Baseline GitHub checks
 
@@ -102,4 +104,4 @@ namespace/release or cluster and a fresh run ID, preserving the existing release
 The successful earlier local-GitSync cycle and hosted BigQuery jobs remain
 documented in [V1.3 Minikube evidence](v1.3-minikube-live.md). They are not promoted
 to public-GitHub evidence. No new BigQuery load, cloud infrastructure apply or
-BigQuery ML training is implied by the V1.3.1 offline planner checks.
+BigQuery ML training is implied by the V1.4.0 offline planner checks.

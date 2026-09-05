@@ -12,6 +12,52 @@ public sealed class PlannerTests
         SourceProject = ForgeTestProject.CreateSmallSpec(), Architecture = new() { PresetId = preset }
     };
 
+    [Theory]
+    [InlineData("free-gcp-lab", "generated")]
+    [InlineData("free-gcp-connect", "generated")]
+    [InlineData("local-fast", "reference-only")]
+    [InlineData("open-lakehouse-iceberg", "reference-only")]
+    public void OverallImplementationRespectsPresetStagesAndNeverClaimsExecution(string preset, string expected)
+    {
+        foreach (var scenario in new[] { ScenarioCatalog.DefaultScenarioId, ScenarioCatalog.MlScenarioId })
+        {
+            var plan = PlanBuilder.Build(ScenarioCatalog.Apply(Project(preset), scenario));
+            Assert.Contains(plan.Stages, stage => stage.ImplementationStatus == expected);
+            Assert.Equal(expected, plan.OverallImplementationStatus);
+            Assert.Equal("not-executed", plan.CurrentExecutionStatus);
+            using var json = JsonDocument.Parse(PlanBuilder.ToJson(plan));
+            Assert.Equal(expected, json.RootElement.GetProperty("overallImplementationStatus").GetString());
+            Assert.Equal("not-executed", json.RootElement.GetProperty("currentExecutionStatus").GetString());
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false, false, "runnable")]
+    [InlineData(false, false, true, "generated")]
+    [InlineData(false, true, false, "reference-only")]
+    [InlineData(false, true, true, "reference-only")]
+    [InlineData(true, false, false, "unsupported")]
+    [InlineData(true, false, true, "unsupported")]
+    [InlineData(true, true, false, "unsupported")]
+    [InlineData(true, true, true, "unsupported")]
+    public void MixedImplementationStatusesUseConservativePrecedence(bool unsupported, bool reference, bool generated, string expected)
+    {
+        var project = Project("free-gcp-connect");
+        project.Architecture.Overrides.Orchestrator = reference ? "airflow-docker" : "none";
+        project.Architecture.Overrides.Iac = generated ? "opentofu" : "none";
+        var pipeline = DefaultPipeline(project);
+        if (unsupported) pipeline.Activities.Single(activity => activity.Id == "verify_source").Enabled = false;
+
+        var plan = PlanBuilder.Build(project, PipelineDocument.Write(pipeline));
+        Assert.Contains(plan.Stages, stage => stage.ImplementationStatus == "executed");
+        Assert.Contains(plan.Stages, stage => stage.ImplementationStatus == "runnable");
+        Assert.Equal(unsupported, plan.Stages.Any(stage => stage.ImplementationStatus == "unsupported"));
+        Assert.Equal(reference, plan.Stages.Any(stage => stage.ImplementationStatus == "reference-only"));
+        Assert.Equal(generated, plan.Stages.Any(stage => stage.ImplementationStatus == "generated"));
+        Assert.Equal(expected, plan.OverallImplementationStatus);
+        Assert.Equal("not-executed", plan.CurrentExecutionStatus);
+    }
+
     [Fact]
     public void RepeatedPlanPreservesInputAndContainsNoRunIdentityOrMachineState()
     {

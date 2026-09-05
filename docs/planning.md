@@ -56,6 +56,8 @@ The shared resolver requires Git only for `dagSource=github-gitsync`. Local DAG/
 
 Validation uses `declared -> generated -> parses -> executes -> tested -> reconciled`. Implementation status is independently reported as `executed`, `runnable`, `generated`, `reference-only` or `unsupported`. Every evidence entry explains its scope and points to a versioned observation. Historical adapter success never means the current project ran: each new plan explicitly reports `currentExecutionStatus=not-executed`.
 
+`overallImplementationStatus` uses the most conservative stage status: `unsupported > reference-only > generated > runnable`. Historically `executed` adapters contribute runnable capability; they never promote a new plan to executed. Generated deployment stages keep `free-gcp-connect` at `generated`, while `local-fast` and `open-lakehouse-iceberg` remain `reference-only`.
+
 Hosted classic and Connect-local Spark have separate evidence. The successful native BigQuery/dbt runs used classic mode. Minikube's prior successful result adoption used a local Git server. These observations do not prove the full composed Connect-to-BigQuery-to-public-GitHub architecture. IaC parsing is not infrastructure apply. Native ML feature SQL and offline label viability are not model training.
 
 No final Power BI TMDL deployment is added. The JSON bridge preserves project/resolution/run/truth manifests and source, Gold, semantic intent and KPI models, alongside the optional resolved plan. The repository's existing semantic-intent starter is named `models/semantic_model.json`; the pack's conceptual `models/semantic_intent.json` name is mapped to that actual artifact. Planning neither renames the legacy file nor advertises a nonexistent replacement.

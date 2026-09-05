@@ -1,6 +1,8 @@
 using DatabaseGenerator.Forge.Pipeline;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 
 namespace DatabaseGenerator.Tests;
 
@@ -43,6 +45,28 @@ public sealed class PipelineContractTests
             Assert.Contains("--work-order", runtime);
             Assert.True(File.Exists(Path.Combine(root, "pipeline/graph.mmd")));
             Assert.Empty(PipelineCompiler.Validate(File.ReadAllText(Path.Combine(root, "pipeline.json"))));
+        });
+    }
+
+    [Fact]
+    public void EmbeddedAirflowPlanPreservesAuditedV13NewlinesAndMatchesStandalonePlan()
+    {
+        WithTemp(root =>
+        {
+            PipelineCompiler.Compile(PipelineCompiler.CreateDefault(Resolved), Resolved, root);
+            var dag = File.ReadAllText(Path.Combine(root, "airflow/dags/contoso_forge_pipeline.py"));
+            var match = Regex.Match(dag, "base64\\.b64decode\\(\"(?<plan>[A-Za-z0-9+/=]+)\"\\)");
+            Assert.True(match.Success);
+            var embedded = Convert.FromBase64String(match.Groups["plan"].Value);
+            var local = File.ReadAllText(Path.Combine(root, "local_plan.json"));
+            Assert.DoesNotContain("\r", local);
+            Assert.DoesNotContain("\r", dag);
+            Assert.EndsWith("}\n", local);
+            // V1.3's audited Windows payload has CRLF indentation and one final LF.
+            // Check the decoded bytes: normalizing the outer DAG cannot reach Base64.
+            var audited = local[..^1].Replace("\n", "\r\n") + "\n";
+            Assert.Equal(Encoding.UTF8.GetBytes(audited), embedded);
+            Assert.Equal(local, Encoding.UTF8.GetString(embedded).Replace("\r\n", "\n"));
         });
     }
 

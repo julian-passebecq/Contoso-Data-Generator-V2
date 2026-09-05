@@ -1,6 +1,6 @@
 # Contoso Data Generator V2
 
-V1.3.1 adds an offline C# architecture planner: choose a business scenario and preset, inspect the resolved DAG, manual checkpoints and evidence, then compile. The explicit free-gcp-connect preset preserves free-gcp-lab classic behavior. See [planning and CLI usage](docs/planning.md) and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
+Contoso Forge V1.4.0 adds an offline C# architecture planner: choose a business scenario and preset, inspect the resolved DAG, manual checkpoints and evidence, then compile. The explicit free-gcp-connect preset preserves free-gcp-lab classic behavior. See [planning and CLI usage](docs/planning.md) and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
 
 
 
@@ -12,7 +12,7 @@ New Studio projects default to `free-gcp-lab`: GitHub + Minikube/Airflow 3/Helm/
 
 See [the preset and compiler guide](docs/free-gcp-lab.md) for initialization, compilation, Colab work orders, reconciliation, and validation limits. The original V1 commands and backends below remain available without modification.
 
-V1.3 adds an optional [WPF Pipeline Studio](ContosoForge.PipelineStudio/README.md), separately verified [classic and Spark Connect modes](docs/colab-spark-modes.md), strict returned-runtime evidence, and generated dbt-bigquery/BigQuery ML adapters. Hosted Colab, native BigQuery Sandbox and the corrected native dbt run have successful execution evidence: 24 models and 121 tests passed with exact Gold KPI reconciliation. The [live Minikube report](docs/v1.3-minikube-live.md) records real GitSync and returned-result reconciliation. Native ML feature SQL works; model training remains unvalidated. See [the current handoff](HANDOFF.md) for exact results and remaining work.
+V1.3 introduced an optional [WPF Pipeline Studio](ContosoForge.PipelineStudio/README.md), separately verified [classic and Spark Connect modes](docs/colab-spark-modes.md), strict returned-runtime evidence, and generated dbt-bigquery/BigQuery ML adapters. Hosted Colab, native BigQuery Sandbox and the corrected native dbt run have successful execution evidence: 24 models and 121 tests passed with exact Gold KPI reconciliation. The [live Minikube report](docs/v1.3-minikube-live.md) records real GitSync and returned-result reconciliation. Native ML feature SQL works; model training remains unvalidated. See [the current handoff](HANDOFF.md) for exact results and remaining work.
 
 For a larger ML-ready sample, generate `examples/free-gcp-bqml.project.json`. Its optional `generation.timeSpanDays: 365` produces 1,200 orders with viable chronological splits after the 14-day embargo; omitting the field preserves the original 60-day horizon. Configure its project/dataset before issuing a cloud work order:
 

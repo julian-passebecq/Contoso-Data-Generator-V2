@@ -10,7 +10,7 @@
         <Grid.RowDefinitions><RowDefinition Height="39" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="Contoso Forge" Foreground="White" FontSize="24" FontWeight="SemiBold" />
-          <TextBlock Text="PIPELINE STUDIO  /  V1.3.1" Foreground="#A3CDD1" Margin="21,10,0,0" FontSize="11" />
+          <TextBlock Text="PIPELINE STUDIO  /  V1.4.0" Foreground="#A3CDD1" Margin="21,10,0,0" FontSize="11" />
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" Text="LOCAL AUTHORING · LIVE EVIDENCE TRACKED SEPARATELY" Foreground="#A3CDD1" FontSize="10" Margin="0,11,0,0" />
         <WrapPanel Grid.Row="1" VerticalAlignment="Center">

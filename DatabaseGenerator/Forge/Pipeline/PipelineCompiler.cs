@@ -140,7 +140,10 @@ public static class PipelineCompiler
     {
         var (pipeline, plan, order, settings) = Prepare(pipelineJson, resolvedProjectJson);
         var canonical = JsonSerializer.Serialize(pipeline, PipelineJsonContext.Default.PipelineDefinition) + "\n";
-        var planJson = JsonSerializer.Serialize(plan, PipelineJsonContext.Default.PipelineExecutionPlan) + "\n";
+        // V1.3's audited Base64 payload used Windows JSON indentation plus a final LF.
+        // Pin those bytes on every OS before encoding; Write normalizes standalone JSON to LF.
+        var planJson = JsonSerializer.Serialize(plan, PipelineJsonContext.Default.PipelineExecutionPlan)
+            .Replace("\r\n", "\n").Replace("\n", "\r\n") + "\n";
         var root = Path.GetFullPath(outputRoot);
         Write(root, "pipeline.json", canonical);
         Write(root, "local_plan.json", planJson);

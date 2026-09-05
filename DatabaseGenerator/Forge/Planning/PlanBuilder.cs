@@ -125,8 +125,12 @@ public static class PlanBuilder
         if (settings.Runtime == "docker" && settings.Engine == "spark")
             plan.Warnings.Add("The existing V1 Docker Spark/Delta/dbt reference exporter is preserved. The neutral engine-transform activity is not an implemented Docker runner mapping.");
         var unsupported = compilation.Activities.Any(a => a.Operation == "unsupported") || plan.Stages.Any(s => s.ImplementationStatus == "unsupported");
-        var reference = plan.Stages.Any(s => s.ImplementationStatus == "reference-only");
-        plan.OverallImplementationStatus = unsupported ? (reference ? "reference-only" : "unsupported") : "runnable";
+        // Aggregate stage implementation, including deployment prerequisites. Historical
+        // "executed" adapters contribute runnable capability, never execution of this project.
+        plan.OverallImplementationStatus = plan.Stages.Any(s => s.ImplementationStatus == "unsupported") ? "unsupported"
+            : plan.Stages.Any(s => s.ImplementationStatus == "reference-only") ? "reference-only"
+            : plan.Stages.Any(s => s.ImplementationStatus == "generated") ? "generated"
+            : "runnable";
         // An assembled new project has no run evidence even when its individual adapters have it.
         plan.OverallReadiness = unsupported ? "declared" : "generated";
         plan.Edges = plan.Edges.DistinctBy(e => (e.From, e.To)).OrderBy(e => e.From, StringComparer.Ordinal).ThenBy(e => e.To, StringComparer.Ordinal).ToList();

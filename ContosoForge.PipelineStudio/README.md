@@ -1,4 +1,4 @@
-# Contoso Forge Pipeline Studio
+# Contoso Forge Pipeline Studio V1.4.0
 
 Optional Windows WPF architecture planner and editor targeting .NET 8. It references the existing generator, uses the shared `PlanBuilder` and edits `PipelineDefinition` and `StudioProjectSpec` directly. The cross-platform solution and all existing command-line backends remain independent of this project.
 
