@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--spark-parity", type=Path)
     parser.add_argument("--ci-runs", type=Path)
+    parser.add_argument("--checks", type=Path, help="Measured test/smoke summary with retained artifact hashes")
     args = parser.parse_args()
     gate = args.gate.resolve()
     parity = read(gate / "engine_parity.json")
@@ -25,6 +26,11 @@ def main():
     runs = [{"engine": e, "root": gate / e, "state": gate / e / ".forge/v15/v16"} for e in parity["runs"]]
     verified = compare_runs(runs, gate / "recaptured_parity.json", parity["repositoryCommit"])
     if not verified["matched"]: raise ValueError("Retained engine evidence no longer verifies")
+    if verified["tables"] != parity["tables"] or verified["source"] != parity["source"]:
+        raise ValueError("Parity table/source report changed")
+    checkout = read(gate / "checkout.json")
+    if checkout["workingTreeDirty"] or checkout["headCommit"] != parity["repositoryCommit"]:
+        raise ValueError("Release evidence requires the recorded clean implementation checkout")
     for name, binding in verified["runs"].items():
         if binding != parity["runs"][name]: raise ValueError("Retained run changed since parity")
     engines = {}
@@ -47,7 +53,7 @@ def main():
     result = {"contractVersion": "1.6-evidence-summary", "capturedAt": now(),
         "startingMainSha": "b004a4d98e65eb9693a144db17f64676470946eb", "implementationCommit": parity["repositoryCommit"],
         "scope": "Measured full local engine pipelines; separate actual Spark Silver evidence when supplied. New plans remain not-executed.",
-        "localEngines": engines, "engineParity": {"artifact": str((gate / "engine_parity.json").relative_to(REPO)),
+        "checkout": checkout, "localEngines": engines, "engineParity": {"artifact": str((gate / "engine_parity.json").relative_to(REPO)),
             "sha256": sha(gate / "engine_parity.json"), **parity},
         "sparkParity": {"status": "not-executed"},
         "unverifiedThisRelease": ["hosted Colab", "native BigQuery/BQML", "MotherDuck/Dive", "Airflow/Cosmos tasks", "Kaggle/Databricks hosting", "Minikube/GitSync deployment", "IaC apply"]}
@@ -57,7 +63,8 @@ def main():
             raise ValueError("Real successful Spark comparison required")
         spark_runs = [{"engine": e, "root": r["root"], "state": r["state"]} for e, r in spark["runs"].items()]
         checked = compare_runs(spark_runs, gate / "recaptured_spark_parity.json", spark["repositoryCommit"])
-        if not checked["matched"] or checked["runs"] != spark["runs"]: raise ValueError("Retained Spark evidence changed")
+        if not checked["matched"] or checked["runs"] != spark["runs"] or checked["tables"] != spark["tables"] or checked["source"] != spark["source"]:
+            raise ValueError("Retained Spark evidence changed")
         result["sparkParity"] = {"status": "matched", "sha256": sha(args.spark_parity), **spark}
     if args.ci_runs:
         ci = read(args.ci_runs)
@@ -65,11 +72,17 @@ def main():
         if {r["name"] for r in ci} != required or len(ci) != len(required) or len({r["headSha"] for r in ci}) != 1:
             raise ValueError("Exactly six workflows on one commit required")
         if any(r["status"] != "completed" or r["conclusion"] != "success" for r in ci): raise ValueError("All workflows must be successful")
+        if ci[0]["headSha"] != parity["repositoryCommit"]: raise ValueError("CI and measured implementation commits differ")
         result["githubActions"] = ci
     elif os.environ.get("GITHUB_RUN_ID"):
         result["currentActionsRun"] = {"runId": os.environ["GITHUB_RUN_ID"], "sha": os.environ["GITHUB_SHA"],
             "url": f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
             "status": "running-at-capture; final conclusion must be fetched after completion"}
+    if args.checks:
+        checks = read(args.checks)
+        for item in checks["artifacts"]:
+            if sha(REPO / item["path"]) != item["sha256"]: raise ValueError("Test artifact changed: " + item["path"])
+        result["checks"] = checks
     write(args.output, result)
     print(args.output)
 

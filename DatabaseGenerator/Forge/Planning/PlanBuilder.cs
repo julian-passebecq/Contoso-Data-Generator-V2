@@ -171,7 +171,12 @@ public static class PlanBuilder
                 Scope = $"Versioned local {settings.Engine} adapter evidence: real Bronze/Silver, dbt Gold/tests, independent KPI reconciliation, ML and Evidence. This planned project has not executed; report rendering and cross-engine parity require their own measured artifacts."
             });
             stage.ExecutionMode = "local-or-airflow";
-            stage.Engine = stage.CompilerOperation switch { "factory-dbt" => "dbt-duckdb", "factory-ml" or "factory-export-ml" => "scikit-learn", "factory-bi" => "evidence", _ => settings.Engine! };
+            stage.Engine = stage.CompilerOperation switch
+            {
+                "factory-silver" => settings.Engine!, "factory-verify" => "python",
+                "factory-dbt" => "dbt-duckdb", "factory-ml" or "factory-export-ml" => "scikit-learn",
+                "factory-bi" => "evidence", _ => "duckdb"
+            };
             stage.Kind = stage.CompilerOperation switch { "factory-dbt" => "analytics-transform", "factory-ml" => "ml-training", "factory-export-ml" => "ml-design", "factory-bi" => "bi-validation", _ => stage.Kind };
         }
         var gold = plan.Stages.LastOrDefault(s => s.Kind == "analytics-transform");

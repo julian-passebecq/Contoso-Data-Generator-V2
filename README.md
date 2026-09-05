@@ -1,6 +1,6 @@
 # Contoso Data Generator V2
 
-Contoso Forge V1.5 adds a business-first Data Factory, ML Lab and BI Validation flow. Opt-in local projects execute DuckDB → dbt → reconciled Gold → scikit-learn → Evidence, with BI also available when ML is disabled. Spark classic/Connect, BigQuery Sandbox, Airflow, IaC and the existing generator remain available. See the [V1.5 execution guide and evidence](docs/v1.5.md), [planning and CLI usage](docs/planning.md), and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
+Contoso Forge V1.6 adds real local Polars and pandas engines alongside DuckDB, with measured logical parity across all 13 Silver tables and a separate actual Spark 4.0.4 parity gate. The shared dbt Gold, KPI reconciliation, ML Lab and Evidence flow remains intact, as do legacy deterministic generation, Spark classic/Connect and cloud boundaries. Start with the [V1.6 execution guide](docs/v1.6.md), [canonical parity contract](docs/v1.6-canonical-encoding.md), [release evidence](docs/v1.6-evidence.json), [planning and CLI usage](docs/planning.md), and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
 
 
 

@@ -28,6 +28,9 @@ public sealed class FactoryV16Tests
         Assert.Equal("1.6", plan.Product!.Version);
         Assert.Equal(engine, plan.Stages.Single(s => s.CompilerOperation == "factory-silver").Engine);
         Assert.Equal("dbt-duckdb", plan.Stages.Single(s => s.CompilerOperation == "factory-dbt").Engine);
+        Assert.Equal("python", plan.Stages.Single(s => s.CompilerOperation == "factory-verify").Engine);
+        Assert.Equal("duckdb", plan.Stages.Single(s => s.CompilerOperation == "factory-validate-silver").Engine);
+        Assert.Equal("duckdb", plan.Stages.Single(s => s.CompilerOperation == "factory-reconcile").Engine);
         var resolved = ArchitecturePresets.ToJson(ArchitecturePresets.Resolve(project));
         var graph = PipelineCompiler.CreateDefault(resolved);
         Assert.Equal(7, PipelineCompiler.Inspect(graph, resolved).Activities.Count);
