@@ -12,8 +12,8 @@ def main():
     args = parser.parse_args()
     dag_path = args.project.resolve() / "airflow/dags/contoso_forge_pipeline.py"
     sys.path.insert(0, str(dag_path.parent))
-    from airflow.models import DagBag
-    bag = DagBag(dag_folder=str(dag_path), include_examples=False, safe_mode=False)
+    from airflow.dag_processing.dagbag import DagBag
+    bag = DagBag(dag_folder=str(dag_path), safe_mode=False)
     if bag.import_errors:
         raise RuntimeError(json.dumps(bag.import_errors, indent=2))
     if len(bag.dags) != 1:

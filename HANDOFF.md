@@ -1,3 +1,37 @@
+# Contoso Forge V1.6 final orchestration handoff — 2026-09-05
+
+Implemented the final orchestration pass on `codex/v1.6-final-orchestration-hardening`, from fetched `origin/main` at the verified PR #2 merge `35d1959c6ecb891b50ba45a47f44d373f76acac7`. [PR #3](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/pull/3) remains open; do not auto-merge. The measured implementation is `05071147fd670287b4864e6279e049c23837bfe0`. This evidence/documentation follow-up is separately gated on all seven workflows before delivery.
+
+[The orchestration guide](docs/v1.6-orchestration.md) gives the architecture, versions, commands and boundaries. [The exact evidence ledger](docs/v1.6-orchestration-evidence.json) records four real CI DagRuns and their invocation, project, warehouse, callback, manifest/run-results, Airflow metadata and report hashes. The capture script checks the GitHub archive digests and that the artifacts belong to the recorded commit/run, then verifies retained witness bytes and identities.
+
+- **Airflow 3.3.1 / Cosmos 1.15.1** executed the generated DAG using `airflow dags test`, with zero import errors and **58 successful tasks in each of four runs**. This proves complete local DagRuns, not a persistent scheduler or Kubernetes deployment.
+- Every run executed **exactly one full dbt build** through the Cosmos Watcher producer against `warehouse.duckdb`: **27 models, 135 tests, zero failures/skips**. The callback archived whole-project artifacts before Cosmos cleanup. Artifact adoption supplied the exact canonical `dbt/target/manifest.json` and `run_results.json` to reconciliation; no second plain build ran.
+- All five KPIs reconciled in all four runs. sklearn ML, BI without ML, and export-ML each passed strict Evidence production builds. The export remains `exported-not-executed`. Two no-ML DagRuns on the same generated project used different invocation IDs/nonces and could not adopt one another's evidence.
+- **250 .NET tests passed**, including all **152 audited legacy artifact hashes**. **43 new orchestration Python checks** pass in each CI matrix job, alongside the existing **123 distinct Python checks** and **three explicitly skipped optional Google-client integrations**. Release capture also rejected a different CI revision, different artifact revision and incorrect archive digest.
+- DuckDB/Polars/pandas logical parity, actual Spark 4.0.4 parity, direct dbt, ML legality/embargo/validation-only selection, Evidence, Spark classic/Connect, free-GCP and WPF gates remain green.
+- Only the evidenced V1.6 DuckDB/Cosmos dbt stage becomes `runnable`/`reconciled`, citing this ledger. Newly generated plans remain `currentExecutionStatus=not-executed`. Other Cosmos engine/product combinations remain generated. Historical direct-dbt ledgers are unchanged.
+- Active Airflow CI and explicit V1.6 Minikube exports align to 3.3.1. Byte-audited legacy/V1.5 Minikube exports retain 3.2.2; both Helm variants validate. No new cluster execution is claimed.
+
+All seven workflows succeeded on the measured implementation:
+
+| Workflow | Run |
+| --- | --- |
+| factory-v15 | [33987236497](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33987236497) |
+| factory-v16 | [33987236493](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33987236493) |
+| free-gcp-contracts | [33987236539](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33987236539) |
+| orchestration-v16 | [33987236531](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33987236531) |
+| pipeline-studio-windows | [33987236491](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33987236491) |
+| spark-parity-v16 | [33987236486](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33987236486) |
+| validate | [33987236505](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33987236505) |
+
+The final follow-up's checks are attached to PR #3. Raw workflow artifacts are `v16-orchestration-ml`, `v16-orchestration-export` and `v16-orchestration-bi` under the orchestration run; archive SHA-256 values and exact evidence file hashes are in the ledger. Live source/Silver/warehouse checks run inside CI; release capture verifies the retained artifacts and does not pretend that omitted large files were reexecuted locally.
+
+Remaining boundaries: no persistent Airflow service, managed deployment or fresh Kubernetes proof; no retry/fallback certification; other Cosmos engine/product combinations remain unverified. Integrity checks assume a trusted runtime directory. Historical hosted/cloud and ML export records retain their original scope. No V1.7, FastAPI product, Iceberg, NoSQL, Polars Cloud or new provider was added. Large-data parity sorting and generic CDC tie policies remain separate future work.
+
+---
+
+The following handoffs are historical and retain their original evidence scope.
+
 # Contoso Forge V1.6 release handoff — 2026-09-05
 
 Implemented real Polars and pandas Bronze/Silver adapters and canonical logical parity on `codex/v1.6-multi-engine-parity`, starting from merged remote main `b004a4d98e65eb9693a144db17f64676470946eb`. PR #1 and the complete V1.5 final head were verified in main before branching. The measured implementation is `4661b7df433e5265e83fd6ca9d4c1a41d139fd0d`; the final follow-up adds the ledger, stricter evidence recapture and accurate per-stage planner engine labels. The final branch is separately gated before PR delivery. Do not merge automatically.

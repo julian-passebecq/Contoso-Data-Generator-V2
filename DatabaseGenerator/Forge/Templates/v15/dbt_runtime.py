@@ -16,6 +16,8 @@ def prepare(root, state):
 
 
 def build(root, state, database_path=None):
+    if read(root / "project.json").get("product", {}).get("dbtIntegration") == "cosmos" or (state / "cosmos/attempt.json").exists():
+        raise ValueError("Cosmos requires invocation-bound artifact adoption; a second plain dbt build is forbidden")
     project = prepare(root, state)
     from datetime import datetime, timedelta, timezone
     config = read(root / "factory/ml/run_config.json")
@@ -52,6 +54,11 @@ def check_results(state):
 
 
 def reconcile(root, state, database_path=None):
+    if (state / "cosmos/attempt.json").exists():
+        from orchestration import validate_cosmos
+        result = validate_cosmos(root, state, read(state / "run_evidence.json")["runId"])
+        if database_path is not None or any(sha(state / "dbt/target" / n) != digest for n, digest in result["artifacts"].items()):
+            raise ValueError("Reconciliation must consume the exact adopted Cosmos artifacts and warehouse")
     dbt = check_results(state)
     catalog = read(root / "models/kpi_catalog.json")
     model = ".".join(identifier(part) for part in catalog["reconciliation"]["actualModel"].split("."))

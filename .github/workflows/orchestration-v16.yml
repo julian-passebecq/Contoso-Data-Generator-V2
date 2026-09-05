@@ -1,0 +1,83 @@
+name: orchestration-v16
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  airflow-cosmos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        downstream: [ml, bi, export]
+    env:
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve the compiler and install isolated pinned runtimes
+        run: |
+          dotnet build DatabaseGenerator --configuration Release
+          python -m venv .venv-factory
+          .venv-factory/bin/pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt
+          .venv-factory/bin/pip check
+          python -m venv .venv-airflow
+          .venv-airflow/bin/pip install apache-airflow==3.3.1 apache-airflow-providers-standard --constraint https://raw.githubusercontent.com/apache/airflow/constraints-3.3.1/constraints-3.12.txt
+          .venv-airflow/bin/pip install apache-airflow==3.3.1 astronomer-cosmos==1.15.1
+          .venv-airflow/bin/pip check
+      - name: Generate the selected downstream contract
+        env:
+          DOWNSTREAM: ${{ matrix.downstream }}
+        run: |
+          python scripts/generate_orchestration_fixture.py --downstream "$DOWNSTREAM" --output out/cosmos
+          .venv-factory/bin/python out/cosmos/factory/prepare_cosmos.py --root out/cosmos
+      - name: Fail closed on orchestration evidence mutations
+        run: .venv-factory/bin/python scripts/test_orchestration.py -v
+      - name: Discover the generated DAG and execute all tasks including strict Evidence build
+        run: |
+          export FORGE_FACTORY_PYTHON="$PWD/.venv-factory/bin/python"
+          export FORGE_DBT_EXECUTABLE="$PWD/.venv-factory/bin/dbt"
+          .venv-airflow/bin/python scripts/run_orchestration.py --root out/cosmos --airflow-home "$PWD/out/airflow-first"
+      - name: A second real DagRun must produce its own artifacts
+        if: matrix.downstream == 'bi'
+        run: |
+          export FORGE_FACTORY_PYTHON="$PWD/.venv-factory/bin/python"
+          export FORGE_DBT_EXECUTABLE="$PWD/.venv-factory/bin/dbt"
+          .venv-airflow/bin/python scripts/run_orchestration.py --root out/cosmos --airflow-home "$PWD/out/airflow-second" --logical-date '2026-09-06T00:00:00+00:00'
+          .venv-factory/bin/python scripts/check_orchestration_runs.py --root out/cosmos --expected-runs 2
+      - name: Validate retained execution and downstream evidence
+        if: matrix.downstream != 'bi'
+        run: .venv-factory/bin/python scripts/check_orchestration_runs.py --root out/cosmos --expected-runs 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v16-orchestration-${{ matrix.downstream }}
+          include-hidden-files: true
+          path: |
+            out/cosmos/.forge/v15/*/*.json
+            out/cosmos/.forge/v15/*/*.log
+            out/cosmos/.forge/v15/*/cosmos/
+            out/cosmos/.forge/v15/*/dbt/target/
+            out/cosmos/.forge/v15/*/ml/
+            out/cosmos/.forge/v15/*/exports/
+            out/cosmos/.forge/v15/*/bi/*.json
+            out/cosmos/.forge/v15/*/bi/*.log
+            out/cosmos/.forge/v15/*/bi/evidence/build/index.html
+            out/airflow-*/*.json
+            out/airflow-*/*.log

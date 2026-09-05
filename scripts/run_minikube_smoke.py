@@ -134,10 +134,10 @@ def main():
         exe = [*kn, "exec", scheduler["metadata"]["name"], "-c", "scheduler", "--"]
         code = """import os,sys,json,hashlib
 from pathlib import Path
-from airflow.models import DagBag
+from airflow.dag_processing.dagbag import DagBag
 root=Path(os.environ['FORGE_PROJECT_ROOT']); path=root/'airflow/dags/contoso_forge_pipeline.py'
 sys.path.insert(0,str(path.parent))
-bag=DagBag(dag_folder=str(path),include_examples=False,safe_mode=False)
+bag=DagBag(dag_folder=str(path),safe_mode=False)
 report={'dagSha256':hashlib.sha256(path.read_bytes()).hexdigest(),'dagIds':sorted(bag.dags),
         'taskIds':{k:sorted(v.task_ids) for k,v in bag.dags.items()},'importErrors':bag.import_errors,
         'projectRoot':str(root),'resolvedCheckout':str(root.resolve())}
