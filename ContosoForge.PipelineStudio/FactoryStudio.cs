@@ -32,7 +32,7 @@ public partial class MainWindow
     {
         if (MlDesignPreview is null) return;
         var settings = ArchitecturePresets.Resolve(Session.Project).Settings;
-        OrchestrationDetails.Text = $"Engine: {settings.Engine} Â· Warehouse: {settings.Warehouse} Â· Orchestrator: {settings.Orchestrator} Â· Host: {settings.AirflowHost ?? settings.Orchestrator} Â· Executor: {settings.Executor ?? "preset default"}. The selected engine produces Silver; dbt produces Gold.";
+        OrchestrationDetails.Text = $"Engine: {settings.Engine} · Warehouse: {settings.Warehouse} · Orchestrator: {settings.Orchestrator} · Host: {settings.AirflowHost ?? settings.Orchestrator} · Executor: {settings.Executor ?? "preset default"}. The selected engine produces Silver; dbt produces Gold.";
         MlDesignPreview.Text = Session.Project.BusinessScenario == ScenarioCatalog.MlScenarioId
             ? JsonSerializer.Serialize(new MlExperimentDesign { RuntimeTarget = Session.Project.Product?.MlTarget ?? "local-sklearn" }, PlanningJsonContext.Default.MlExperimentDesign)
             : "ML is disabled for this business scenario. BI & Validation remains available. Select Retail Customer Satisfaction ML to derive a delivery-time experiment.";
