@@ -19,6 +19,8 @@ public static class ArchitecturePresets
         Preset("free-gcp-full", "GCP billing-enabled free-usage lab", "spark", "google-colab", "airflow-minikube", "gcs", "none", "bigquery", "gcp-free-tier-billing-enabled"),
         Preset("local-spark", "Existing V1 Spark / Docker reference", "spark", "docker", "airflow-docker", "local", "delta", "duckdb", "local"),
         Preset("local-fast", "Local Fast / DuckDB (V1.5 opt-in)", "duckdb", "local-process", "local-sequential", "local", "none", "duckdb", "local"),
+        LocalEngine("local-polars", "Local Polars / DuckDB Gold", "polars"),
+        LocalEngine("local-pandas", "Local pandas / DuckDB Gold", "pandas"),
         LocalProfile("local-airflow", "Local Airflow / Docker or Codespaces", "duckdb", "airflow", "docker-local"),
         LocalProfile("motherduck-lite", "MotherDuck Lite / Gold / Dive", "motherduck", "local-sequential", null),
         Preset("external-sink", "External sink / export only", "spark", "docker", "local-sequential", "local", "none", "none", "external"),
@@ -77,6 +79,13 @@ public static class ArchitecturePresets
     }
 
     public static string ToJson(ResolvedProject project) => JsonSerializer.Serialize(project, ArchitectureJsonContext.Default.ResolvedProject);
+
+    private static ArchitecturePreset LocalEngine(string id, string name, string engine)
+    {
+        var preset = Preset(id, name, engine, "local-process", "local-sequential", "local", "none", "duckdb", "local");
+        preset.Defaults.Iac = "none";
+        return preset;
+    }
 
     private static ArchitecturePreset LocalProfile(string id, string name, string warehouse, string orchestrator, string? host)
     {

@@ -5,7 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "version": { "const": "1.5" },
+    "version": { "enum": ["1.5", "1.6"] },
     "pipelineMode": { "enum": ["full-batch", "incremental-cdc", "scd2", "late-arrival-backfill", "quality-quarantine", "ml-features"] },
     "mlTarget": { "enum": ["local-sklearn", "colab-sklearn", "colab-spark-ml", "kaggle-sklearn", "bqml-export", "databricks-export"] },
     "biTarget": { "enum": ["evidence", "evidence-and-dive"] },

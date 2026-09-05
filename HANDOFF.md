@@ -1,3 +1,35 @@
+# Contoso Forge V1.6 release handoff — 2026-09-05
+
+Implemented real Polars and pandas Bronze/Silver adapters and canonical logical parity on `codex/v1.6-multi-engine-parity`, starting from merged remote main `b004a4d98e65eb9693a144db17f64676470946eb`. PR #1 and the complete V1.5 final head were verified in main before branching. The measured implementation is `4661b7df433e5265e83fd6ca9d4c1a41d139fd0d`; the final follow-up adds the ledger, stricter evidence recapture and accurate per-stage planner engine labels. The final branch is separately gated before PR delivery. Do not merge automatically.
+
+[The V1.6 guide](docs/v1.6.md), [canonical encoding specification](docs/v1.6-canonical-encoding.md) and [machine-readable evidence ledger](docs/v1.6-evidence.json) describe the executable behavior and retained measurements.
+
+- `local-fast` remains DuckDB; `local-polars` and `local-pandas` use real DataFrame transformations, typed CSV ingestion and persisted Parquet. Existing C# contracts, compiler, graph and Studio remain authoritative. `product.version=1.6` is additive; V1.5 and legacy defaults remain supported. Studio displays the selected Silver engine and shared warehouse. Source verification uses Python; independent persisted-count/KPI checks and the warehouse use DuckDB.
+- All three local engine runs under `out/v16-release/<engine>/.forge/v15/v16/` passed seven stages: **27 dbt models, 135 tests, zero failures/skips**, all five Gold KPI reconciliations, four sklearn candidates with preserved legality/embargo/validation-only selection, and strict Evidence production builds. Runtime versions, report HTML hashes, model metrics hashes and source/run identities are captured in the ledger. Local Node 21.7.1 builds passed; CI repeats with Node 22.
+- `out/v16-release/engine_parity.json` is a real successful DuckDB/Polars/pandas comparison. **All 13 governed Silver tables / 10,477 rows match** in logical schema, key/multiplicity, row/null counts and canonical SHA-256. The source fingerprint is `8333b366a8a76ada6b1e4102fdc2a9a0bae9f97b041811ff70857cc27e90a8ad`. Physical Parquet integrity and logical hashes are distinct checks.
+- `out/v16-release/spark_engine_parity.json` also matches every table after actual Spark **4.0.4** classic execution in WSL/Java 17. This is explicitly **Bronze/Silver-only Spark parity**, not a new full local Spark factory preset or hosted execution claim. The dedicated Spark CI artifact independently matches the local logical hashes. Existing classic and true Connect checks remain green.
+- **246 .NET tests passed**, including all 152 audited legacy artifact hashes. **123 distinct Python checks passed**, with **three optional Google-client integrations skipped**. V1.5's 19 checks also ran separately for each local engine. The 34 new checks cover encoding, value/key/null/empty/schema mutations, bounded diagnostics, persisted tampering, duplicate replay, empty optional tables, quarantine and the exact 24-hour lag boundary. Tests prohibit DuckDB connections inside Polars/pandas transformations. Five intentionally failed comparison reports are retained under `artifacts/v16/negative-parity/`.
+- Four local WPF smokes passed: legacy, V1.5, Polars and pandas. The Windows workflow repeats all four and renders the actual UI. Pending edits, shared compiler identity, selected-engine visibility and save/load/compile are verified.
+
+All six workflows passed on measured implementation `4661b7d`:
+
+| Workflow | Successful run |
+| --- | --- |
+| validate | [33980017294](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33980017294) |
+| pipeline-studio-windows | [33980017409](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33980017409) |
+| free-gcp-contracts | [33980017283](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33980017283) |
+| factory-v15 | [33980017342](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33980017342) |
+| factory-v16 | [33980017309](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33980017309) |
+| spark-parity-v16 | [33980017334](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33980017334) |
+
+The final evidence/label follow-up must also pass these workflows; its final checks are attached to the V1.6 PR. The ledger deliberately records the completed measured implementation rather than inventing its own future commit SHA or future Actions IDs.
+
+Run the reproduction commands in the guide with fresh output locations. Capture rejects changed source/run/Parquet/report artifacts, modified table reports, dirty recorded implementation checkouts, and CI records from another implementation revision. Raw outputs, npm packages, databases and credentials remain untracked.
+
+Remaining boundaries: Cosmos/Airflow task execution, native MotherDuck/Dive, hosted notebooks, native BigQuery/BQML and infrastructure deployments are not recertified by V1.6. Historical evidence remains historical. FastAPI, Polars Cloud, Iceberg and NoSQL were not added. The comparator materializes tables and sorts canonical rows, so large-data parity needs bounded external sorting. Conflicting CDC events with identical precedence fields need a governed tie policy before external ingestion expands. Cosmos still needs invocation-bound task evidence before removing its duplicate dbt build. These are explicit later concerns, not fabricated release proofs.
+
+---
+
 # V1.5 hardening audit — 2026-09-05
 
 Hardened the existing `codex/v1.5-data-factory` branch in implementation commit `172525abccd8661aba801925ee7cc61ffa352d4f`. The architecture remains unchanged. [The hardening design note](docs/v1.5-hardening.md) describes the exact controls, threshold policy, dependency trial and remaining boundaries. [The recaptured evidence ledger](docs/v1.5-evidence.json) binds local output hashes and all four successful GitHub Actions runs to this implementation. The subsequent documentation/evidence commit is also gated on all four workflows before PR creation; its checks are available on the PR. Do not merge automatically.
