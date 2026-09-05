@@ -48,7 +48,7 @@ public sealed class ProductDesign
     public string BusinessProblem { get; set; } = "Customer satisfaction and fulfillment";
     public string OperationalDecision { get; set; } = "Identify fulfillment problems and prioritize customer follow-up at delivery.";
     public string GenerationContract { get; set; } = "sourceProject.generation and sourceProject.problems";
-    public string DataBehavior { get; set; } = "Deterministic duplicates, CDC insert/update/delete, SCD2, late arrivals and quarantined rows. Injector prevalence, noise and causal strength are fixed in this scenario; quantity and horizon are configurable.";
+    public string DataBehavior { get; set; } = "Deterministic duplicates, CDC insert/update/delete, SCD2, late arrivals and quarantined rows. Quantity/horizon are configurable. Optional sourceProject.generation.ml profile causal-v1 controls positiveOutcomeRate, signalStrength and noiseLevel for subsequent review/survey outcomes; omission preserves legacy data.";
     public string PipelineMode { get; set; } = "full-batch";
     public string ModeSemantics { get; set; } = "Reproducible batch replay; selected CDC/SCD2/backfill/quality modes focus the existing injected exercises, not a persistent streaming service.";
     public string Orchestrator { get; set; } = "local-sequential";

@@ -155,9 +155,16 @@ public static class PlanBuilder
         };
         foreach (var stage in plan.Stages.Where(s => s.CompilerOperation.StartsWith("factory-", StringComparison.Ordinal)))
         {
-            stage.ImplementationStatus = stage.CompilerOperation == "factory-export-ml" ? "generated" : "runnable";
-            stage.ValidationLevel = stage.CompilerOperation == "factory-export-ml" ? "generated" : "reconciled";
-            if (stage.CompilerOperation != "factory-export-ml") stage.Evidence.Add(new()
+            var generatedOnly = stage.CompilerOperation == "factory-export-ml" || (intent.DbtIntegration == "cosmos" && stage.CompilerOperation == "factory-dbt");
+            stage.ImplementationStatus = generatedOnly ? "generated" : "runnable";
+            stage.ValidationLevel = generatedOnly ? "generated" : "reconciled";
+            if (intent.DbtIntegration == "cosmos" && stage.CompilerOperation == "factory-dbt")
+            {
+                stage.Evidence.Clear();
+                stage.Reason = "Cosmos is generated/unverified. The TaskGroup runs dbt, then a second plain dbt build records authoritative results. Promotion requires real task execution with unambiguous results from both invocations.";
+                plan.Warnings.Add(stage.Reason);
+            }
+            if (!generatedOnly) stage.Evidence.Add(new()
             {
                 Id = "v15-local-duckdb-dbt-sklearn-bi", Reference = "docs/v1.5-evidence.json", ValidationLevel = "reconciled",
                 Scope = "V1.5 local 60-order BI and 1200-order ML fixtures executed DuckDB, 27 dbt models/135 tests, five KPI reconciliations and Evidence package generation. Four sklearn candidates produced measured metrics. This planned project has not executed; report rendering is recorded separately."

@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from common import read, write, sha, now
-from ml_lab import FEATURES, NUMERIC, CATEGORICAL, TARGET, temporal_split, evaluate
+from ml_lab import FEATURES, NUMERIC, CATEGORICAL, TARGET, temporal_split, evaluate, select_validation_threshold, BASELINE_THRESHOLD
 
 
 def train(features, config, spec, output):
@@ -31,24 +31,38 @@ def train(features, config, spec, output):
         estimators = {"logistic_regression": LogisticRegression(labelCol=TARGET, maxIter=100),
                       "random_forest": RandomForestClassifier(labelCol=TARGET, numTrees=100, maxDepth=5, seed=seed),
                       "gradient_boosting": GBTClassifier(labelCol=TARGET, maxIter=30, maxDepth=3, seed=seed)}
-        metrics, predictions = {}, []
+        metrics, predictions, fitted_models, threshold_analysis = {}, [], {}, {}
         prior = float(data.loc[data.split_name == "train", TARGET].mean())
-        for name, estimator in [("dummy", None), *estimators.items()]:
-            fitted = Pipeline(stages=indexers + [encoder, imputer, assembler, estimator]).fit(training) if estimator is not None else None
-            metrics[name] = {}
-            for split in ("validation", "test"):
+        selected = None
+        for split in ("validation", "test"):
+            # The selected model and all operating thresholds are frozen before test.
+            if split == "test":
+                selected = max(metrics, key=lambda n: (metrics[n]["validation"]["average_precision"], n))
+            for name, estimator in [("dummy", None), *estimators.items()]:
+                if split == "validation":
+                    fitted_models[name] = Pipeline(stages=indexers + [encoder, imputer, assembler, estimator]).fit(training) if estimator is not None else None
+                    metrics[name] = {}
+                fitted = fitted_models[name]
                 subset = frame.filter(F.col("split_name") == split)
                 observed = (fitted.transform(subset).select("order_key", TARGET, vector_to_array("probability")[1].alias("probability"))
                             if fitted else subset.select("order_key", TARGET, F.lit(prior).alias("probability"))).orderBy("order_key").toPandas()
-                metrics[name][split] = evaluate(observed[TARGET], observed.probability.to_numpy(), config["threshold"])
+                probability = observed.probability.to_numpy()
+                metrics[name][split] = evaluate(observed[TARGET], probability, BASELINE_THRESHOLD)
+                if split == "validation":
+                    threshold_analysis[name] = select_validation_threshold(observed[TARGET], probability)
+                else:
+                    threshold_analysis[name]["test"] = evaluate(observed[TARGET], probability, threshold_analysis[name]["threshold"])
+                observed["prediction"] = (probability >= BASELINE_THRESHOLD).astype(int)
+                observed["selected_threshold"] = threshold_analysis[name]["threshold"]
+                observed["prediction_at_selected_threshold"] = (probability >= threshold_analysis[name]["threshold"]).astype(int)
                 observed["algorithm"], observed["split_name"] = name, split
                 predictions.append(observed)
         output.mkdir(parents=True, exist_ok=True)
         pd.concat(predictions).to_parquet(output / "predictions.parquet", index=False)
-        selected = max(metrics, key=lambda n: (metrics[n]["validation"]["average_precision"], n))
         result = {"status": "executed", "framework": "spark-ml", "sparkVersion": spark.version, "completedAt": now(),
                   "identity": {"featureSha256": sha(features)}, "partitions": partitions, "models": metrics, "selectedModel": selected,
-                  "selectedBy": "validation Average Precision only", "embargoDays": 14}
+                  "selectedBy": "validation Average Precision only", "embargoDays": 14,
+                  "baselineThreshold": BASELINE_THRESHOLD, "thresholdAnalysis": threshold_analysis}
         write(output / "metrics.json", result)
         return result
     finally: spark.stop()

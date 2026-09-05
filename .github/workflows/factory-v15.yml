@@ -31,18 +31,23 @@ jobs:
         run: |
           dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project examples/v15-local-bi.project.json --output out/v15-bi
           dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project examples/v15-local-ml.project.json --output out/v15-ml
+          dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project examples/v15-local-ml-causal.project.json --output out/v15-ml-causal
           python scripts/validate_studio_artifacts.py --project out/v15-bi
           python scripts/validate_studio_artifacts.py --project out/v15-ml
+          python scripts/validate_studio_artifacts.py --project out/v15-ml-causal
       - name: Execute DuckDB, dbt, independent truth reconciliation and sklearn
         run: |
           python out/v15-bi/pipeline/run_local.py --root out/v15-bi --run-id ci
           python out/v15-ml/pipeline/run_local.py --root out/v15-ml --run-id ci
+          python out/v15-ml-causal/pipeline/run_local.py --root out/v15-ml-causal --run-id ci
           python scripts/test_v15.py --root out/v15-ml --state out/v15-ml/.forge/v15/ci -v
+          python scripts/test_v15.py --root out/v15-ml-causal --state out/v15-ml-causal/.forge/v15/ci -v
           python out/v15-ml/factory/notebook_export.py --root out/v15-ml --state out/v15-ml/.forge/v15/ci
       - name: Strict Evidence sources and production build with and without ML
         run: |
           python out/v15-bi/factory/build_evidence.py --state out/v15-bi/.forge/v15/ci
           python out/v15-ml/factory/build_evidence.py --state out/v15-ml/.forge/v15/ci
+          python out/v15-ml-causal/factory/build_evidence.py --state out/v15-ml-causal/.forge/v15/ci
       - uses: actions/upload-artifact@v4
         if: always()
         with:

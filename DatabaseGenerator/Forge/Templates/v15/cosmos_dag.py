@@ -2,6 +2,10 @@
 
 Copy to the Airflow DAG directory only when Cosmos is selected and installed.
 All execution variables are run scoped. DAG import performs no dbt or cloud calls.
+Generated/unverified: dbt currently runs twice, first in the TaskGroup (cosmos.duckdb),
+then in a full plain build (warehouse.duckdb). The latter proves only its own run.
+TODO: capture separate invocation-bound results for every Cosmos model/test and
+the plain build before claiming runnable Cosmos; a last-node run_results is insufficient.
 """
 import os
 from pathlib import Path

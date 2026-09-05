@@ -14,7 +14,7 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "DatabaseGenerator/Forge/Templates/v15"))
 from common import compare_kpis, read, write
-from ml_lab import temporal_split, algorithms, evaluate, load_features, TARGET
+from ml_lab import temporal_split, algorithms, evaluate, load_features, select_validation_threshold, train_frame, FEATURES, NUMERIC, TARGET
 from dbt_runtime import check_results
 from run import execute, state_path, verify_artifacts
 ROOT = None
@@ -22,6 +22,47 @@ STATE = None
 
 
 class FactoryTests(unittest.TestCase):
+    def test_validation_threshold_matches_independent_exhaustive_search_with_ties(self):
+        from sklearn.metrics import f1_score, confusion_matrix
+        for y, probability in (([0, 1, 0, 1, 1], [.1, .2, .2, .3, .3]), ([0, 1, 0, 1], [.1, .1, .1, .1]),
+                               ([0, 0, 1, 1], [0., .5, .5, 1.]), ([0, 1, 1], [1., 1., 1.])):
+            probability = np.array(probability)
+            result = select_validation_threshold(y, probability)
+            candidates = sorted(set(probability) | {0., .5, 1.})
+            expected = max(candidates, key=lambda t: (f1_score(y, probability >= t), -abs(t - .5), t))
+            self.assertEqual(result["threshold"], expected)
+            for row in result["validationTradeoff"]:
+                self.assertAlmostEqual(row["f1"], f1_score(y, probability >= row["threshold"]))
+                self.assertEqual(row["confusion_matrix"], confusion_matrix(y, probability >= row["threshold"], labels=[0, 1]).tolist())
+
+    def test_threshold_rejects_invalid_validation_data(self):
+        for y, p in (([0, 1], [np.nan, .2]), ([0, 1], [-.1, .2]), ([0, 1], [.1, 1.1]), ([1, 1], [.1, .2]), ([0, 1], [.1])):
+            with self.assertRaises(ValueError): select_validation_threshold(y, p)
+
+    def test_test_labels_cannot_change_model_or_threshold_selection(self):
+        from sklearn.dummy import DummyClassifier
+        from sklearn.linear_model import LogisticRegression
+        frame = self.frame()
+        for column in FEATURES:
+            frame[column] = np.arange(len(frame)) % 7 if column in NUMERIC else "category"
+        spec = {"features": FEATURES, "leakageExclusions": [TARGET], "featureAvailability": {}, "problemType": "binary_classification"}
+        config = {"labelAsOf": "2025-02-01T00:00:00Z", "materializationLimitMb": 16, "seed": 7, "threshold": .5}
+        split, _ = temporal_split(frame, config["labelAsOf"])
+        with tempfile.TemporaryDirectory() as temporary:
+            results = []
+            for index in range(2):
+                with patch("ml_lab.algorithms", return_value={"dummy": DummyClassifier(), "logistic_regression": LogisticRegression()}):
+                    output = Path(temporary) / str(index)
+                    train_frame(frame, config, spec, output, {})
+                    results.append(read(output / "metrics.json"))
+                test = frame.order_key.isin(split.loc[split.split_name == "test", "order_key"])
+                frame.loc[test, TARGET] = 1 - frame.loc[test, TARGET]
+            self.assertEqual(results[0]["selectedModel"], results[1]["selectedModel"])
+            for name in results[0]["models"]:
+                self.assertEqual(results[0]["models"][name]["validation"], results[1]["models"][name]["validation"])
+                for key in ("threshold", "validationTradeoff", "validation"):
+                    self.assertEqual(results[0]["thresholdAnalysis"][name][key], results[1]["thresholdAnalysis"][name][key])
+
     def test_materialization_guard_runs_before_pandas_load(self):
         from types import SimpleNamespace
         with patch("pyarrow.parquet.read_metadata", return_value=SimpleNamespace(num_rows=100000)), patch("pandas.read_parquet") as materialize:
@@ -129,8 +170,34 @@ class FactoryTests(unittest.TestCase):
             actual = evaluate(rows[TARGET], rows.probability.to_numpy())
             for key in ("average_precision", "roc_auc", "f1", "precision", "recall", "confusion_matrix"):
                 self.assertEqual(actual[key], metrics["models"][model][split][key])
+            selected = metrics["thresholdAnalysis"][model]
+            actual = evaluate(rows[TARGET], rows.probability.to_numpy(), selected["threshold"])
+            for key in ("threshold", "average_precision", "roc_auc", "f1", "precision", "recall", "confusion_matrix"):
+                self.assertEqual(actual[key], selected[split][key])
+            self.assertTrue((rows.prediction_at_selected_threshold == (rows.probability >= selected["threshold"])).all())
+            if split == "validation":
+                self.assertEqual(select_validation_threshold(rows[TARGET], rows.probability)["threshold"], selected["threshold"])
         expected = max(metrics["models"], key=lambda n: (metrics["models"][n]["validation"]["average_precision"], n))
         self.assertEqual(expected, metrics["selectedModel"])
+
+    def test_report_projects_measured_operating_points_and_pr_curves(self):
+        if STATE is None: self.skipTest("Pass --state with an executed ML run")
+        import csv
+        sources = STATE / "bi/evidence/sources/forge"
+        metrics = read(STATE / "ml/metrics.json")
+        with (sources / "ml_metrics.csv").open(encoding="utf-8") as stream:
+            rows = list(csv.DictReader(stream))
+        self.assertEqual(len(rows), 4 * len(metrics["models"]))
+        for row in rows:
+            model = row["algorithm"]
+            measured = (metrics["models"][model] if row["operating_point"] == "baseline 0.5" else metrics["thresholdAnalysis"][model])[row["split"]]
+            for key in ("threshold", "f1", "precision", "recall", "average_precision", "roc_auc"):
+                self.assertEqual(float(row[key]), measured[key])
+        with (sources / "ml_pr_curve.csv").open(encoding="utf-8") as stream:
+            for row in csv.DictReader(stream):
+                curve = metrics["models"][row["algorithm"]]["validation"]["pr_curve"]
+                for key in ("precision", "recall"):
+                    self.assertEqual(float(row[key]), curve[key][int(row["point"])])
 
 
 if __name__ == "__main__":

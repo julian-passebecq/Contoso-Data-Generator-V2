@@ -148,15 +148,48 @@ select * from forge.semantic_relationships
         if metrics["status"] != "executed": raise ValueError("Report cannot present unexecuted ML metrics")
         inputs["ml_metrics.json"] = ml
         shutil.copyfile(ml, contracts / "ml_metrics.json")
-        csv_rows(sources / "ml_metrics.csv", [{"algorithm": a, "split": split, **{k: v for k, v in m.items() if k not in ("pr_curve", "confusion_matrix")}}
-                 for a, splits in metrics["models"].items() for split, m in splits.items()],
-                 ["algorithm", "split", "average_precision", "roc_auc", "f1", "precision", "recall", "threshold"])
+        # Projection of measured artifacts only: selection, curves and metrics live in ML.
+        measurements = [(a, split, "baseline 0.5", m) for a, splits in metrics["models"].items() for split, m in splits.items()]
+        measurements += [(a, split, "validation F1 threshold", entry[split])
+                         for a, entry in metrics.get("thresholdAnalysis", {}).items() for split in ("validation", "test")]
+        csv_rows(sources / "ml_metrics.csv", [{"algorithm": a, "split": split, "operating_point": point,
+                 "selected_model": a == metrics["selectedModel"], **m} for a, split, point, m in measurements],
+                 ["algorithm", "selected_model", "split", "operating_point", "threshold", "average_precision", "roc_auc", "f1", "precision", "recall"])
         csv_rows(sources / "ml_partitions.csv", [{"split": name, **p} for name, p in metrics["partitions"].items()],
                  ["split", "rows", "negative", "positive", "prevalence", "predictionStart", "predictionEnd", "latestLabel"])
-        csv_rows(sources / "confusion_matrix.csv", [{"algorithm": a, "split": split, "actual": y, "predicted": p, "rows": m["confusion_matrix"][y][p]}
-                 for a, splits in metrics["models"].items() for split, m in splits.items() for y in (0, 1) for p in (0, 1)], ["algorithm", "split", "actual", "predicted", "rows"])
+        csv_rows(sources / "confusion_matrix.csv", [{"algorithm": a, "split": split, "operating_point": point, "threshold": m["threshold"], "actual": y, "predicted": p, "rows": m["confusion_matrix"][y][p]}
+                 for a, split, point, m in measurements for y in (0, 1) for p in (0, 1)], ["algorithm", "split", "operating_point", "threshold", "actual", "predicted", "rows"])
+        csv_rows(sources / "ml_pr_curve.csv", [{"algorithm": a, "point": i, "precision": precision, "recall": recall}
+                 for a, splits in metrics["models"].items()
+                 for i, (precision, recall) in enumerate(zip(splits["validation"]["pr_curve"]["precision"], splits["validation"]["pr_curve"]["recall"]))],
+                 ["algorithm", "point", "precision", "recall"])
+        csv_rows(sources / "ml_threshold_tradeoff.csv", [{"algorithm": a, **row}
+                 for a, entry in metrics.get("thresholdAnalysis", {}).items() for row in entry["validationTradeoff"]],
+                 ["algorithm", "threshold", "precision", "recall", "f1"])
         pd.read_parquet(state / "ml/feature_importance.parquet").to_csv(sources / "feature_importance.csv", index=False)
-        for title, query in [("Measured model comparison", "ml_metrics"), ("Chronological partitions · 14-day embargo", "ml_partitions"), ("Confusion matrix · threshold 0.5", "confusion_matrix"), ("Validation permutation importance", "feature_importance")]:
+        page += f"## ML · measured operating points\n\nSelected model: **{metrics['selectedModel']}**. Selection: {metrics['selectedBy']}.\n\n"
+        page += "The 0.5 baseline is retained for every model. Alternative thresholds maximize validation F1 (ties: closest to 0.5, then higher) and are frozen before test. Both operating points use probability ≥ threshold. Test results do not choose models or thresholds. Positive means dissatisfaction within 14 days.\n\n"
+        page += """```sql model_ranking
+select algorithm, selected_model, average_precision, roc_auc
+from forge.ml_metrics where split = 'validation' and operating_point = 'baseline 0.5'
+order by average_precision desc, algorithm desc
+```
+<BarChart data={model_ranking} x=algorithm y=average_precision title="Model selection · validation Average Precision" />
+<DataTable data={model_ranking} />
+
+```sql validation_pr
+select * from forge.ml_pr_curve order by algorithm, point desc
+```
+<LineChart data={validation_pr} x=recall y=precision series=algorithm yMin=0 yMax=1 xAxisTitle="Recall" yAxisTitle="Precision" title="Validation precision–recall curves" />
+
+```sql threshold_tradeoff
+select * from forge.ml_threshold_tradeoff order by algorithm, threshold
+```
+<LineChart data={threshold_tradeoff} x=threshold y=f1 series=algorithm xAxisTitle="Threshold" yAxisTitle="F1" title="Validation threshold tradeoff · F1" />
+<DataTable data={threshold_tradeoff} search=true />
+
+"""
+        for title, query in [("Baseline and frozen threshold comparison · validation and test", "ml_metrics"), ("Chronological partitions · 14-day embargo", "ml_partitions"), ("Confusion matrices · both operating points", "confusion_matrix"), ("Validation permutation importance", "feature_importance")]:
             page += f"## {title}\n\n```sql {query}\nselect * from forge.{query}\n```\n<DataTable data={{{query}}} />\n\n"
     else:
         page += "## ML\n\nNo measured training results are attached to this run. BI validation is available independently of ML.\n\n"

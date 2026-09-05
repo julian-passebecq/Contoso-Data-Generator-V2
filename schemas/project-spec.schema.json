@@ -38,8 +38,19 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 3650,
-          "default": 60,
-          "description": "Optional order-date horizon from startDate. Dates cycle once per horizon; omission preserves V1's 60-day output. Generate at least this many orders to cover every day."
+          "default": 60
+        },
+        "ml": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["profile"],
+          "description": "Explicit opt-in causal outcome generation. Omit to preserve legacy bytes. Positive means dissatisfaction within 14 days; realized prevalence is stochastic and subject to quarantine.",
+          "properties": {
+            "profile": { "const": "causal-v1" },
+            "positiveOutcomeRate": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.1 },
+            "signalStrength": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+            "noiseLevel": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.1 }
+          }
         },
         "formats": {
           "type": "array",

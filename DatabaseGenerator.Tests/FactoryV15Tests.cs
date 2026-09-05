@@ -105,6 +105,21 @@ public sealed class FactoryV15Tests
         Assert.Throws<ArgumentException>(() => PlanBuilder.Build(project));
     }
 
+    [Fact]
+    public void CosmosCannotBorrowPlainDbtExecutionEvidence()
+    {
+        var project = Project();
+        project.Architecture.PresetId = "local-airflow";
+        project.Product!.DbtIntegration = "cosmos";
+        var plan = PlanBuilder.Build(project);
+        var dbt = Assert.Single(plan.Stages, s => s.CompilerOperation == "factory-dbt");
+        Assert.Equal("generated", dbt.ImplementationStatus);
+        Assert.Equal("generated", dbt.ValidationLevel);
+        Assert.Empty(dbt.Evidence);
+        Assert.Equal("not-executed", plan.CurrentExecutionStatus);
+        Assert.NotEqual("runnable", plan.OverallImplementationStatus);
+    }
+
     [Theory]
     [InlineData("free-gcp-lab")]
     [InlineData("free-gcp-connect")]

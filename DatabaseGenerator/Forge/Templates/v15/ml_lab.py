@@ -20,6 +20,7 @@ CATEGORICAL = ["store_channel", "country_code", "customer_loyalty_tier_as_of_ord
 NUMERIC = ["sales_amount", "item_quantity", "promised_transit_hours", "actual_transit_hours", "delivery_delay_hours", "is_on_time", "shipment_event_count_at_delivery"]
 FEATURES = NUMERIC + CATEGORICAL
 TARGET = "is_dissatisfied_14d"
+BASELINE_THRESHOLD = 0.5
 
 
 def algorithms(problem, seed):
@@ -76,6 +77,45 @@ def evaluate(y, probability, threshold=0.5):
             "pr_curve": {"precision": precision.tolist(), "recall": recall.tolist(), "thresholds": thresholds.tolist()}}
 
 
+def select_validation_threshold(y, probability):
+    """Maximize validation F1; ties prefer closest to 0.5, then the higher threshold.
+
+    The caller supplies validation only. No test data or estimator fitting occurs here.
+    Include all distinct validation scores and 0/0.5/1; >= is the decision rule.
+    """
+    y, probability = np.asarray(y), np.asarray(probability, dtype=float)
+    if y.ndim != 1 or probability.shape != y.shape or set(np.unique(y)) != {0, 1}:
+        raise ValueError("Threshold selection requires aligned binary validation labels with both classes")
+    if not np.isfinite(probability).all() or ((probability < 0) | (probability > 1)).any():
+        raise ValueError("Validation probabilities must be finite and in [0, 1]")
+    order = np.argsort(probability, kind="stable")
+    scores, labels = probability[order], y[order]
+    cumulative = np.r_[0, np.cumsum(labels)]
+    positives, negatives = int(y.sum()), int(len(y) - y.sum())
+    rows = []
+    for threshold in np.unique(np.r_[scores, 0.0, BASELINE_THRESHOLD, 1.0]):
+        below = int(np.searchsorted(scores, threshold, side="left"))
+        fn = int(cumulative[below])
+        tn, tp = below - fn, positives - fn
+        fp = negatives - tn
+        rows.append({"threshold": float(threshold), "precision": tp / (tp + fp) if tp + fp else 0.0,
+                     "recall": tp / positives, "f1": 2 * tp / (2 * tp + fp + fn),
+                     "confusion_matrix": [[tn, fp], [fn, tp]]})
+    chosen = max(rows, key=lambda r: (r["f1"], -abs(r["threshold"] - BASELINE_THRESHOLD), r["threshold"]))
+    return {"selectedOn": "validation", "objective": "maximum F1", "decisionRule": "probability >= threshold",
+            "tieBreak": "closest to 0.5, then higher threshold", "threshold": chosen["threshold"],
+            "validationTradeoff": rows, "validation": evaluate(y, probability, chosen["threshold"])}
+
+
+def prediction_rows(selected, name, probability, threshold):
+    batch = selected[["order_key", "prediction_time", "label_timestamp", "split_name", TARGET]].copy()
+    batch["algorithm"], batch["probability"] = name, probability
+    batch["prediction"] = (probability >= BASELINE_THRESHOLD).astype(int)
+    batch["selected_threshold"] = threshold
+    batch["prediction_at_selected_threshold"] = (probability >= threshold).astype(int)
+    return batch
+
+
 def train_frame(frame, config, spec, output, identity):
     output.mkdir(parents=True, exist_ok=True)
     if set(spec["features"]) != set(FEATURES) or set(FEATURES) & set(spec["leakageExclusions"]):
@@ -93,7 +133,8 @@ def train_frame(frame, config, spec, output, identity):
           "splitStrategy": "chronological", "embargoDays": 14, "partitions": partitions,
           "pointInTimeEnforcement": "dbt Gold filters shipment event time AND ingestion time and customer CDC availability"})
     train = frame[frame.split_name == "train"]
-    models, predictions, importance = {}, [], []
+    validation = frame[frame.split_name == "validation"]
+    models, fitted, threshold_analysis, predictions, importance = {}, {}, {}, [], []
     for name, estimator in algorithms(spec["problemType"], config["seed"]).items():
         prep = ColumnTransformer([
             ("numeric", Pipeline([("impute", SimpleImputer(strategy="median")), ("scale", StandardScaler())]), NUMERIC),
@@ -101,29 +142,33 @@ def train_frame(frame, config, spec, output, identity):
         ])
         model = Pipeline([("preprocessing", prep), ("estimator", estimator)])
         model.fit(train[FEATURES], train[TARGET])
-        models[name] = {}
-        for split in ("validation", "test"):
-            selected = frame[frame.split_name == split]
-            probability = model.predict_proba(selected[FEATURES])[:, 1]
-            models[name][split] = evaluate(selected[TARGET], probability, config["threshold"])
-            batch = selected[["order_key", "prediction_time", "label_timestamp", "split_name", TARGET]].copy()
-            batch["algorithm"] = name
-            batch["probability"] = probability
-            batch["prediction"] = (probability >= config["threshold"]).astype(int)
-            predictions.append(batch)
-        validation = frame[frame.split_name == "validation"]
+        fitted[name] = model
+        probability = model.predict_proba(validation[FEATURES])[:, 1]
+        models[name] = {"validation": evaluate(validation[TARGET], probability, BASELINE_THRESHOLD)}
+        threshold_analysis[name] = select_validation_threshold(validation[TARGET], probability)
+        predictions.append(prediction_rows(validation, name, probability, threshold_analysis[name]["threshold"]))
         measured = permutation_importance(model, validation[FEATURES], validation[TARGET], scoring="average_precision", n_repeats=3, random_state=config["seed"], n_jobs=1)
         importance.extend({"algorithm": name, "feature": feature, "importance": float(value), "stddev": float(deviation), "split": "validation"}
                           for feature, value, deviation in zip(FEATURES, measured.importances_mean, measured.importances_std))
     selected_model = max(models, key=lambda n: (models[n]["validation"]["average_precision"], n))
+    # Freeze every threshold AND the selected model before computing any test predictions.
+    test = frame[frame.split_name == "test"]
+    for name, model in fitted.items():
+        probability = model.predict_proba(test[FEATURES])[:, 1]
+        threshold = threshold_analysis[name]["threshold"]
+        models[name]["test"] = evaluate(test[TARGET], probability, BASELINE_THRESHOLD)
+        threshold_analysis[name]["test"] = evaluate(test[TARGET], probability, threshold)
+        predictions.append(prediction_rows(test, name, probability, threshold))
     pd.concat(predictions).to_parquet(output / "predictions.parquet", index=False)
     pd.DataFrame(importance).to_parquet(output / "feature_importance.parquet", index=False)
     frame.to_parquet(output / "split_assignments.parquet", index=False)
     metrics = {"status": "executed", "framework": "scikit-learn", "identity": identity, "completedAt": now(), "partitions": partitions,
-               "selectedBy": "validation Average Precision only; test is held out", "selectedModel": selected_model, "models": models}
+               "selectedBy": "validation Average Precision only; test is held out", "selectedModel": selected_model, "models": models,
+               "baselineThreshold": BASELINE_THRESHOLD, "thresholdAnalysis": threshold_analysis}
     write(output / "metrics.json", metrics)
     (output / "model_card.md").write_text("# Customer dissatisfaction experiment\n\nMeasured scikit-learn run. Selected by validation Average Precision: " + selected_model
-        + ".\n\nPrediction: one order at delivery; label matures 14 days later. Chronological train/validation/test, 14-day embargo, preprocessing fitted on training only. Threshold fixed at 0.5.\n\n"
+        + ".\n\nPrediction: one order at delivery; label matures 14 days later. Chronological train/validation/test, 14-day embargo, preprocessing fitted on training only. Baseline threshold: 0.5.\n\n"
+        + f"Alternative threshold: {threshold_analysis[selected_model]['threshold']:.17g}, selected by validation F1 only and frozen before test evaluation. Ties prefer closest to 0.5, then higher. Model selection uses validation AP; test metrics are descriptive only.\n\n"
         + "Synthetic selective outcomes are educational; a missing adverse outcome is not proof of satisfaction. No deployment or production quality claim.\n", encoding="utf-8")
     return {"status": "executed", "selectedModel": selected_model, "metrics": "ml/metrics.json", "metricsSha256": sha(output / "metrics.json"), "partitions": partitions}
 
