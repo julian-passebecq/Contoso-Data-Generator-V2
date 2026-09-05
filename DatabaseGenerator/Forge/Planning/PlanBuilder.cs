@@ -155,22 +155,31 @@ public static class PlanBuilder
         };
         foreach (var stage in plan.Stages.Where(s => s.CompilerOperation.StartsWith("factory-", StringComparison.Ordinal)))
         {
-            var generatedOnly = stage.CompilerOperation == "factory-export-ml" || (intent.DbtIntegration == "cosmos" && stage.CompilerOperation == "factory-dbt");
+            var cosmosDbt = intent.DbtIntegration == "cosmos" && stage.CompilerOperation == "factory-dbt";
+            var cosmosProven = cosmosDbt && intent.Version == "1.6" && settings.Engine == "duckdb";
+            var generatedOnly = stage.CompilerOperation == "factory-export-ml" || (cosmosDbt && !cosmosProven);
             stage.ImplementationStatus = generatedOnly ? "generated" : "runnable";
             stage.ValidationLevel = generatedOnly ? "generated" : "reconciled";
-            if (intent.DbtIntegration == "cosmos" && stage.CompilerOperation == "factory-dbt")
+            if (cosmosDbt)
             {
                 stage.Evidence.Clear();
-                stage.Reason = "Cosmos is generated/unverified. The TaskGroup runs dbt, then a second plain dbt build records authoritative results. Promotion requires real task execution with unambiguous results from both invocations.";
-                plan.Warnings.Add(stage.Reason);
+                stage.Reason = cosmosProven
+                    ? "Cosmos Watcher ran one authoritative dbt build through a complete local Airflow DagRun; invocation-bound artifacts were adopted and reconciled. This planned project has not executed."
+                    : "Cosmos Watcher is generated for this engine/product combination. Validation requires a real DagRun and invocation-bound full-project artifacts; direct dbt evidence cannot certify Cosmos.";
+                if (cosmosProven) stage.Evidence.Add(new()
+                {
+                    Id = "v16-airflow-cosmos-watcher-duckdb", Reference = "docs/v1.6-orchestration-evidence.json", ValidationLevel = "reconciled",
+                    Scope = "Historical V1.6 DuckDB/Cosmos local airflow dags-test: one dbt build, 27 models/135 tests, five KPI reconciliations, ML/export and strict Evidence. Not execution of this project or a persistent scheduler/Kubernetes deployment."
+                });
+                else plan.Warnings.Add(stage.Reason);
             }
-            if (!generatedOnly) stage.Evidence.Add(new()
+            if (!generatedOnly && !cosmosDbt) stage.Evidence.Add(new()
             {
                 Id = settings.Engine == "duckdb" ? "v15-local-duckdb-dbt-sklearn-bi" : "v16-local-" + settings.Engine,
                 Reference = settings.Engine == "duckdb" ? "docs/v1.5-evidence.json" : "docs/v1.6-evidence.json", ValidationLevel = "reconciled",
                 Scope = $"Versioned local {settings.Engine} adapter evidence: real Bronze/Silver, dbt Gold/tests, independent KPI reconciliation, ML and Evidence. This planned project has not executed; report rendering and cross-engine parity require their own measured artifacts."
             });
-            stage.ExecutionMode = "local-or-airflow";
+            stage.ExecutionMode = cosmosDbt ? "airflow-cosmos-watcher" : "local-or-airflow";
             stage.Engine = stage.CompilerOperation switch
             {
                 "factory-silver" => settings.Engine!, "factory-verify" => "python",

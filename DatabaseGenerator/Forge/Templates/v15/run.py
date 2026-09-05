@@ -87,7 +87,12 @@ def execute(root, run_id, stage):
                 write(state / "silver_contract.json", contract(root))
                 result.update(adapter=engine, version=importlib.metadata.version(engine))
             elif stage == "validate-silver": result = duckdb_silver.validate(root, state)
-            elif stage == "dbt": result = dbt_runtime.build(root, state)
+            elif stage == "dbt":
+                if read(root / "project.json")["product"]["dbtIntegration"] == "cosmos":
+                    from orchestration import adopt_cosmos_dbt_results
+                    result = adopt_cosmos_dbt_results(root, state, run_id)
+                else:
+                    result = dbt_runtime.build(root, state)
             elif stage == "reconcile": result = dbt_runtime.reconcile(root, state)
             elif stage == "ml":
                 from ml_lab import train

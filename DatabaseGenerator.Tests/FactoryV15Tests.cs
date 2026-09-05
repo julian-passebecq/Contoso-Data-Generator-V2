@@ -120,6 +120,65 @@ public sealed class FactoryV15Tests
         Assert.NotEqual("runnable", plan.OverallImplementationStatus);
     }
 
+    [Fact]
+    public void V16CosmosReferencesOnlyItsOwnHistoricalDagRunEvidence()
+    {
+        var project = Project();
+        project.Architecture.PresetId = "local-airflow";
+        project.Product!.Version = "1.6";
+        project.Product.DbtIntegration = "cosmos";
+        var plan = PlanBuilder.Build(project);
+        var dbt = Assert.Single(plan.Stages, s => s.CompilerOperation == "factory-dbt");
+        Assert.Equal("runnable", dbt.ImplementationStatus);
+        Assert.Equal("reconciled", dbt.ValidationLevel);
+        Assert.Equal("docs/v1.6-orchestration-evidence.json", Assert.Single(dbt.Evidence).Reference);
+        Assert.Equal("not-executed", plan.CurrentExecutionStatus);
+        Assert.Equal("airflow-cosmos-watcher", dbt.ExecutionMode);
+    }
+
+    [Theory]
+    [InlineData("1.5", "3.2.2")]
+    [InlineData("1.6", "3.3.1")]
+    public async Task MinikubeVersionAlignmentRequiresExplicitV16(string productVersion, string airflowVersion)
+    {
+        var project = Project();
+        project.Product!.Version = productVersion;
+        project.Architecture.PresetId = "free-gcp-lab";
+        project.Git = new();
+        var root = Path.Combine(Path.GetTempPath(), "forge-airflow-version-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await new ForgeProjectGenerator().GenerateAsync(project.SourceProject, root);
+            ForgeStudioCommand.Compile(project, root);
+            Assert.Contains("defaultAirflowTag: \"" + airflowVersion + "\"", File.ReadAllText(Path.Combine(root, "minikube/values.yaml")));
+            using var status = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "minikube/validation_status.json")));
+            Assert.Equal(airflowVersion, status.RootElement.GetProperty("airflowVersion").GetString());
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task CosmosCompilesWatcherAndArtifactAdoptionBehindTheExistingFactory()
+    {
+        var project = Project();
+        project.Product!.Version = "1.6";
+        project.Product.DbtIntegration = "cosmos";
+        project.Architecture.PresetId = "local-airflow";
+        var root = Path.Combine(Path.GetTempPath(), "forge-cosmos-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await new ForgeProjectGenerator().GenerateAsync(project.SourceProject, root);
+            ForgeStudioCommand.Compile(project, root);
+            var dag = File.ReadAllText(Path.Combine(root, "airflow/dags/contoso_forge_cosmos.py"));
+            Assert.Contains("ExecutionMode.WATCHER", dag);
+            Assert.Contains("warehouse.duckdb", dag);
+            Assert.DoesNotContain("cosmos.duckdb", dag);
+            Assert.DoesNotContain("plain_build", dag);
+            Assert.Contains("adopt_cosmos_dbt_results", File.ReadAllText(Path.Combine(root, "factory/orchestration.py")));
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
     [Theory]
     [InlineData("free-gcp-lab")]
     [InlineData("free-gcp-connect")]

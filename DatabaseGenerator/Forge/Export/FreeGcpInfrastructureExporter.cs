@@ -15,6 +15,7 @@ public static class FreeGcpInfrastructureExporter
 {
     public const string AirflowChartVersion = "1.22.0";
     public const string AirflowVersion = "3.2.2";
+    public const string V16AirflowVersion = "3.3.1";
     public const string GoogleProviderVersion = "7.45.0";
 
     public static void Export(string outputRoot, string resolvedProjectJson, string pipelineJson)
@@ -23,6 +24,9 @@ public static class FreeGcpInfrastructureExporter
         using var pipeline = JsonDocument.Parse(pipelineJson);
         var root = project.RootElement;
         var settings = root.GetProperty("settings");
+        // Legacy output is byte-audited. Only an explicit V1.6 product selects the current image.
+        var airflowVersion = root.TryGetProperty("product", out var product) && Value(product, "version", "") == "1.6"
+            ? V16AirflowVersion : AirflowVersion;
         var iac = Value(settings, "iac", "opentofu");
         if (iac is not ("none" or "opentofu" or "terraform-community" or "dual-validate"))
             throw new ArgumentException($"Unsupported infrastructure engine '{iac}'.");
@@ -55,8 +59,9 @@ public static class FreeGcpInfrastructureExporter
             tokens["__GIT_BRANCH_JSON__"] = JsonValue.Create(branch)!.ToJsonString();
             tokens["__GIT_SUBPATH_JSON__"] = JsonValue.Create(subPath)!.ToJsonString();
             tokens["__PROJECT_ROOT_JSON__"] = JsonValue.Create("/opt/airflow/dags/repo/" + projectSubPath.Trim('/'))!.ToJsonString();
+            if (airflowVersion != AirflowVersion) tokens[AirflowVersion] = airflowVersion;
             ForgeIo.CopyTreeWithTokens(Path.Combine(templateRoot, "minikube"), Path.Combine(outputRoot, "minikube"), tokens);
-            WriteStatus(Path.Combine(outputRoot, "minikube", "validation_status.json"), "airflow-minikube", iac);
+            WriteStatus(Path.Combine(outputRoot, "minikube", "validation_status.json"), "airflow-minikube", iac, airflowVersion);
         }
 
         if (iac != "none" && (Value(settings, "warehouse", "none") == "bigquery" || storage == "gcs"))
@@ -86,7 +91,7 @@ public static class FreeGcpInfrastructureExporter
         node.ValueKind == JsonValueKind.Object && node.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString() ?? fallback : fallback;
 
-    private static void WriteStatus(string path, string target, string iac)
+    private static void WriteStatus(string path, string target, string iac, string airflowVersion = AirflowVersion)
     {
         var status = new JsonObject
         {
@@ -98,7 +103,7 @@ public static class FreeGcpInfrastructureExporter
             ["runtimeValidation"] = "not-run",
             ["cloudApplied"] = false,
             ["airflowChartVersion"] = AirflowChartVersion,
-            ["airflowVersion"] = AirflowVersion,
+            ["airflowVersion"] = airflowVersion,
             ["googleProviderVersion"] = GoogleProviderVersion,
             ["validationCommand"] = "python scripts/validate_free_gcp_infra.py --project <generated-project> --iac " + iac,
             ["liveValidationCommand"] = target == "airflow-minikube"
