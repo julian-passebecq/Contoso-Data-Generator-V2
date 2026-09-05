@@ -97,6 +97,11 @@ class GateTests(unittest.TestCase):
         self.assertNotIn("<script src=", (folder / "space/index.html").read_text())
         self.assertFalse(any(p.suffix in (".pkl", ".pickle", ".joblib") for p in folder.rglob("*")))
 
+    def test_ml_only_report_omits_empty_kpi_source(self):
+        state = Path(SUMMARY["runs"]["specific-ml"]["state"])
+        self.assertFalse((state / "bi/evidence/sources/forge/kpis.csv").exists())
+        self.assertIn("Origin: **scikit-learn**", (state / "bi/evidence/pages/index.md").read_text())
+
     def test_colab_spark_export_preserved(self):
         state = Path(SUMMARY["runs"]["spark-ml"]["state"])
         code = (state / "exports/colab-spark-ml.ipynb").read_text()
@@ -265,9 +270,13 @@ class AutoMlTests(IsolatedTests):
                 observed.update(kwargs)
                 self.folder = Path(kwargs["results_path"]); self.folder.mkdir(parents=True)
             def fit(self, X, y, cv):
+                from ml_lab import NUMERIC
+                if any(X[column].dtype != np.dtype("float64") for column in NUMERIC): raise AssertionError("Numeric features became text")
                 self.assertions = (X, y, cv)
                 observed["fitRows"] = len(X); observed["cv"] = cv
                 write(self.folder / "params.json", {"best_model": "fixture"})
+                (self.folder / "loser").mkdir()
+                (self.folder / "loser/importance.csv").write_text("feature,importance\nsales_amount,1\n")
             def get_leaderboard(self, **kwargs): return pd.DataFrame([{"name": "fixture", "metric_value": .3}])
             def predict_proba(self, X):
                 if len(X) == bound["partitions"]["test"]["rows"]:
@@ -280,6 +289,7 @@ class AutoMlTests(IsolatedTests):
         self.assertEqual(observed["fitRows"], sum(bound["partitions"][k]["rows"] for k in ("train", "validation")))
         self.assertEqual(set(observed["cv"][0][0]) & set(observed["cv"][0][1]), set())
         self.assertEqual(read(output / "automl_execution.json")["testRowsPassedToFit"], 0)
+        self.assertFalse((output / "feature_importance.csv").exists())
 
     def test_notebook_process_hard_timeout_does_not_emit_success_manifest(self):
         self.make_package()
@@ -351,7 +361,7 @@ class WranglingTests(IsolatedTests):
             {"id": "split", "op": "conditional-split", "input": "filtered", "matched": False, "predicate": {"operator": ">", "args": [{"field": "OrderKey"}, {"value": 100}]}},
             {"id": "dedup", "op": "deduplicate", "input": "split", "columns": ["OrderKey"]},
             {"id": "window", "op": "window", "input": "dedup", "name": "position", "function": "row_number", "groupBy": ["store"], "orderBy": ["OrderKey"]},
-            {"id": "daily", "op": "aggregate", "input": "window", "groupBy": ["store"], "measures": [{"name": "orders", "function": "count"}, {"name": "amount", "function": "sum", "field": "doubled"}]},
+            {"id": "daily", "op": "aggregate", "input": "window", "groupBy": ["store"], "measures": [{"name": "orders", "function": "count"}, {"name": "amount", "function": "mean", "field": "doubled"}]},
             {"id": "lookup_source", "op": "source", "entity": "stores"},
             {"id": "lookup_pick", "op": "select", "input": "lookup_source", "columns": ["StoreKey", "StoreName"]},
             {"id": "lookup_rename", "op": "rename", "input": "lookup_pick", "renames": {"StoreKey": "store"}},
@@ -366,15 +376,20 @@ class WranglingTests(IsolatedTests):
         self.setup_recipe()
         from wrangling import execute
         import pyarrow.parquet as pq
-        outputs = []
+        from parity import compare_tables
+        outputs = {}
         for engine in ("duckdb", "polars"):
             state = self.state / engine
             shutil.copytree(self.state / "lake", state / "lake")
             shutil.copyfile(self.state / "silver_contract.json", state / "silver_contract.json")
             result = execute(ROOT, state, self.recipe(), engine)
             self.assertEqual(result["status"], "executed")
-            outputs.append(sorted(pq.read_table(state / "wrangling/output.parquet").to_pylist(), key=lambda r: r["store"]))
-        self.assertEqual(outputs[0], outputs[1])
+            outputs[engine] = pq.read_table(state / "wrangling/output.parquet")
+        governed = {"key": ["store"], "unique": True, "columns": [
+            {"name": "store", "type": "int32", "nullable": False}, {"name": "orders", "type": "int64", "nullable": False},
+            {"name": "amount", "type": "float64", "nullable": True, "decimalPlaces": 9}, {"name": "StoreName", "type": "string", "nullable": True}]}
+        comparison = compare_tables(outputs, governed)
+        self.assertTrue(comparison["matched"], comparison)
 
     def test_recipe_cycle_and_unknown_operator_fail(self):
         from wrangling import validate
@@ -411,6 +426,30 @@ class MotherDuckTests(IsolatedTests):
             result = publish_silver_and_build(ROOT, self.state, self.target)
         self.assertEqual(result["status"], "exported-not-executed")
         self.assertFalse((self.state / "dbt").exists())
+
+    def test_reconciliation_uses_remote_database_and_summary_is_bound(self):
+        from journey_runtime import dispatch
+        from run import verify_motherduck_summary
+        write(self.state / "motherduck_build.json", {"database": "forge_fresh", "status": "dbt-executed-awaiting-reconciliation"})
+        with patch("dbt_runtime.reconcile", return_value={"status": "reconciled", "kpis": {}}) as reconcile:
+            dispatch(ROOT, self.state, {}, {"warehouse": "motherduck"}, "reconcile", {})
+        reconcile.assert_called_once_with(ROOT, self.state, database_path="md:forge_fresh")
+        verify_motherduck_summary(self.state)
+        write(self.state / "motherduck_execution.json", {"status": "executed", "database": "wrong"})
+        with self.assertRaises(ValueError): verify_motherduck_summary(self.state)
+
+    def test_no_auth_dive_export_reads_only_governed_gold(self):
+        from journey_runtime import dispatch
+        write(self.state / "motherduck_build.json", {"database": "forge_fresh", "status": "exported-not-executed"})
+        target = {"kind": "motherduck", "database": "forge_fresh", "createDive": True, "execute": True}
+        with patch.dict(os.environ, {}, clear=True), patch("duckdb.connect", side_effect=AssertionError("No remote connection")):
+            result = dispatch(ROOT, self.state, {"publishTargets": [target]}, {}, "publish", {})
+        self.assertEqual(result["status"], "exported-not-executed")
+        self.assertEqual(result["dive"]["status"], "exported-not-published")
+        self.assertNotIn("url", result["dive"])
+        query = read(self.state / "dive_query.json")["query"]
+        self.assertIn('"forge_fresh".gold.kpi_customer_satisfaction', query)
+        self.assertNotIn("silver", query)
 
     def test_native_destination_counts_dbt_and_invocation_are_bound(self):
         self.prepare_silver()

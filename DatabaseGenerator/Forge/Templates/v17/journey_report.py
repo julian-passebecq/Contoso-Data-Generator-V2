@@ -16,7 +16,8 @@ def build(root, state, evidence):
         "run_results.json": state / "dbt/target/run_results.json"}
     for name, path in inputs.items(): shutil.copyfile(path, contracts / name)
     reconciliation = read(state / "reconciliation.json")
-    csv_rows(sources / "kpis.csv", [{"kpi": k, **v} for k, v in reconciliation["kpis"].items()], ["kpi", "actual", "expected", "matched"])
+    if reconciliation["kpis"]:
+        csv_rows(sources / "kpis.csv", [{"kpi": k, **v} for k, v in reconciliation["kpis"].items()], ["kpi", "actual", "expected", "matched"])
     csv_rows(sources / "stages.csv", [{"stage": name, "status": r["status"], "result": r.get("result", {}).get("status", "running")} for name, r in evidence["stages"].items()], ["stage", "status", "result"])
     write(report / "package.json", {"name": "contoso-forge-journey", "version": "1.7.0", "private": True, "type": "module",
         "scripts": {"sources": "evidence sources --strict", "build": "evidence build:strict"},

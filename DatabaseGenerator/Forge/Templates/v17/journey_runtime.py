@@ -19,6 +19,11 @@ def dispatch(root, state, product, settings, stage, evidence):
         return execute(root, state, product["recipe"], settings["engine"])
     remote = state / "motherduck_build.json"
     if remote.exists() and read(remote)["status"] == "exported-not-executed":
+        if stage == "publish":
+            from motherduck import dive
+            target = next(p for p in product["publishTargets"] if p["kind"] == "motherduck")
+            if target["createDive"]:
+                return {"status": "exported-not-executed", "blocksDownstream": True, "dive": dive(root, state, target)}
         return {"status": "exported-not-executed", "blocksDownstream": True, "reason": "MotherDuck Gold has not executed; dependent stage remains unexecuted"}
     if stage == "dbt":
         if settings["warehouse"] == "motherduck":

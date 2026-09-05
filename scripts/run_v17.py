@@ -61,6 +61,8 @@ def main():
         # This is real local MLJAR proof; it is never labelled a Kaggle account-backed run.
         remote = json.dumps({"datasetId": "local-fixture/forge", "kernelId": "local-fixture/automl", "datasetVersion": 1})
         run([args.automl_python.resolve(), "-B", root / "factory/notebook_runner.py", "--package", state / "kaggle/dataset", "--output", output / "local-automl-results", "--remote", remote], "local-automl")
+    if subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip() != revision:
+        raise ValueError("Checkout changed during the measured gate")
     summary = {"version": "1.7", "headCommit": revision, "workingTreeDirty": bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()),
         "runs": records, "parity": "engine_parity.json", "localAutoMl": "executed" if args.automl_python else "not-executed", "spark": "executed" if args.spark else "not-executed",
         "externalKaggle": "exported-not-executed", "huggingFace": "exported-not-published", "motherDuck": "exported-not-executed"}

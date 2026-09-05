@@ -66,7 +66,8 @@ def train(package, output, identity, automl_class=None):
         "selectedBy": "custom chronological validation logloss; test held out", "partitions": partitions,
         "models": {selected_name: {"validation": validation_metrics, "test": test_metrics}}, "thresholdAnalysis": {selected_name: threshold}, "completedAt": now()}
     write(output / "metrics.json", metrics)
-    importance = list(report.rglob("*importance.csv"))
+    # Importance from a losing candidate must not be presented as the selected model's.
+    importance = list((report / selected_name).rglob("*importance.csv"))
     if importance:
         import shutil
         shutil.copyfile(sorted(importance)[0], output / "feature_importance.csv")
