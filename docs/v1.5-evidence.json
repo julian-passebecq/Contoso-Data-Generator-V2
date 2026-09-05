@@ -1,0 +1,800 @@
+{
+  "baseMainSha": "b9fe2b6f8708a57a91d6a6ba4241e4a4a1661b8f",
+  "capturedAt": "2026-09-05T14:37:28.688008+00:00",
+  "contractVersion": "1.5-evidence-summary",
+  "localBi": {
+    "artifacts": [
+      {
+        "path": "out/v15-release-bi/run_manifest.json",
+        "sha256": "6b264ab18de9cbc90c35f34ccf1a60533904b2c2d9860d6e53a3ded76c9445fe"
+      },
+      {
+        "path": "out/v15-release-bi/truth_manifest.json",
+        "sha256": "2cb89751b4c9e329a7be3fd947f87b6b145d1e2de8ebb063ecf5ed75555be807"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/run_evidence.json",
+        "sha256": "607885e5e3c720f8695802e7b38cc257c009279190107cd50bd3562c87842def"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/reconciliation.json",
+        "sha256": "b33fa99b067137eb0a9af8c79add9c13980ca523eac06e0b25246ecf8e700ef6"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/dbt_execution.json",
+        "sha256": "9e721c18c77c142b5a1ae3a6e9ab107c2d7ca05ff4879626af7baa7aea7fed0f"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/dbt/target/manifest.json",
+        "sha256": "0ba31492b8544776930b2cf46be59af0566e0c02987390376d78bd54223874b2"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/dbt/target/run_results.json",
+        "sha256": "b8f38b433a911e49d1f19787fa128f2b4fd892426be7778353f777fcb6546947"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/bi/report_contract.json",
+        "sha256": "0ffd936b511119da0829f8bfec81ff57d770663d40eb113a3c0cdb9adb70d4db"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/bi/build_evidence.json",
+        "sha256": "a4a841c5f16f3b37953f179bac82d090e5fa71ced992f14fc071ca15b274dfdb"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/bi/evidence/build/index.html",
+        "sha256": "456b6a8edb85c9c903e09c834cbc4e2e522170c0f5c78d1e22df64eb1e0d7e8b"
+      },
+      {
+        "path": "out/v15-release-bi/.forge/v15/release/bi/evidence/package-lock.json",
+        "sha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017"
+      }
+    ],
+    "completedAt": "2026-09-05T14:31:20.117808+00:00",
+    "dbt": {
+      "artifacts": {
+        "manifest.json": "0ba31492b8544776930b2cf46be59af0566e0c02987390376d78bd54223874b2",
+        "run_results.json": "b8f38b433a911e49d1f19787fa128f2b4fd892426be7778353f777fcb6546947"
+      },
+      "command": [
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\.tools\\v15\\Scripts\\dbt.exe",
+        "build",
+        "--project-dir",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-bi\\.forge\\v15\\release\\dbt",
+        "--profiles-dir",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-bi\\.forge\\v15\\release\\dbt",
+        "--no-partial-parse"
+      ],
+      "exitCode": 0,
+      "failed": 0,
+      "labelAsOf": "2025-02-01T00:00:00Z",
+      "models": 27,
+      "skipped": 0,
+      "status": "tested",
+      "tests": 135
+    },
+    "evidenceBuild": {
+      "artifact": "bi/evidence/build/index.html",
+      "completedAt": "2026-09-05T14:35:53.386129+00:00",
+      "nodeVersion": "v21.7.1",
+      "npmVersion": "10.5.0",
+      "packageLockSha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017",
+      "reportContractSha256": "0ffd936b511119da0829f8bfec81ff57d770663d40eb113a3c0cdb9adb70d4db",
+      "runId": "release",
+      "sha256": "456b6a8edb85c9c903e09c834cbc4e2e522170c0f5c78d1e22df64eb1e0d7e8b",
+      "startedAt": "2026-09-05T14:32:43.184183+00:00",
+      "status": "built"
+    },
+    "identity": {
+      "compiledManifestSha256": "6b264ab18de9cbc90c35f34ccf1a60533904b2c2d9860d6e53a3ded76c9445fe",
+      "datasetFingerprint": "9dffebc2987043f92c937e07dfee52eebb348d26d6e94156e7fa9514cb1d3609",
+      "projectSha256": "c025755773f2a488127cacf3d4f466380919540f8e90ac00ba6763fcbc6c9be1",
+      "truthSha256": "2cb89751b4c9e329a7be3fd947f87b6b145d1e2de8ebb063ecf5ed75555be807"
+    },
+    "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+    "reconciliation": {
+      "dbt": {
+        "failed": 0,
+        "models": 27,
+        "skipped": 0,
+        "status": "tested",
+        "tests": 135
+      },
+      "goldRowCounts": {
+        "bi_daily_customer_experience": 60,
+        "dim_carrier": 3,
+        "dim_customer": 34,
+        "dim_date": 66,
+        "dim_product": 12,
+        "dim_store": 4,
+        "fact_customer_experience": 60,
+        "fact_return": 7,
+        "fact_sales": 115,
+        "fact_shipment": 59,
+        "fact_support": 9,
+        "kpi_customer_satisfaction": 1,
+        "ml_customer_dissatisfaction": 59
+      },
+      "kpis": {
+        "average_review_rating": {
+          "actual": "3.842105",
+          "expected": "3.842105",
+          "matched": true
+        },
+        "gross_sales_amount": {
+          "actual": "51284.73",
+          "expected": "51284.73",
+          "matched": true
+        },
+        "on_time_delivery_rate": {
+          "actual": "0.610169",
+          "expected": "0.610169",
+          "matched": true
+        },
+        "order_count": {
+          "actual": "60",
+          "expected": "60",
+          "matched": true
+        },
+        "return_rate": {
+          "actual": "0.116667",
+          "expected": "0.116667",
+          "matched": true
+        }
+      },
+      "status": "reconciled"
+    },
+    "runId": "release",
+    "runtimeVersions": {
+      "dbt-core": "1.11.7",
+      "dbt-duckdb": "1.10.1",
+      "duckdb": "1.4.4",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "scikit-learn": "1.7.2"
+    },
+    "stages": [
+      "bi",
+      "dbt",
+      "reconcile",
+      "silver",
+      "validate-silver",
+      "verify"
+    ],
+    "startedAt": "2026-09-05T14:30:56.610130+00:00",
+    "status": "succeeded"
+  },
+  "localMl": {
+    "artifacts": [
+      {
+        "path": "out/v15-release-ml/run_manifest.json",
+        "sha256": "1574d8d3cb1a66b74922e5c214673aa11a7d53a013fd6169bf1b8251a837b377"
+      },
+      {
+        "path": "out/v15-release-ml/truth_manifest.json",
+        "sha256": "b3ff8b776f07f243c0551946d77ab053e193eceb44d0626f6ca0264dad2bd715"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/run_evidence.json",
+        "sha256": "47c599e8b82c17ec2892bf9efd1a7ea81fc698e015acf6c0d63e774b449b48d9"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/reconciliation.json",
+        "sha256": "d0f8df2bf58e10f2a02977c85c48677a285e4b186a7a0bad3f26df5012b621a3"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/dbt_execution.json",
+        "sha256": "93aa89be0c9e6e70208df6cf0ecfbd980a527812759e6757d42620b7ecc570e0"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/dbt/target/manifest.json",
+        "sha256": "36815eefe30584a2329c4e44176b6255c2c9da1967f99d7715e9ebb7bd4fbad9"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/dbt/target/run_results.json",
+        "sha256": "4e1be875aff3f6ded14c9ab3321806c17058fe17421d20c2994a12b3fddba2f9"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/bi/report_contract.json",
+        "sha256": "6d0b737a8086bedfb2ff5d634a23fa68894f0a4812590ecc713f07902f673abf"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/bi/build_evidence.json",
+        "sha256": "91973cd700517f3335c883b4299dd07d5b37b59e49ae0f967f7bc41ba9b4f79b"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/bi/evidence/build/index.html",
+        "sha256": "fb0d553fcea497e802e171e2623180de02ccdcbf0c701f5efe6bd26e82473663"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/bi/evidence/package-lock.json",
+        "sha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/feature_importance.parquet",
+        "sha256": "8dc8bd859871d0538aba6f0a5fcbfc6b9de01b5a2c0eee53e61ba4f36e487437"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/features.json",
+        "sha256": "62c8f18da65ee06e56847b1e05b752b7f0fe20c76afe8df27a06f1909524cfe6"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/leakage_report.json",
+        "sha256": "6413df1524eb3decd5d23c29f2d9997e951f8910d806bd66b02a874015f75534"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/metrics.json",
+        "sha256": "d15f6cad2400de9bec3adcc680c7bcd5efb8c92c5f386d4cb49da71783a32cf3"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/model_card.md",
+        "sha256": "f3cf6de47af338daaa16d20136f726592e6a5d504a156834f2ff32a823489e04"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/predictions.parquet",
+        "sha256": "e3da54ed179441981598d6b3a7323971d877294f752a88716cd3068b02d1612c"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/run_config.json",
+        "sha256": "912063a964787b7e374e63413d90a25446e00958f8961d7f2506aef8917bdfb4"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/spec.json",
+        "sha256": "272ccac0d9c1c949c77985c08bd6236ead6bb895545c6ec4c2ce32b1712b11f8"
+      },
+      {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/split_assignments.parquet",
+        "sha256": "eb29cd92c3d65ba0401bef241ce7d241886cd52e40c34422fa9ba8074c2439d5"
+      }
+    ],
+    "completedAt": "2026-09-05T14:31:20.441712+00:00",
+    "dbt": {
+      "artifacts": {
+        "manifest.json": "36815eefe30584a2329c4e44176b6255c2c9da1967f99d7715e9ebb7bd4fbad9",
+        "run_results.json": "4e1be875aff3f6ded14c9ab3321806c17058fe17421d20c2994a12b3fddba2f9"
+      },
+      "command": [
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\.tools\\v15\\Scripts\\dbt.exe",
+        "build",
+        "--project-dir",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-ml\\.forge\\v15\\release\\dbt",
+        "--profiles-dir",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-ml\\.forge\\v15\\release\\dbt",
+        "--no-partial-parse"
+      ],
+      "exitCode": 0,
+      "failed": 0,
+      "labelAsOf": "2025-02-01T00:00:00Z",
+      "models": 27,
+      "skipped": 0,
+      "status": "tested",
+      "tests": 135
+    },
+    "evidenceBuild": {
+      "artifact": "bi/evidence/build/index.html",
+      "completedAt": "2026-09-05T14:35:54.007030+00:00",
+      "nodeVersion": "v21.7.1",
+      "npmVersion": "10.5.0",
+      "packageLockSha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017",
+      "reportContractSha256": "6d0b737a8086bedfb2ff5d634a23fa68894f0a4812590ecc713f07902f673abf",
+      "runId": "release",
+      "sha256": "fb0d553fcea497e802e171e2623180de02ccdcbf0c701f5efe6bd26e82473663",
+      "startedAt": "2026-09-05T14:32:32.513404+00:00",
+      "status": "built"
+    },
+    "identity": {
+      "compiledManifestSha256": "1574d8d3cb1a66b74922e5c214673aa11a7d53a013fd6169bf1b8251a837b377",
+      "datasetFingerprint": "4089b948f30dd2d2a6ef9e5ace7245e29b773633897c050c2d0467c21a2eda21",
+      "projectSha256": "3ae8fc22fe5d600b1a8bbf4576094aa21edb5358361858382e2b72380b036136",
+      "truthSha256": "b3ff8b776f07f243c0551946d77ab053e193eceb44d0626f6ca0264dad2bd715"
+    },
+    "ml": {
+      "artifact": {
+        "path": "out/v15-release-ml/.forge/v15/release/ml/metrics.json",
+        "sha256": "d15f6cad2400de9bec3adcc680c7bcd5efb8c92c5f386d4cb49da71783a32cf3"
+      },
+      "framework": "scikit-learn",
+      "models": {
+        "dummy": {
+          "test": {
+            "average_precision": 0.09444444444444444,
+            "confusion_matrix": [
+              [
+                163,
+                0
+              ],
+              [
+                17,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.5,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.07142857142857142,
+            "confusion_matrix": [
+              [
+                130,
+                0
+              ],
+              [
+                10,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.5,
+            "threshold": 0.5
+          }
+        },
+        "histogram_gradient_boosting": {
+          "test": {
+            "average_precision": 0.3505190915022227,
+            "confusion_matrix": [
+              [
+                155,
+                8
+              ],
+              [
+                12,
+                5
+              ]
+            ],
+            "f1": 0.3333333333333333,
+            "precision": 0.38461538461538464,
+            "recall": 0.29411764705882354,
+            "roc_auc": 0.806207145434861,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.15236273789103977,
+            "confusion_matrix": [
+              [
+                122,
+                8
+              ],
+              [
+                10,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.7684615384615384,
+            "threshold": 0.5
+          }
+        },
+        "logistic_regression": {
+          "test": {
+            "average_precision": 0.18754007883316906,
+            "confusion_matrix": [
+              [
+                163,
+                0
+              ],
+              [
+                17,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.765427643450018,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.18588750122590347,
+            "confusion_matrix": [
+              [
+                130,
+                0
+              ],
+              [
+                10,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.7792307692307692,
+            "threshold": 0.5
+          }
+        },
+        "random_forest": {
+          "test": {
+            "average_precision": 0.29296290408750947,
+            "confusion_matrix": [
+              [
+                162,
+                1
+              ],
+              [
+                16,
+                1
+              ]
+            ],
+            "f1": 0.10526315789473684,
+            "precision": 0.5,
+            "recall": 0.058823529411764705,
+            "roc_auc": 0.8224467701190906,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.12380704678609955,
+            "confusion_matrix": [
+              [
+                127,
+                3
+              ],
+              [
+                10,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.7261538461538461,
+            "threshold": 0.5
+          }
+        }
+      },
+      "partitions": {
+        "test": {
+          "latestLabel": "2025-01-19T13:00:00+00:00",
+          "negative": 163,
+          "positive": 17,
+          "predictionEnd": "2025-01-05T13:00:00+00:00",
+          "predictionStart": "2024-11-06T14:00:00+00:00",
+          "prevalence": 0.09444444444444444,
+          "rows": 180
+        },
+        "train": {
+          "latestLabel": "2024-09-06T16:00:00+00:00",
+          "negative": 721,
+          "positive": 75,
+          "predictionEnd": "2024-08-23T16:00:00+00:00",
+          "predictionStart": "2024-01-04T10:00:00+00:00",
+          "prevalence": 0.0942211055276382,
+          "rows": 796
+        },
+        "validation": {
+          "latestLabel": "2024-11-06T13:00:00+00:00",
+          "negative": 130,
+          "positive": 10,
+          "predictionEnd": "2024-10-23T13:00:00+00:00",
+          "predictionStart": "2024-09-07T09:00:00+00:00",
+          "prevalence": 0.07142857142857142,
+          "rows": 140
+        }
+      },
+      "selectedBy": "validation Average Precision only; test is held out",
+      "selectedModel": "logistic_regression"
+    },
+    "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+    "reconciliation": {
+      "dbt": {
+        "failed": 0,
+        "models": 27,
+        "skipped": 0,
+        "status": "tested",
+        "tests": 135
+      },
+      "goldRowCounts": {
+        "bi_daily_customer_experience": 884,
+        "dim_carrier": 3,
+        "dim_customer": 242,
+        "dim_date": 373,
+        "dim_product": 48,
+        "dim_store": 4,
+        "fact_customer_experience": 1200,
+        "fact_return": 133,
+        "fact_sales": 2436,
+        "fact_shipment": 1199,
+        "fact_support": 171,
+        "kpi_customer_satisfaction": 1,
+        "ml_customer_dissatisfaction": 1199
+      },
+      "kpis": {
+        "average_review_rating": {
+          "actual": "3.922306",
+          "expected": "3.922306",
+          "matched": true
+        },
+        "gross_sales_amount": {
+          "actual": "1325360.44",
+          "expected": "1325360.44",
+          "matched": true
+        },
+        "on_time_delivery_rate": {
+          "actual": "0.581318",
+          "expected": "0.581318",
+          "matched": true
+        },
+        "order_count": {
+          "actual": "1200",
+          "expected": "1200",
+          "matched": true
+        },
+        "return_rate": {
+          "actual": "0.110833",
+          "expected": "0.110833",
+          "matched": true
+        }
+      },
+      "status": "reconciled"
+    },
+    "runId": "release",
+    "runtimeVersions": {
+      "dbt-core": "1.11.7",
+      "dbt-duckdb": "1.10.1",
+      "duckdb": "1.4.4",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "scikit-learn": "1.7.2"
+    },
+    "stages": [
+      "bi",
+      "dbt",
+      "ml",
+      "reconcile",
+      "silver",
+      "validate-silver",
+      "verify"
+    ],
+    "startedAt": "2026-09-05T14:30:46.120849+00:00",
+    "status": "succeeded"
+  },
+  "notExecutedThisPass": [
+    "hosted Colab",
+    "native BigQuery",
+    "BQML training",
+    "MotherDuck",
+    "Dive deployment",
+    "Airflow/Cosmos tasks",
+    "Minikube/GitSync deployment",
+    "IaC apply",
+    "Kaggle hosting",
+    "Databricks hosting"
+  ],
+  "sameSessionSparkContinuation": {
+    "actualSparkApiMode": "connect-local",
+    "artifacts": [
+      {
+        "path": "artifacts/v15/connect-session/colab/spark_runtime.json",
+        "sha256": "e54d8fbd8c2166564a931179e9dff22235ad6cc43bd05952a3d45bb294a69c77"
+      },
+      {
+        "path": "artifacts/v15/connect-session/colab/spark_result_manifest.json",
+        "sha256": "4c0e31422c4463e8305ba6aa65cf364c69625fe47095c0991639f705da486b9a"
+      },
+      {
+        "path": "artifacts/v15/connect-session/spark_evidence.json",
+        "sha256": "deff3eebf300c311e7112aea3a2b81da0e8165aafba880558562640f53f19bf4"
+      },
+      {
+        "path": "artifacts/v15/connect-session/factory-session/run_evidence.json",
+        "sha256": "8ccb2279aab5f266102478cdaf70649b3c6c1ea253144464961c42e0b93c1e5e"
+      },
+      {
+        "path": "artifacts/v15/connect-session/factory-session/dbt_execution.json",
+        "sha256": "f9e72f8c81d8b39c4cccfd8f12340cf7248f50d97fe7a4926366467d01cc9372"
+      },
+      {
+        "path": "artifacts/v15/connect-session/factory-session/reconciliation.json",
+        "sha256": "8135dc0f323fb947096c1f9dbdbb6a159aef8a4df28ba62d82fb23f88aa6fc97"
+      },
+      {
+        "path": "artifacts/v15/connect-session/factory-session/ml/metrics.json",
+        "sha256": "ce03653a7b6b07c79103661a77faa443f593e1f8bd1e0e6965cdfb107046c746"
+      }
+    ],
+    "hostedColabExecution": false,
+    "isRemote": true,
+    "nativeBigQueryExecution": false,
+    "samePackageAndSession": true,
+    "sparkVersion": "4.0.4",
+    "status": "succeeded"
+  },
+  "scope": "Actual local Windows and WSL runs. Plans remain not-executed. Raw outputs stay outside Git; hashes bind this summary to retained local files.",
+  "sparkMl": {
+    "artifact": {
+      "path": "artifacts/v15/spark-ml/metrics.json",
+      "sha256": "b1bae8cf4431d5b55ad265dcc85469961b0ccbce8aa4b6fe994e0fa6e702a418"
+    },
+    "framework": "spark-ml",
+    "models": {
+      "dummy": {
+        "test": {
+          "average_precision": 0.09444444444444444,
+          "confusion_matrix": [
+            [
+              163,
+              0
+            ],
+            [
+              17,
+              0
+            ]
+          ],
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "roc_auc": 0.5,
+          "threshold": 0.5
+        },
+        "validation": {
+          "average_precision": 0.07142857142857142,
+          "confusion_matrix": [
+            [
+              130,
+              0
+            ],
+            [
+              10,
+              0
+            ]
+          ],
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "roc_auc": 0.5,
+          "threshold": 0.5
+        }
+      },
+      "gradient_boosting": {
+        "test": {
+          "average_precision": 0.36572648455553763,
+          "confusion_matrix": [
+            [
+              163,
+              0
+            ],
+            [
+              16,
+              1
+            ]
+          ],
+          "f1": 0.1111111111111111,
+          "precision": 1.0,
+          "recall": 0.058823529411764705,
+          "roc_auc": 0.8284012991699747,
+          "threshold": 0.5
+        },
+        "validation": {
+          "average_precision": 0.15393402430686295,
+          "confusion_matrix": [
+            [
+              129,
+              1
+            ],
+            [
+              10,
+              0
+            ]
+          ],
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "roc_auc": 0.7888461538461538,
+          "threshold": 0.5
+        }
+      },
+      "logistic_regression": {
+        "test": {
+          "average_precision": 0.198994680556362,
+          "confusion_matrix": [
+            [
+              163,
+              0
+            ],
+            [
+              17,
+              0
+            ]
+          ],
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "roc_auc": 0.7722843738722482,
+          "threshold": 0.5
+        },
+        "validation": {
+          "average_precision": 0.16147954957499497,
+          "confusion_matrix": [
+            [
+              130,
+              0
+            ],
+            [
+              10,
+              0
+            ]
+          ],
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "roc_auc": 0.7776923076923077,
+          "threshold": 0.5
+        }
+      },
+      "random_forest": {
+        "test": {
+          "average_precision": 0.2564687849413515,
+          "confusion_matrix": [
+            [
+              163,
+              0
+            ],
+            [
+              17,
+              0
+            ]
+          ],
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "roc_auc": 0.803680981595092,
+          "threshold": 0.5
+        },
+        "validation": {
+          "average_precision": 0.13693147309271952,
+          "confusion_matrix": [
+            [
+              130,
+              0
+            ],
+            [
+              10,
+              0
+            ]
+          ],
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "roc_auc": 0.7553846153846153,
+          "threshold": 0.5
+        }
+      }
+    },
+    "partitions": {
+      "test": {
+        "latestLabel": "2025-01-19T13:00:00+00:00",
+        "negative": 163,
+        "positive": 17,
+        "predictionEnd": "2025-01-05T13:00:00+00:00",
+        "predictionStart": "2024-11-06T14:00:00+00:00",
+        "prevalence": 0.09444444444444444,
+        "rows": 180
+      },
+      "train": {
+        "latestLabel": "2024-09-06T16:00:00+00:00",
+        "negative": 721,
+        "positive": 75,
+        "predictionEnd": "2024-08-23T16:00:00+00:00",
+        "predictionStart": "2024-01-04T10:00:00+00:00",
+        "prevalence": 0.0942211055276382,
+        "rows": 796
+      },
+      "validation": {
+        "latestLabel": "2024-11-06T13:00:00+00:00",
+        "negative": 130,
+        "positive": 10,
+        "predictionEnd": "2024-10-23T13:00:00+00:00",
+        "predictionStart": "2024-09-07T09:00:00+00:00",
+        "prevalence": 0.07142857142857142,
+        "rows": 140
+      }
+    },
+    "selectedBy": "validation Average Precision only",
+    "selectedModel": "logistic_regression"
+  }
+}

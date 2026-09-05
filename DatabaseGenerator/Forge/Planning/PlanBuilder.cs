@@ -30,6 +30,7 @@ public static class PlanBuilder
         var settings = resolved.Settings;
         var plan = new ResolvedPlan
         {
+            Product = project.Product is null ? null : new ProductDesign(),
             ProjectName = resolved.Name, ArchitecturePreset = resolved.PresetId, ResolvedSettings = settings,
             BusinessScenario = new() { Id = scenario.ScenarioId, DisplayName = scenario.DisplayName, MlEnabled = scenario.MlEnabled,
                 Profile = MatchesProfile(project, scenario) ? scenario.ProfileId : "custom" },
@@ -118,6 +119,7 @@ public static class PlanBuilder
         AddControlPlane(plan, Unique);
         AddCredentialsAndCosts(plan, project, definition);
         AddArtifacts(plan, source.Id);
+        if (project.Product is not null) AddProduct(plan, project, Unique);
         if (scenario.MlEnabled && preparation is null)
             plan.Warnings.Add("ML semantic intent is preserved, but this selected architecture has no implemented native BigQuery ML execution path. No training is implied.");
         if (scenario.MlEnabled && (generation.TimeSpanDays ?? 60) < 365)
@@ -139,6 +141,61 @@ public static class PlanBuilder
     }
 
     public static string ToJson(ResolvedPlan plan) => JsonSerializer.Serialize(plan, PlanningJsonContext.Default.ResolvedPlan).Replace("\r\n", "\n", StringComparison.Ordinal) + "\n";
+
+    private static void AddProduct(ResolvedPlan plan, StudioProjectSpec project, Func<string, string> unique)
+    {
+        var intent = project.Product!;
+        var settings = plan.ResolvedSettings;
+        plan.Product = new ProductDesign
+        {
+            PipelineMode = intent.PipelineMode, BiTarget = intent.BiTarget,
+            Orchestrator = settings.Orchestrator!.StartsWith("airflow", StringComparison.Ordinal) ? "airflow" : settings.Orchestrator,
+            AirflowHost = settings.AirflowHost ?? (settings.Orchestrator == "airflow-minikube" ? "minikube" : settings.Orchestrator == "airflow-docker" ? "docker-local" : null),
+            Ml = plan.BusinessScenario.MlEnabled ? new MlExperimentDesign { RuntimeTarget = intent.MlTarget } : null
+        };
+        foreach (var stage in plan.Stages.Where(s => s.CompilerOperation.StartsWith("factory-", StringComparison.Ordinal)))
+        {
+            stage.ImplementationStatus = stage.CompilerOperation == "factory-export-ml" ? "generated" : "runnable";
+            stage.ValidationLevel = stage.CompilerOperation == "factory-export-ml" ? "generated" : "reconciled";
+            if (stage.CompilerOperation != "factory-export-ml") stage.Evidence.Add(new()
+            {
+                Id = "v15-local-duckdb-dbt-sklearn-bi", Reference = "docs/v1.5-evidence.json", ValidationLevel = "reconciled",
+                Scope = "V1.5 local 60-order BI and 1200-order ML fixtures executed DuckDB, 27 dbt models/135 tests, five KPI reconciliations and Evidence package generation. Four sklearn candidates produced measured metrics. This planned project has not executed; report rendering is recorded separately."
+            });
+            stage.ExecutionMode = "local-or-airflow";
+            stage.Engine = stage.CompilerOperation switch { "factory-dbt" => "dbt-duckdb", "factory-ml" or "factory-export-ml" => "scikit-learn", "factory-bi" => "evidence", _ => "duckdb" };
+            stage.Kind = stage.CompilerOperation switch { "factory-dbt" => "analytics-transform", "factory-ml" => "ml-training", "factory-export-ml" => "ml-design", "factory-bi" => "bi-validation", _ => stage.Kind };
+        }
+        var gold = plan.Stages.LastOrDefault(s => s.Kind == "analytics-transform");
+        if (!plan.Stages.Any(s => s.Kind == "bi-validation"))
+        {
+            var bi = new PlanStage { Id = unique("bi_validation"), Name = "BI & Validation / Evidence", Kind = "bi-validation", Engine = "evidence", Runtime = "local-process",
+                Inputs = plan.Product.BiInputs, Outputs = new() { "Evidence report package" }, ImplementationStatus = "generated", ValidationLevel = "generated",
+                CompilerOperation = "standalone-evidence", CompilerBoundary = "standalone-after-pipeline", ExecutionMode = "explicit-local-build",
+                Reason = "Generated universal report consumer. Export measured Gold and bound dbt/run evidence before building; compilation does not execute or publish a report." };
+            plan.Stages.Add(bi);
+            if (gold is not null) plan.Edges.Add(new() { From = gold.Id, To = bi.Id });
+        }
+        if (plan.BusinessScenario.MlEnabled && !plan.Stages.Any(s => s.Kind is "ml-training" or "ml-design"))
+        {
+            var ml = new PlanStage { Id = unique("ml_design"), Name = "ML Lab / " + intent.MlTarget, Kind = "ml-design", Engine = "scikit-learn", Runtime = intent.MlTarget,
+                Inputs = new() { "Gold feature mart" }, Outputs = new() { "factory/ml/spec.json", "notebook export" }, ImplementationStatus = "generated", ValidationLevel = "generated",
+                CompilerOperation = "standalone-ml-export", CompilerBoundary = "standalone-after-pipeline", ExecutionMode = "explicit-notebook",
+                Reason = "Delivery-time classification, mature labels, chronological split and 14-day embargo. Training requires actual metrics from the selected runtime." };
+            plan.Stages.Add(ml);
+            var bi = plan.Stages.Single(s => s.Kind == "bi-validation");
+            if (gold is not null)
+            {
+                plan.Edges.RemoveAll(e => e.From == gold.Id && e.To == bi.Id);
+                plan.Edges.Add(new() { From = gold.Id, To = ml.Id });
+            }
+            plan.Edges.Add(new() { From = ml.Id, To = bi.Id });
+        }
+        plan.Artifacts.Add(new() { Path = "factory/product_design.json", Purpose = "Compiled product intent, derived from this project.", StageId = plan.Stages[0].Id });
+        plan.Warnings.RemoveAll(w => w.Contains("no implemented native BigQuery ML execution path", StringComparison.Ordinal));
+        plan.CostAndQuotaNotes.Add("Colab remains a manual interactive checkpoint with dynamic limits. Keep small sklearn feature marts in the same Colab session; materialization limit " + intent.MaterializationLimitMb + " MiB. Kaggle/Databricks notebooks are exports; BQML training requires explicit billing authorization.");
+        plan.CostAndQuotaNotes.Add("Docker/Codespaces are development hosts; Minikube/Helm/GitSync is Kubernetes proof; GitHub Actions/kind-ci are finite CI validation. MotherDuck account quotas apply; no embedded Dive or compute-backed Hugging Face Space is required.");
+    }
 
     private static bool MatchesProfile(StudioProjectSpec project, ScenarioDefinition scenario)
     {
@@ -205,7 +262,7 @@ public static class PlanBuilder
         plan.Edges.Add(new() { From = reconcile.Id, To = gold.Id });
         plan.ManualCheckpoints.Add(new() { AfterStage = gold.Id, Reason = gold.Reason });
         plan.Warnings.Add("Gold is a generated standalone adapter after the core pipeline. PLAN does not add an executable dbt activity to the compiled DAG.");
-        if (!plan.BusinessScenario.MlEnabled) return;
+        if (!plan.BusinessScenario.MlEnabled || plan.Product is not null) return;
         var features = new PlanStage
         {
             Id = unique("ml_features"), Name = "ML features and partition readiness", Kind = "ml-features", Engine = "bigquery-sql", Runtime = "bigquery",

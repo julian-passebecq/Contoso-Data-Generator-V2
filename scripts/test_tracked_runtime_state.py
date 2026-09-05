@@ -14,7 +14,7 @@ class RuntimeStateGuardTests(unittest.TestCase):
         for path in (".forge-live/project.json", "nested/.Forge-Live/result.json",
                      ".forge-runtime/run.json", ".kube/config", ".config/gcloud/configurations/config_default",
                      "out/test/result_manifest.json", "artifacts/run/work_order.json",
-                     "generated/.forge/state/runs/id/result_manifest.json", "generated/colab/work_order.json",
+                     "generated/.forge/state/runs/id/result_manifest.json", "generated/.forge/v15/run/ml/metrics.json", "generated/colab/work_order.json",
                      "generated/colab/result_manifest.json", "generated/colab/spark_runtime.json", "generated/colab/work_package.zip",
                      "lake/silver/orders.parquet", "local/application_default_credentials.json",
                      "local/credentials.db", "local/access_tokens.db", ".env", ".env.local", "kubeconfig"):

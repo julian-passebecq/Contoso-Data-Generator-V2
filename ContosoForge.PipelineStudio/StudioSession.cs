@@ -104,6 +104,26 @@ public sealed class StudioSession
         InvalidateCompilation();
     }
 
+    public void ApplyProduct(ProductIntent product)
+    {
+        var draft = JsonSerializer.Deserialize(ProjectJson, ArchitectureJsonContext.Default.StudioProjectSpec)!;
+        var original = PipelineDocument.Write(PipelineDocument.Read(PipelineCompiler.CreateDefault(ResolvedJson)));
+        draft.Product = product;
+        var resolved = ArchitecturePresets.ToJson(ArchitecturePresets.Resolve(draft));
+        var replacement = PipelineJson == original ? PipelineDocument.Read(PipelineCompiler.CreateDefault(resolved)) : Pipeline;
+        Project = draft;
+        Pipeline = replacement;
+        InvalidateCompilation();
+    }
+
+    public void ApplyGeneration(string json)
+    {
+        var node = JsonNode.Parse(ProjectJson)!;
+        node["sourceProject"]!["generation"] = JsonNode.Parse(json);
+        Project = ProjectSpecReader.Read(node.ToJsonString()).Studio!;
+        InvalidateCompilation();
+    }
+
     public IReadOnlyList<string> Validate()
     {
         try

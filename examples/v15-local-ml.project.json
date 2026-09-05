@@ -1,0 +1,67 @@
+{
+  "version": "1.2.0",
+  "sourceProject": {
+    "version": "1.0.0",
+    "name": "customer-satisfaction-local",
+    "scenario": "retail.customer_satisfaction",
+    "generation": {
+      "legacyContosoMode": true,
+      "seed": 20260904,
+      "orders": 1200,
+      "customers": 240,
+      "products": 48,
+      "stores": 4,
+      "startDate": "2024-01-01T00:00:00Z",
+      "formats": [
+        "CSV"
+      ],
+      "timeSpanDays": 365
+    },
+    "extensions": {
+      "shipments": true,
+      "shipmentEvents": true,
+      "returns": true,
+      "supportTickets": true,
+      "reviews": true
+    },
+    "problems": {
+      "duplicates": true,
+      "cdc": true,
+      "lateArrivals": true,
+      "scd2": true,
+      "qualityIssues": true
+    },
+    "outputs": {
+      "sql": true,
+      "pyspark": true,
+      "dbt": true,
+      "airflow": true,
+      "semanticModel": true,
+      "mlSpec": true
+    },
+    "lab": {
+      "docker": true,
+      "airflow": true,
+      "spark": true,
+      "dbtDuckdb": true,
+      "kubernetesKind": true,
+      "openTofu": true
+    }
+  },
+  "architecture": {
+    "presetId": "local-fast",
+    "overrides": {
+      "iac": "none"
+    }
+  },
+  "product": {
+    "version": "1.5",
+    "pipelineMode": "full-batch",
+    "mlTarget": "local-sklearn",
+    "biTarget": "evidence",
+    "dbtIntegration": "plain",
+    "labelAsOf": "2025-02-01T00:00:00Z",
+    "materializationLimitMb": 256
+  },
+  "businessScenario": "retail.customer_satisfaction_ml"
+}

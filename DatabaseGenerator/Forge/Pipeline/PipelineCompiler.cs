@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using DatabaseGenerator.Forge.Architecture;
 
 namespace DatabaseGenerator.Forge.Pipeline;
 
@@ -39,6 +40,9 @@ public static class PipelineCompiler
     public static string CreateDefault(string resolvedProjectJson)
     {
         using var document = JsonDocument.Parse(resolvedProjectJson);
+        var factoryProject = JsonSerializer.Deserialize(resolvedProjectJson, ArchitectureJsonContext.Default.ResolvedProject)!;
+        if (factoryProject.Product is not null && FactoryPipeline.IsLocal(factoryProject.Settings))
+            return PipelineDocument.Write(FactoryPipeline.Create(factoryProject));
         var settings = ReadSettings(document.RootElement);
         var colab = Get(settings, "runtime").StartsWith("google-colab", StringComparison.Ordinal);
         var pipeline = new PipelineDefinition
@@ -184,6 +188,7 @@ public static class PipelineCompiler
             mapped.Reason = "This activity carries custom bindings or connector properties requiring an exporter mapping; they will not be ignored.";
             return mapped;
         }
+        if (FactoryPipeline.Map(activity, mapped, settings)) return mapped;
         if (activity.Kind == "source" && activity.Implementation == "generated-source" && mapped.Source == "local")
         {
             mapped.Operation = "verify-source";
@@ -219,6 +224,7 @@ public static class PipelineCompiler
     private static void CheckDatasetBindings(PipelineDefinition pipeline, PipelineActivity activity, PipelinePlannedActivity mapped)
     {
         if (mapped.Operation == "unsupported") return;
+        if (mapped.Operation.StartsWith("factory-", StringComparison.Ordinal)) return; // Factory mapping rejects all custom bindings.
         bool Matches(string id, string expectedPath, string expectedFormat)
         {
             var dataset = pipeline.Datasets.Single(d => d.Id == id);
@@ -266,6 +272,11 @@ public static class PipelineCompiler
         if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("settings", out var settings) || settings.ValueKind != JsonValueKind.Object)
             throw new ArgumentException("resolved_project.json must contain a settings object.");
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (root.TryGetProperty("product", out var product) && product.ValueKind == JsonValueKind.Object)
+        {
+            result["productVersion"] = product.GetProperty("version").GetString()!;
+            result["mlTarget"] = product.GetProperty("mlTarget").GetString()!;
+        }
         foreach (var item in settings.EnumerateObject())
             if (item.Value.ValueKind == JsonValueKind.String) result[item.Name] = item.Value.GetString()!;
         foreach (var key in new[] { "engine", "runtime", "storage", "fileFormat", "tableFormat", "warehouse" })

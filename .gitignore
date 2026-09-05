@@ -349,6 +349,7 @@ ASALocalRun/
 healthchecksdb
 
 # Contoso Forge generated runtime artifacts
+**/.forge/v15/
 /.forge-live/
 /.forge-runtime/
 /out/

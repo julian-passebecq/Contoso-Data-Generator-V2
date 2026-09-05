@@ -9,6 +9,9 @@
     "sourceProject"
   ],
   "properties": {
+    "product": {
+      "$ref": "product-intent.schema.json"
+    },
     "version": {
       "const": "1.2.0"
     },
@@ -29,6 +32,9 @@
             "free-gcp-full",
             "local-spark",
             "local-fast",
+            "local-airflow",
+            "motherduck-lite",
+            "external-sink",
             "azure-adls-airflow",
             "fabric-lakehouse",
             "databricks-free",
@@ -102,6 +108,8 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "airflowHost": {"enum": ["docker-local", "codespaces", "minikube", "kind-ci"]},
+        "executor": {"enum": ["local", "kubernetes"]},
         "engine": {
           "enum": [
             "spark",
@@ -126,6 +134,7 @@
           "enum": [
             "none",
             "local-sequential",
+            "airflow",
             "airflow-docker",
             "airflow-minikube",
             "gcp-workflows",

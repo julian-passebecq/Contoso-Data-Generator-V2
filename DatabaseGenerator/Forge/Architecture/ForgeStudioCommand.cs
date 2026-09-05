@@ -75,6 +75,7 @@ public static class ForgeStudioCommand
             BigQueryColabExporter.Export(stage, resolved, canonical);
             BigQueryAnalyticsExporter.Export(stage, resolved);
             FreeGcpInfrastructureExporter.Export(stage, resolved, canonical);
+            FactoryExporter.Export(stage, project);
             if (resolvedPlan is not null)
                 ForgeIo.WriteText(Path.Combine(stage, "plan", "resolved_plan.json"), PlanBuilder.ToJson(resolvedPlan));
             var files = Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories)

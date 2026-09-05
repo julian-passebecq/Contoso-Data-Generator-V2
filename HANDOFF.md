@@ -1,3 +1,39 @@
+# V1.5 continuation — 2026-09-05
+
+Implemented the Data Factory / ML Lab / BI Validation slice on branch `codex/v1.5-data-factory`. The first repository operation was `git fetch origin main`. Remote main matched the audited ZIP pin, `b9fe2b6f8708a57a91d6a6ba4241e4a4a1661b8f`; no reset or historical checkout was used. All 20 continuation-pack files were read, starting in the user's specified order. The user's direct request governed scope; embedded continuation prompts were treated as source material.
+
+The additive `product.version=1.5` contract retains the existing C# source project, neutral compiler and offline planner. WPF now starts at Business and exposes all ten requested sections. Opt-in local-fast is executable with a real DuckDB Bronze/Silver adapter, dbt staging/intermediate/Gold/tests, independent truth reconciliation, optional bounded sklearn training, and Evidence even with ML disabled. Existing Spark, Colab classic/true Connect, BigQuery Sandbox/dbt-bigquery/BQML, Airflow, Kubernetes/GitSync, IaC, semantic/KPI/truth contracts and all previous tests remain. Legacy default generation retains its audited 152 hashes.
+
+Exact artifact paths, hashes, versions, timestamps, dbt counts, KPI comparisons and model metrics are in [docs/v1.5-evidence.json](docs/v1.5-evidence.json). [docs/v1.5.md](docs/v1.5.md) contains the full changed behavior, capability matrix, limitations and commands. The new HEAD is the commit containing this section (`git rev-parse HEAD`); its changed-file list is reproducible with `git diff --name-only b9fe2b6f8708a57a91d6a6ba4241e4a4a1661b8f HEAD`.
+
+Actual release evidence:
+
+- `out/v15-release-bi/.forge/v15/release/`: six stages succeeded, 60 orders, ML disabled, 11 Bronze/13 Silver tables, 27 dbt models/135 tests, all five Gold KPIs reconciled, strict Evidence sources/build succeeded. Built HTML SHA-256: `456b6a8edb85c9c903e09c834cbc4e2e522170c0f5c78d1e22df64eb1e0d7e8b`.
+- `out/v15-release-ml/.forge/v15/release/`: seven stages succeeded, 1,200 orders/365 days, same dbt model/test gate, real dummy/logistic/RF/histogram-gradient-boosting fits, and strict Evidence build. Built HTML SHA-256: `fb0d553fcea497e802e171e2623180de02ccdcbf0c701f5efe6bd26e82473663`.
+- ML partitions after the 14-day embargo: train 796 (75 positive), validation 140 (10 positive), test 180 (17 positive). Selected logistic regression by validation AP only. Held-out test AP `0.18754007883316906`, ROC-AUC `0.765427643450018`; F1/precision/recall `0` at threshold 0.5; confusion `[[163,0],[17,0]]`. These are measured educational results, not a claim of useful threshold performance.
+- `artifacts/v15/spark-ml/`: actual secondary Spark ML 4.0.4 comparison completed in WSL. `artifacts/v15/connect-session/`: issued/extracted package executed true Connect (`isRemote=true`) → dbt → Gold reconciliation → sklearn → Evidence package in the same local session. Hosted V1.5 Colab and native BigQuery were not executed by this proof.
+- `artifacts/v15/exported-sklearn/`: portable exported sklearn code executed independently. Four notebook exports passed notebook/code validation; hosted destinations remain unexecuted.
+- 230 .NET tests passed, including all 216 previous tests. Python: 85 passed, 3 optional Google-client integration tests explicitly skipped. Legacy WPF editor/planner and V1.5 WPF flow smokes passed; latest V1.5 renders are in `artifacts/v15/wpf-release/`. Generated project schemas, resolved-plan schema, notebook/Python syntax and real `dbt parse` for Cosmos preparation passed. The Evidence report was also inspected in a browser.
+
+Reproduce the core result from a fresh output location:
+
+```powershell
+dotnet test ContosoDGV2.sln
+python -m venv .tools/v15
+.tools/v15/Scripts/python.exe -m pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt
+dotnet run --project DatabaseGenerator --no-build -- forge generate --project examples/v15-local-ml.project.json --output out/v15-release-ml
+.tools/v15/Scripts/python.exe out/v15-release-ml/pipeline/run_local.py --root out/v15-release-ml --run-id release
+.tools/v15/Scripts/python.exe out/v15-release-ml/factory/build_evidence.py --state out/v15-release-ml/.forge/v15/release
+.tools/v15/Scripts/python.exe scripts/test_v15.py --root out/v15-release-ml --state out/v15-release-ml/.forge/v15/release -v
+```
+
+Use `v15-local-bi.project.json` / `out/v15-release-bi` for the no-ML run. Node/npm is required for Evidence rendering. Raw evidence and generated dependencies remain untracked. `scripts/capture_v15_evidence.py` validates retained hashes before regenerating the ledger. Linux/WSL Spark commands, exports, WPF checks and explicit MotherDuck commands are in the V1.5 guide.
+
+Remaining boundaries: MotherDuck and Gold-only Dive are generated/auth-gated and unexecuted; optional Cosmos/Airflow tasks were not run. Cloud/Minikube/IaC historical evidence below is preserved, not re-certified. Local modes replay the scenario's batch/CDC/SCD2/late/quality exercises; persistent incremental processing and prevalence/noise/causal controls are not implemented. Regression/KMeans/IsolationForest candidate factories exist, while the authored ML scenario is classification. BQML stays SQL export or explicitly billing-gated training. Fabric/Databricks remain exporters/consumers, Polars/Pandas engines and Hugging Face model demos remain deferred. New CI definitions were added but remote CI has not been run in this local task. All newly planned projects retain `not-executed`; only the evidenced local adapter is promoted from reference-only.
+
+---
+
+The following sections are historical handoffs; their status claims apply to their stated runs and dates.
 # Contoso Forge V1.4.0 release handoff — 2026-09-05
 
 V1.4.0 was published in `ec1ea2d6bb2e408480277ef11eef46333de00939`, following audited V1.3 baseline `407c1d250addb7b3f0cc3f9ce21f5ae676c2132d`. Offline C# Plan, separate business scenarios, explicit `free-gcp-connect`, capability/evidence scope and WPF Plan-before-Compile are implemented. Plan output remains opt-in. Local-only plans do not require Git; explicit time horizons require enough orders to cover every requested day.

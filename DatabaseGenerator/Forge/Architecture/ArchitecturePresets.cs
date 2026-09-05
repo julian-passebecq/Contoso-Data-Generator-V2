@@ -18,7 +18,10 @@ public static class ArchitecturePresets
         ConnectPreset(),
         Preset("free-gcp-full", "GCP billing-enabled free-usage lab", "spark", "google-colab", "airflow-minikube", "gcs", "none", "bigquery", "gcp-free-tier-billing-enabled"),
         Preset("local-spark", "Existing V1 Spark / Docker reference", "spark", "docker", "airflow-docker", "local", "delta", "duckdb", "local"),
-        Preset("local-fast", "Local DuckDB reference contract", "duckdb", "local-process", "local-sequential", "local", "none", "duckdb", "local"),
+        Preset("local-fast", "Local Fast / DuckDB (V1.5 opt-in)", "duckdb", "local-process", "local-sequential", "local", "none", "duckdb", "local"),
+        LocalProfile("local-airflow", "Local Airflow / Docker or Codespaces", "duckdb", "airflow", "docker-local"),
+        LocalProfile("motherduck-lite", "MotherDuck Lite / Gold / Dive", "motherduck", "local-sequential", null),
+        Preset("external-sink", "External sink / export only", "spark", "docker", "local-sequential", "local", "none", "none", "external"),
         Preset("azure-adls-airflow", "Azure Data Lake / Airflow reference", "spark", "google-colab", "airflow-minikube", "azure-adls", "none", "none", "external"),
         Preset("fabric-lakehouse", "Fabric Lakehouse reference", "spark", "fabric-spark", "fabric", "fabric-onelake", "delta", "fabric", "external"),
         Preset("databricks-free", "Databricks reference", "spark", "databricks-spark", "databricks-jobs", "local", "delta", "databricks", "external"),
@@ -51,13 +54,17 @@ public static class ArchitecturePresets
                 o.Runtime.StartsWith("google-colab", StringComparison.Ordinal) ? "colab-native" : o.Runtime == "docker" ? "pinned" : null),
             SparkVersion = o.SparkVersion ?? (o.Runtime is null ? d.SparkVersion :
                 o.Runtime.StartsWith("google-colab", StringComparison.Ordinal) ? "4.0.4" : o.Runtime == "docker" ? "3.5.9" : null),
-            SparkRemote = o.SparkRemote ?? d.SparkRemote
+            SparkRemote = o.SparkRemote ?? d.SparkRemote,
+            AirflowHost = o.AirflowHost ?? d.AirflowHost, Executor = o.Executor ?? d.Executor
         };
+        if (project.Product is not null && preset.PresetId == "local-fast" && o.Iac is null) settings.Iac = "none";
         Validate(settings, project.Gcp, project.Git);
+        project.Product?.Validate(project, settings);
         var result = new ResolvedProject
         {
             PresetId = preset.PresetId, Name = project.SourceProject.Name, Settings = settings,
-            Gcp = project.Gcp, Git = project.Git, DatasetFingerprint = fingerprint
+            Gcp = project.Gcp, Git = project.Git, DatasetFingerprint = fingerprint,
+            Product = project.Product, BusinessScenario = project.Product is null ? null : project.BusinessScenario ?? Planning.ScenarioCatalog.DefaultScenarioId
         };
         if (settings.Runtime!.StartsWith("google-colab", StringComparison.Ordinal))
             result.Notes.Add("Colab is an interactive, ephemeral Spark runtime; a work order and verified manual result are required.");
@@ -70,6 +77,15 @@ public static class ArchitecturePresets
     }
 
     public static string ToJson(ResolvedProject project) => JsonSerializer.Serialize(project, ArchitectureJsonContext.Default.ResolvedProject);
+
+    private static ArchitecturePreset LocalProfile(string id, string name, string warehouse, string orchestrator, string? host)
+    {
+        var result = Preset(id, name, "duckdb", "local-process", orchestrator, "local", "none", warehouse, warehouse == "motherduck" ? "external" : "local");
+        result.Defaults.Iac = "none";
+        result.Defaults.AirflowHost = host;
+        result.Defaults.Executor = host is null ? null : "local";
+        return result;
+    }
 
     private static ArchitecturePreset ConnectPreset()
     {
@@ -111,7 +127,13 @@ public static class ArchitecturePresets
     {
         Choice(s.Engine, "engine", "spark", "duckdb", "polars", "pandas");
         Choice(s.Runtime, "runtime", "google-colab", "google-colab-connect-local", "google-colab-connect-remote", "docker", "local-process", "databricks-spark", "fabric-spark", "kubernetes");
-        Choice(s.Orchestrator, "orchestrator", "none", "local-sequential", "airflow-docker", "airflow-minikube", "gcp-workflows", "databricks-jobs", "fabric", "adf");
+        Choice(s.Orchestrator, "orchestrator", "none", "local-sequential", "airflow", "airflow-docker", "airflow-minikube", "gcp-workflows", "databricks-jobs", "fabric", "adf");
+        if (s.AirflowHost is not null) Choice(s.AirflowHost, "airflowHost", "docker-local", "codespaces", "minikube", "kind-ci");
+        if (s.Executor is not null) Choice(s.Executor, "executor", "local", "kubernetes");
+        if (s.Orchestrator == "airflow" && (s.AirflowHost is null || s.Executor is null))
+            throw new ArgumentException("orchestrator=airflow requires separate airflowHost and executor.");
+        if (s.AirflowHost is not null && !s.Orchestrator!.StartsWith("airflow", StringComparison.Ordinal))
+            throw new ArgumentException("airflowHost requires an Airflow orchestrator. GitHub Actions is CI, not an Airflow host.");
         Choice(s.DagSource, "dagSource", "github-gitsync", "local");
         Choice(s.Storage, "storage", "local", "gcs", "azure-adls", "fabric-onelake", "r2", "seaweedfs", "b2", "s3");
         Choice(s.FileFormat, "fileFormat", "csv", "jsonl", "avro", "orc", "parquet");

@@ -1,6 +1,6 @@
 # Contoso Data Generator V2
 
-Contoso Forge V1.4.0 adds an offline C# architecture planner: choose a business scenario and preset, inspect the resolved DAG, manual checkpoints and evidence, then compile. The explicit free-gcp-connect preset preserves free-gcp-lab classic behavior. See [planning and CLI usage](docs/planning.md) and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
+Contoso Forge V1.5 adds a business-first Data Factory, ML Lab and BI Validation flow. Opt-in local projects execute DuckDB → dbt → reconciled Gold → scikit-learn → Evidence, with BI also available when ML is disabled. Spark classic/Connect, BigQuery Sandbox, Airflow, IaC and the existing generator remain available. See the [V1.5 execution guide and evidence](docs/v1.5.md), [planning and CLI usage](docs/planning.md), and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
 
 
 
