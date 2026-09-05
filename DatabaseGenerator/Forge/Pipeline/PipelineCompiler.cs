@@ -41,7 +41,7 @@ public static class PipelineCompiler
     {
         using var document = JsonDocument.Parse(resolvedProjectJson);
         var factoryProject = JsonSerializer.Deserialize(resolvedProjectJson, ArchitectureJsonContext.Default.ResolvedProject)!;
-        if (factoryProject.Product is not null && FactoryPipeline.IsLocal(factoryProject.Settings))
+        if (factoryProject.Product is not null && (factoryProject.Product.Version == "1.7" || FactoryPipeline.IsLocal(factoryProject.Settings)))
             return PipelineDocument.Write(FactoryPipeline.Create(factoryProject));
         var settings = ReadSettings(document.RootElement);
         var colab = Get(settings, "runtime").StartsWith("google-colab", StringComparison.Ordinal);
@@ -276,6 +276,11 @@ public static class PipelineCompiler
         {
             result["productVersion"] = product.GetProperty("version").GetString()!;
             result["mlTarget"] = product.GetProperty("mlTarget").GetString()!;
+            if (result["productVersion"] == "1.7")
+            {
+                result["stopAfter"] = product.GetProperty("stopAfter").GetString()!;
+                result["dbtIntegration"] = product.GetProperty("dbtIntegration").GetString()!;
+            }
         }
         foreach (var item in settings.EnumerateObject())
             if (item.Value.ValueKind == JsonValueKind.String) result[item.Name] = item.Value.GetString()!;

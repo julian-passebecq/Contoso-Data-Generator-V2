@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeJourneys();
         PresetBox.ItemsSource = ArchitecturePresets.List().Select(p => p.PresetId);
         ScenarioBox.ItemsSource = ScenarioCatalog.List();
         PipelineModeBox.ItemsSource = ProductIntent.Modes;
@@ -287,6 +288,7 @@ public partial class MainWindow : Window
         MlTargetBox.SelectedItem = product.MlTarget;
         BiTargetBox.SelectedItem = product.BiTarget;
         DbtIntegrationBox.SelectedItem = product.DbtIntegration;
+        RefreshJourney();
         RefreshProduct();
         var datasetId = DatasetBox.SelectedItem as string;
         DatasetBox.ItemsSource = Session.Pipeline.Datasets.Select(d => d.Id).ToList();
@@ -564,7 +566,7 @@ public partial class MainWindow : Window
         "preset/profile" => [ScenarioBox, PresetBox, CostBox],
         "overrides" => [OverridesEditor],
         "generation" => [GenerationEditor],
-        "product" => [PipelineModeBox, MlTargetBox, BiTargetBox, DbtIntegrationBox],
+        "product" => [PipelineModeBox, MlTargetBox, BiTargetBox, DbtIntegrationBox, GoalBox, StopAfterBox, SelectedKpisBox, AnalysisEditor, PublishEditor, RecipeEditor],
         _ => throw new ArgumentException("Unknown editor panel.")
     };
 

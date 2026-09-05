@@ -37,6 +37,8 @@ jobs:
         run: |
           dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v16-local-polars.project.json --factory-smoke-output out/studio-smoke/polars
           dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v16-local-pandas.project.json --factory-smoke-output out/studio-smoke/pandas
+      - name: Execute V1.7 goal, stop-stage and typed intent round trip
+        run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v17-kpi-duckdb.project.json --journey-smoke-output out/studio-smoke/journey
       - uses: actions/upload-artifact@v4
         if: always()
         with:

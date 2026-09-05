@@ -22,6 +22,8 @@ public partial class MainWindow
         Session.ApplyProduct(new ProductIntent
         {
             Version = current.Version,
+            Goal = current.Goal, StopAfter = current.StopAfter, SelectedKpis = current.SelectedKpis,
+            Analysis = current.Analysis, PublishTargets = current.PublishTargets, Recipe = current.Recipe,
             PipelineMode = PipelineModeBox.Text, MlTarget = MlTargetBox.Text, BiTarget = BiTargetBox.Text,
             DbtIntegration = DbtIntegrationBox.Text, LabelAsOf = current.LabelAsOf, MaterializationLimitMb = current.MaterializationLimitMb
         });
@@ -67,7 +69,7 @@ public partial class MainWindow
             factoryRunning = true;
             RunFactoryButton.IsEnabled = false;
             ResultsPreview.Text = "Generating deterministic C# sources...\n";
-            ProductFlowTabs.SelectedIndex = 9;
+            ProductFlowTabs.SelectedIndex = project.Product?.Version == "1.7" ? 7 : 9;
             await new ForgeProjectGenerator().GenerateAsync(project.SourceProject, lastFactoryRoot);
             ForgeStudioCommand.Compile(project, lastFactoryRoot, graph, includePlan: true);
             await RunPython(Path.Combine(lastFactoryRoot, "pipeline", "run_local.py"), "--root", lastFactoryRoot, "--run-id", id);

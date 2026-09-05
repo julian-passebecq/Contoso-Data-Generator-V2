@@ -34,11 +34,16 @@ public partial class App : Application
                 RunFactorySmoke(window, factoryOutput);
                 Shutdown(0);
             }
+            else if (options.TryGetValue("--journey-smoke-output", out var journeyOutput))
+            {
+                RunJourneySmoke(window, journeyOutput);
+                Shutdown(0);
+            }
             else window.Show();
         }
         catch (Exception error)
         {
-            if (options.TryGetValue("--smoke-output", out var output) || options.TryGetValue("--factory-smoke-output", out output))
+            if (options.TryGetValue("--smoke-output", out var output) || options.TryGetValue("--factory-smoke-output", out output) || options.TryGetValue("--journey-smoke-output", out output))
             {
                 Directory.CreateDirectory(output);
                 File.WriteAllText(Path.Combine(output, "failure.txt"), error.ToString());
@@ -53,7 +58,7 @@ public partial class App : Application
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         for (var index = 0; index < args.Length; index += 2)
         {
-            if (index + 1 == args.Length || args[index] is not ("--project" or "--pipeline" or "--smoke-output" or "--factory-smoke-output"))
+            if (index + 1 == args.Length || args[index] is not ("--project" or "--pipeline" or "--smoke-output" or "--factory-smoke-output" or "--journey-smoke-output"))
                 throw new ArgumentException("Options: --project <project.json> --pipeline <pipeline.json> --smoke-output <empty-directory> --factory-smoke-output <empty-directory>");
             result.Add(args[index], Path.GetFullPath(args[index + 1]));
         }
@@ -65,7 +70,7 @@ public partial class App : Application
         var directory = new DirectoryInfo(Environment.CurrentDirectory);
         while (directory is not null)
         {
-            var candidate = Path.Combine(directory.FullName, "examples/free-gcp-lab.project.json");
+            var candidate = Path.Combine(directory.FullName, "examples/v17-kpi-duckdb.project.json");
             if (File.Exists(candidate)) return candidate;
             directory = directory.Parent;
         }
@@ -393,6 +398,31 @@ public partial class App : Application
             ["selectedEngine"] = selectedEngine, ["selectedEngineVisible"] = true,
             ["corePlanIdentical"] = true, ["actualPipelineExecution"] = "tested separately through generated neutral runner"
         }.ToJsonString(new() { WriteIndented = true }) + "\n");
+    }
+
+    private static void RunJourneySmoke(MainWindow window, string output)
+    {
+        Directory.CreateDirectory(output);
+        Require(window.Session.Project.Product?.Version == "1.7", "Load a V1.7 journey.");
+        Require(window.ProductFlowTabs.Items.Cast<TabItem>().Take(8).Select(t => t.Header.ToString()).SequenceEqual(ProductIntent.JourneySteps), "Goal-first journey ordering differs from product design.");
+        window.PlanCurrent();
+        window.StopAfterBox.SelectedItem = "bronze";
+        Require(!window.RunFactoryButton.IsEnabled, "Pending stop stage retained execution.");
+        window.ApplyJourneySettings();
+        var plan = window.PlanCurrent();
+        Require(plan.Stages.All(s => s.LogicalStage is null or "generate" or "bronze"), "Studio compiled past stopAfter.");
+        window.SaveTo(Path.Combine(output, "bundle/pipeline.json"));
+        window.LoadProject(Path.Combine(output, "bundle/project.json"));
+        window.PlanCurrent();
+        window.CompileTo(Path.Combine(output, "compiled"));
+        Require(window.Session.Project.Product!.StopAfter == "bronze", "stopAfter did not survive save/load/compile.");
+        for (var index = 0; index < 8; index++)
+        {
+            window.ProductFlowTabs.SelectedIndex = index;
+            Render(window, 1500, 1000, Path.Combine(output, "journey-step-" + index + ".png"));
+        }
+        File.WriteAllText(Path.Combine(output, "journey-smoke-report.json"), new JsonObject { ["status"] = "passed", ["goalFirst"] = true,
+            ["stopAfterRoundTrip"] = true, ["pendingEditsBlockRun"] = true, ["uiRendered"] = true, ["externalExecuted"] = false }.ToJsonString());
     }
 
     private static void Render(MainWindow window, int width, int height, string path)

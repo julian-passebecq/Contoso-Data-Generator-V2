@@ -1,0 +1,115 @@
+name: journeys-v17
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  modular-journeys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      POLARS_MAX_THREADS: '4'
+      DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Legacy compatibility and goal/compiler contracts
+        run: dotnet test ContosoDGV2.sln --configuration Release --logger trx --results-directory artifacts/v17/dotnet
+      - name: Pinned local, Spark and external adapter dependencies
+        run: |
+          python -m pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt -r DatabaseGenerator/Forge/Templates/v17/automl-requirements.txt -r DatabaseGenerator/Forge/Templates/v17/external-requirements.txt pyspark==4.0.4 jsonschema==4.23.0 nbformat==5.10.4
+          python -m pip check
+      - name: Real stages, four-engine parity, selected ML, local MLJAR and strict Evidence builds
+        run: python scripts/run_v17.py --output out/v17-ci --spark --automl-python "$(which python)" --build-evidence
+      - name: Tamper, stale, timeout, temporal, wrangling and external adapter contracts
+        run: python scripts/test_v17.py --gate out/v17-ci -v 2>&1 | tee artifacts/v17/python-tests.log
+      - name: Capture measured release evidence
+        run: python scripts/capture_v17_evidence.py --gate out/v17-ci --output artifacts/v17/evidence.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v17-journey-evidence
+          include-hidden-files: true
+          path: |
+            artifacts/v17/
+            out/v17-ci/*.json
+            out/v17-ci/*.log
+            out/v17-ci/*/.forge/v15/v17/*.json
+            out/v17-ci/*/.forge/v15/v17/ml/
+            out/v17-ci/*/.forge/v15/v17/huggingface/
+            out/v17-ci/*/.forge/v15/v17/kaggle/
+            out/v17-ci/*/.forge/v15/v17/bi/*.json
+            out/v17-ci/*/.forge/v15/v17/bi/*.log
+            out/v17-ci/*/.forge/v15/v17/dbt/target/manifest.json
+            out/v17-ci/*/.forge/v15/v17/dbt/target/run_results.json
+            out/v17-ci/local-automl-results/
+
+  cosmos-journey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Isolated factory and Airflow runtimes
+        run: |
+          dotnet build DatabaseGenerator --configuration Release
+          python -m venv .venv-factory
+          .venv-factory/bin/pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt
+          python -m venv .venv-airflow
+          .venv-airflow/bin/pip install apache-airflow==3.3.1 apache-airflow-providers-standard --constraint https://raw.githubusercontent.com/apache/airflow/constraints-3.3.1/constraints-3.12.txt
+          .venv-airflow/bin/pip install apache-airflow==3.3.1 astronomer-cosmos==1.15.1
+      - name: Generate a selected-KPI V1.7 Cosmos journey
+        run: |
+          dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project examples/v17-cosmos.project.json --output out/v17-cosmos
+          .venv-factory/bin/python out/v17-cosmos/factory/prepare_cosmos.py --root out/v17-cosmos
+      - name: Execute one authoritative dbt build through a real local DagRun
+        run: |
+          export FORGE_FACTORY_PYTHON="$PWD/.venv-factory/bin/python"
+          export FORGE_DBT_EXECUTABLE="$PWD/.venv-factory/bin/dbt"
+          .venv-airflow/bin/python scripts/run_orchestration.py --root out/v17-cosmos --airflow-home "$PWD/out/v17-airflow"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v17-cosmos-evidence
+          include-hidden-files: true
+          path: |
+            out/v17-airflow/*.json
+            out/v17-airflow/*.log
+            out/v17-cosmos/.forge/v15/*/*.json
+            out/v17-cosmos/.forge/v15/*/*.log
+            out/v17-cosmos/.forge/v15/*/cosmos/
+            out/v17-cosmos/.forge/v15/*/dbt/target/*.json
+            out/v17-cosmos/.forge/v15/*/bi/*.json
+            out/v17-cosmos/.forge/v15/*/bi/*.log

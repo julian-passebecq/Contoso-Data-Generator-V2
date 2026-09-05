@@ -1,3 +1,19 @@
+# Contoso Forge V1.7 implementation handoff
+
+V1.7 starts from fetched `origin/main` at verified PR #3 merge `ea7c47a6db64de0e91b69b2259c7d48f744e15cc`, on `codex/v1.7-modular-journeys-external-labs`. The [execution guide](docs/v1.7.md) documents contracts, examples, commands, adapter limits and future work. This release supersedes the proposed FastAPI plan and extends the same C# planner/compiler.
+
+Implemented goal-driven data/KPI/specific-ML/AutoML flows, enforced stage boundaries, independent Bronze/Silver for four engines, scoped governed semantics, DuckDB/Polars wrangling, optional official Kaggle execution with bounded MLJAR, MotherDuck native dbt/Dive, and measured Hugging Face model-card/static-results export with optional publication. Existing modules and historical evidence remain version-scoped.
+
+Local implementation checks passed 282 .NET tests (including the 152-artifact compatibility audit), 33 V1.7 Python checks, three-engine 13-table logical parity, six stop-stage runs, the goal-first WPF smoke, explicit sklearn training and a strict Evidence build. Real local MLJAR trained Baseline, Decision Tree and Linear; the baseline won on chronological validation. This is local framework proof, not a Kaggle account execution. The final checkout is separately gated by CI before delivery.
+
+No MotherDuck, Kaggle or Hugging Face authentication was available. Those account-backed actions remain `exported-not-executed` / `exported-not-published`. No cloud execution, publication URL or remote revision is invented. Colab/Spark ML and Databricks exports retain their stated platform boundaries; BQML, IaC and managed deployment evidence remain historical.
+
+Raw V1.7 evidence is captured by `scripts/capture_v17_evidence.py` and uploaded by `journeys-v17` as `v17-journey-evidence` and `v17-cosmos-evidence`. The final exact-commit workflow ledger will be recorded with the PR after all gates complete. Do not auto-merge.
+
+---
+
+The following handoffs are historical. PR #3 has since merged; references to its previous open state describe that earlier handoff.
+
 # Contoso Forge V1.6 final orchestration handoff — 2026-09-05
 
 Implemented the final orchestration pass on `codex/v1.6-final-orchestration-hardening`, from fetched `origin/main` at the verified PR #2 merge `35d1959c6ecb891b50ba45a47f44d373f76acac7`. [PR #3](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/pull/3) remains open; do not auto-merge. The measured implementation is `05071147fd670287b4864e6279e049c23837bfe0`. This evidence/documentation follow-up is separately gated on all seven workflows before delivery.
