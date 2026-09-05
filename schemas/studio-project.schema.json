@@ -32,6 +32,8 @@
             "free-gcp-full",
             "local-spark",
             "local-fast",
+            "local-polars",
+            "local-pandas",
             "local-airflow",
             "motherduck-lite",
             "external-sink",

@@ -21,17 +21,18 @@ public partial class MainWindow
         var current = Session.Project.Product ?? new ProductIntent();
         Session.ApplyProduct(new ProductIntent
         {
+            Version = current.Version,
             PipelineMode = PipelineModeBox.Text, MlTarget = MlTargetBox.Text, BiTarget = BiTargetBox.Text,
             DbtIntegration = DbtIntegrationBox.Text, LabelAsOf = current.LabelAsOf, MaterializationLimitMb = current.MaterializationLimitMb
         });
-        Changed("V1.5 product settings applied. Plan to review execution support.", "product");
+        Changed("Factory product settings applied. Plan to review execution support.", "product");
     }
 
     private void RefreshProduct()
     {
         if (MlDesignPreview is null) return;
         var settings = ArchitecturePresets.Resolve(Session.Project).Settings;
-        OrchestrationDetails.Text = $"Orchestrator: {settings.Orchestrator} · Host: {settings.AirflowHost ?? settings.Orchestrator} · Executor: {settings.Executor ?? "preset default"}. Airflow orders the work; DuckDB/Spark and dbt transform it.";
+        OrchestrationDetails.Text = $"Engine: {settings.Engine} Â· Warehouse: {settings.Warehouse} Â· Orchestrator: {settings.Orchestrator} Â· Host: {settings.AirflowHost ?? settings.Orchestrator} Â· Executor: {settings.Executor ?? "preset default"}. The selected engine produces Silver; dbt produces Gold.";
         MlDesignPreview.Text = Session.Project.BusinessScenario == ScenarioCatalog.MlScenarioId
             ? JsonSerializer.Serialize(new MlExperimentDesign { RuntimeTarget = Session.Project.Product?.MlTarget ?? "local-sklearn" }, PlanningJsonContext.Default.MlExperimentDesign)
             : "ML is disabled for this business scenario. BI & Validation remains available. Select Retail Customer Satisfaction ML to derive a delivery-time experiment.";
@@ -55,7 +56,7 @@ public partial class MainWindow
         {
             RequireAppliedEdits("running");
             RefreshProduct();
-            if (!RunFactoryButton.IsEnabled) throw new InvalidOperationException("Plan a runnable V1.5 local pipeline before execution.");
+            if (!RunFactoryButton.IsEnabled) throw new InvalidOperationException("Plan a runnable local factory pipeline before execution.");
             var dialog = new OpenFolderDialog { Title = "Choose a parent folder for a fresh generated run" };
             if (dialog.ShowDialog(this) != true) return;
             var project = ProjectSpecReader.Read(Session.ProjectJson).Studio!;

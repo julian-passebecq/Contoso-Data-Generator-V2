@@ -49,9 +49,10 @@ def execute(root, run_id, stage):
     import dbt_runtime
     root = Path(root).resolve()
     settings = read(root / "resolved_project.json")["settings"]
-    if not (settings["engine"] == "duckdb" and settings["runtime"] == "local-process" and settings["warehouse"] == "duckdb"
+    engine = settings["engine"]
+    if not (engine in ("duckdb", "polars", "pandas") and settings["runtime"] == "local-process" and settings["warehouse"] == "duckdb"
             and settings["storage"] == "local" and settings["tableFormat"] == "none" and settings["fileFormat"] == "parquet"):
-        raise ValueError("Local factory requires the compiled local DuckDB/Parquet architecture")
+        raise ValueError("Local factory requires a compiled local DuckDB/Polars/pandas engine with Parquet and DuckDB warehouse")
     state = state_path(root, run_id)
     state.mkdir(parents=True, exist_ok=True)
     # Prevent concurrent writers from corrupting a run; Airflow also has max_active_runs=1.
@@ -79,7 +80,12 @@ def execute(root, run_id, stage):
         write(path, evidence)
         try:
             if stage == "verify": result = {"status": "verified", **current}
-            elif stage == "silver": result = duckdb_silver.transform(root, state)
+            elif stage == "silver":
+                from importlib import import_module
+                result = import_module(engine + "_silver").transform(root, state)
+                from silver_contract import contract
+                write(state / "silver_contract.json", contract(root))
+                result.update(adapter=engine, version=importlib.metadata.version(engine))
             elif stage == "validate-silver": result = duckdb_silver.validate(root, state)
             elif stage == "dbt": result = dbt_runtime.build(root, state)
             elif stage == "reconcile": result = dbt_runtime.reconcile(root, state)
@@ -104,6 +110,8 @@ def execute(root, run_id, stage):
             evidence["status"] = "succeeded" if stage == "bi" else "running"
             if stage == "bi": evidence["completedAt"] = now()
             evidence["runtimeVersions"] = {n: importlib.metadata.version(n) for n in ("duckdb", "dbt-core", "dbt-duckdb", "scikit-learn", "pandas", "pyarrow")}
+            evidence["engine"] = {"name": engine, "version": importlib.metadata.version(engine), "runtime": settings["runtime"]}
+            if engine == "polars": evidence["runtimeVersions"]["polars"] = importlib.metadata.version("polars")
             evidence["python"] = sys.version
         except Exception as error:
             record.update(status="failed", error=str(error), completedAt=now())

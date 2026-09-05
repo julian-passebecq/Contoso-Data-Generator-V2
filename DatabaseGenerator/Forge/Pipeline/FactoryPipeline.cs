@@ -8,13 +8,13 @@ namespace DatabaseGenerator.Forge.Pipeline;
 
 internal static class FactoryPipeline
 {
-    internal static bool IsLocal(ArchitectureSettings s) => s.Engine == "duckdb" && s.Runtime == "local-process"
+    internal static bool IsLocal(ArchitectureSettings s) => s.Engine is "duckdb" or "polars" or "pandas" && s.Runtime == "local-process"
         && s.Storage == "local" && s.FileFormat == "parquet" && s.TableFormat == "none" && s.Warehouse == "duckdb"
         && s.Orchestrator is "none" or "local-sequential" or "airflow" or "airflow-docker";
 
     internal static PipelineDefinition Create(ResolvedProject project)
     {
-        var pipeline = new PipelineDefinition { Id = "contoso_forge_factory", Name = "Contoso Forge V1.5 Data Factory, ML Lab & BI Validation" };
+        var pipeline = new PipelineDefinition { Id = "contoso_forge_factory", Name = $"Contoso Forge V{project.Product!.Version} Data Factory, ML Lab & BI Validation" };
         var specs = new List<(string Id, string Kind, string Operation)>
         {
             ("verify_source", "source", "verify"), ("transform_bronze_silver", "transform", "silver"),
@@ -37,11 +37,12 @@ internal static class FactoryPipeline
 
     internal static bool Map(PipelineActivity activity, PipelinePlannedActivity mapped, Dictionary<string, string> settings)
     {
-        if (settings.GetValueOrDefault("productVersion") != "1.5" || activity.Implementation?.StartsWith("factory-", StringComparison.Ordinal) != true) return false;
+        if (settings.GetValueOrDefault("productVersion") is not ("1.5" or "1.6") || activity.Implementation?.StartsWith("factory-", StringComparison.Ordinal) != true) return false;
         var operation = activity.Implementation[8..];
         var expectedKind = operation switch { "verify" => "source", "silver" => "transform", "dbt" => "dbt", "ml" or "export-ml" => "ml", "validate-silver" or "reconcile" or "bi" => "validate", _ => "" };
         if (activity.Kind != expectedKind || activity.Inputs.Count != 0 || activity.Outputs.Count != 0
-            || mapped.Engine != "duckdb" || mapped.Runtime != "local-process" || mapped.Source != "local" || mapped.Sink != "duckdb"
+            || mapped.Engine is not ("duckdb" or "polars" or "pandas") || mapped.Engine != settings.GetValueOrDefault("engine")
+            || mapped.Runtime != "local-process" || mapped.Source != "local" || mapped.Sink != "duckdb"
             || (activity.FileFormat ?? settings.GetValueOrDefault("fileFormat")) != "parquet"
             || (activity.TableFormat ?? settings.GetValueOrDefault("tableFormat")) != "none") return true;
         if (operation == "ml" && settings.GetValueOrDefault("mlTarget") != "local-sklearn") return true;
@@ -50,7 +51,7 @@ internal static class FactoryPipeline
         mapped.Reason = operation switch
         {
             "verify" => "Bind source and compiled file SHA-256 hashes to an isolated run.",
-            "silver" => "Execute typed DuckDB Bronze/Silver with deterministic deduplication, CDC/SCD2, late-arrival flags and quarantine.",
+            "silver" => $"Execute typed {mapped.Engine} Bronze/Silver with deterministic deduplication, CDC/SCD2, late-arrival flags and quarantine.",
             "validate-silver" => "Read persisted Silver and compare every row count to the independent C# truth manifest.",
             "dbt" => "Execute dbt staging, intermediate and Gold models/tests; retain manifest.json and run_results.json even on failure.",
             "reconcile" => "Read canonical Gold KPIs and independently compare with truth; require all dbt models/tests to pass.",

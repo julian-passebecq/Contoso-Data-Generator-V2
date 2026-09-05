@@ -148,7 +148,7 @@ public static class PlanBuilder
         var settings = plan.ResolvedSettings;
         plan.Product = new ProductDesign
         {
-            PipelineMode = intent.PipelineMode, BiTarget = intent.BiTarget,
+            Version = intent.Version, PipelineMode = intent.PipelineMode, BiTarget = intent.BiTarget,
             Orchestrator = settings.Orchestrator!.StartsWith("airflow", StringComparison.Ordinal) ? "airflow" : settings.Orchestrator,
             AirflowHost = settings.AirflowHost ?? (settings.Orchestrator == "airflow-minikube" ? "minikube" : settings.Orchestrator == "airflow-docker" ? "docker-local" : null),
             Ml = plan.BusinessScenario.MlEnabled ? new MlExperimentDesign { RuntimeTarget = intent.MlTarget } : null
@@ -166,11 +166,12 @@ public static class PlanBuilder
             }
             if (!generatedOnly) stage.Evidence.Add(new()
             {
-                Id = "v15-local-duckdb-dbt-sklearn-bi", Reference = "docs/v1.5-evidence.json", ValidationLevel = "reconciled",
-                Scope = "V1.5 local 60-order BI and 1200-order ML fixtures executed DuckDB, 27 dbt models/135 tests, five KPI reconciliations and Evidence package generation. Four sklearn candidates produced measured metrics. This planned project has not executed; report rendering is recorded separately."
+                Id = settings.Engine == "duckdb" ? "v15-local-duckdb-dbt-sklearn-bi" : "v16-local-" + settings.Engine,
+                Reference = settings.Engine == "duckdb" ? "docs/v1.5-evidence.json" : "docs/v1.6-evidence.json", ValidationLevel = "reconciled",
+                Scope = $"Versioned local {settings.Engine} adapter evidence: real Bronze/Silver, dbt Gold/tests, independent KPI reconciliation, ML and Evidence. This planned project has not executed; report rendering and cross-engine parity require their own measured artifacts."
             });
             stage.ExecutionMode = "local-or-airflow";
-            stage.Engine = stage.CompilerOperation switch { "factory-dbt" => "dbt-duckdb", "factory-ml" or "factory-export-ml" => "scikit-learn", "factory-bi" => "evidence", _ => "duckdb" };
+            stage.Engine = stage.CompilerOperation switch { "factory-dbt" => "dbt-duckdb", "factory-ml" or "factory-export-ml" => "scikit-learn", "factory-bi" => "evidence", _ => settings.Engine! };
             stage.Kind = stage.CompilerOperation switch { "factory-dbt" => "analytics-transform", "factory-ml" => "ml-training", "factory-export-ml" => "ml-design", "factory-bi" => "bi-validation", _ => stage.Kind };
         }
         var gold = plan.Stages.LastOrDefault(s => s.Kind == "analytics-transform");

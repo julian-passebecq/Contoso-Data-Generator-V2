@@ -1,0 +1,43 @@
+name: spark-parity-v16
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-spark-silver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: dotnet build DatabaseGenerator --configuration Release
+      - run: python -m pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt pyspark==4.0.4 jsonschema==4.23.0 nbformat==5.10.4
+      - name: Real local baseline and Spark Silver on the same source
+        run: |
+          python scripts/run_v16.py --output out/v16-spark
+          python scripts/run_v16_spark.py --root out/v16-spark/duckdb --state out/v16-spark/spark-state
+          python out/v16-spark/duckdb/factory/parity.py --run duckdb out/v16-spark/duckdb out/v16-spark/duckdb/.forge/v15/v16 --run polars out/v16-spark/polars out/v16-spark/polars/.forge/v15/v16 --run pandas out/v16-spark/pandas out/v16-spark/pandas/.forge/v15/v16 --run spark out/v16-spark/duckdb out/v16-spark/spark-state --revision "$(git rev-parse HEAD)" --output out/v16-spark/spark_engine_parity.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v16-real-spark-parity
+          include-hidden-files: true
+          path: |
+            out/v16-spark/*.json
+            out/v16-spark/*.log
+            out/v16-spark/spark-state/*.json
+            out/v16-spark/*/.forge/v15/v16/*.json

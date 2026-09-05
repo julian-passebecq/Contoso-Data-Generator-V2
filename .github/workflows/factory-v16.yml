@@ -1,0 +1,54 @@
+name: factory-v16
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-engine-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Core and legacy artifact compatibility
+        run: dotnet test ContosoDGV2.sln --configuration Release --logger trx --results-directory artifacts/v16/dotnet
+      - name: Install exact stable local runtime
+        run: |
+          python -m pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt jsonschema==4.23.0 nbformat==5.10.4
+          python -m pip check
+      - name: Execute every local engine through shared dbt, ML and strict Evidence build
+        run: python scripts/run_v16.py --output out/v16-ci --build-evidence
+      - name: Canonical negative tests, persisted tampering and schema validation
+        run: |
+          python scripts/test_v16.py --gate out/v16-ci --diagnostics artifacts/v16/negative-parity -v
+          python scripts/capture_v16_evidence.py --gate out/v16-ci --output artifacts/v16/evidence.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v16-local-engine-evidence
+          include-hidden-files: true
+          path: |
+            artifacts/v16/
+            out/v16-ci/*.json
+            out/v16-ci/*.log
+            out/v16-ci/*/.forge/v15/v16/*.json
+            out/v16-ci/*/.forge/v15/v16/*.log
+            out/v16-ci/*/.forge/v15/v16/polars_plans/
+            out/v16-ci/*/.forge/v15/v16/dbt/target/manifest.json
+            out/v16-ci/*/.forge/v15/v16/dbt/target/run_results.json
+            out/v16-ci/*/.forge/v15/v16/ml/
+            out/v16-ci/*/.forge/v15/v16/bi/*.json
+            out/v16-ci/*/.forge/v15/v16/bi/*.log

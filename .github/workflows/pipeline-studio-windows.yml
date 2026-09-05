@@ -33,6 +33,10 @@ jobs:
         run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/free-gcp-lab.project.json --pipeline out/studio-input/pipeline.json --smoke-output out/studio-smoke
       - name: Execute V1.5 business-first editor, pending edit and export checks
         run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v15-local-ml.project.json --factory-smoke-output out/studio-smoke/factory
+      - name: Execute Polars and pandas preset editor and shared compiler smokes
+        run: |
+          dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v16-local-polars.project.json --factory-smoke-output out/studio-smoke/polars
+          dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v16-local-pandas.project.json --factory-smoke-output out/studio-smoke/pandas
       - uses: actions/upload-artifact@v4
         if: always()
         with:

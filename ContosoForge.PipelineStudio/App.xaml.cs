@@ -353,6 +353,11 @@ public partial class App : Application
         Require(!window.RunFactoryButton.IsEnabled, "An unplanned project enabled execution.");
         var plan = window.PlanCurrent();
         Require(plan.CurrentExecutionStatus == "not-executed" && window.RunFactoryButton.IsEnabled, "An executable local plan was misrepresented.");
+        var selectedEngine = plan.ResolvedSettings.Engine;
+        Require(plan.Stages.Single(s => s.CompilerOperation == "factory-silver").Engine == selectedEngine,
+            "The Studio lost the selected Bronze/Silver engine.");
+        Require(window.OrchestrationDetails.Text.Contains("Engine: " + selectedEngine, StringComparison.Ordinal),
+            "The selected transform engine is not visible in Studio.");
         window.MlTargetBox.SelectedItem = "kaggle-sklearn";
         Require(!window.RunFactoryButton.IsEnabled && window.Session.Plan is null, "A pending product edit retained a runnable plan.");
         window.ApplyProductSettings();
@@ -385,6 +390,7 @@ public partial class App : Application
             ["status"] = "passed", ["uiRendered"] = true, ["tenStepsInOrder"] = true,
             ["businessFirst"] = true, ["pendingDataAndProductEditsBlockRun"] = true,
             ["targetChangesDefaultGraph"] = true, ["saveLoadCompile"] = true,
+            ["selectedEngine"] = selectedEngine, ["selectedEngineVisible"] = true,
             ["corePlanIdentical"] = true, ["actualPipelineExecution"] = "tested separately through generated neutral runner"
         }.ToJsonString(new() { WriteIndented = true }) + "\n");
     }
