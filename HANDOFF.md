@@ -1,3 +1,39 @@
+# V1.5 hardening audit — 2026-09-05
+
+Hardened the existing `codex/v1.5-data-factory` branch in implementation commit `172525abccd8661aba801925ee7cc61ffa352d4f`. The architecture remains unchanged. [The hardening design note](docs/v1.5-hardening.md) describes the exact controls, threshold policy, dependency trial and remaining boundaries. [The recaptured evidence ledger](docs/v1.5-evidence.json) binds local output hashes and all four successful GitHub Actions runs to this implementation. The subsequent documentation/evidence commit is also gated on all four workflows before PR creation; its checks are available on the PR. Do not merge automatically.
+
+Changes and measured results:
+
+- Optional `sourceProject.generation.ml` profile `causal-v1` adds deterministic `positiveOutcomeRate=0.10`, `signalStrength=0.5`, `noiseLevel=0.1`, each in `[0,1]`. Delivery delay causes later review/survey outcomes through a separate seeded random stream. Prediction-time source bytes never depend on those controls. Omission preserves legacy generation and all **152 audited artifact hashes**. The new example is `examples/v15-local-ml-causal.project.json`; the original ML example remains unchanged.
+- sklearn and secondary Spark ML retain threshold **0.5** and choose alternatives by **validation F1 only**, with explicit deterministic ties. Model selection remains validation AP only. Both selections freeze before test evaluation. Metrics, confusion matrices, validation PR/threshold curves, both persisted decisions and the model card are measured artifacts. Evidence projects those artifacts into ranking, PR/threshold charts and comparison tables; KPI/label logic stays in dbt and ML logic stays in Python.
+- The legacy fixture still selects logistic regression. Its test AP `0.18754007883316906` and ROC-AUC `0.765427643450018` remain unchanged. Baseline 0.5: F1/precision/recall `0`, confusion `[[163,0],[17,0]]`. Frozen threshold **0.12136322464521697**: test F1 **0.34408602150537637**, precision **0.21052631578947367**, recall **0.9411764705882353**, confusion **`[[103,60],[1,16]]`**. That includes 60 false positives; these are educational results, not a deployment recommendation.
+- The causal defaults produce 88/796 train, 14/140 validation and 22/180 test positives. Validation selects histogram gradient boosting; its frozen threshold `0.07563245043365832` gives test F1 `0.14736842105263157`, precision `0.0958904109589041`, recall `0.3181818181818182`, confusion `[[92,66],[15,7]]`, AP `0.11734035938330517`. Defaults were not tuned on test performance.
+- **Adopted DuckDB 1.4.5 LTS and dbt-core 1.11.14**, the latest stable, non-yanked 1.11 patch checked on PyPI. dbt-duckdb 1.10.1, pandas 2.3.3, sklearn 1.7.2 and PyArrow 23.0.1 remain pinned. Installation, `pip check`, actual pipelines, strict Evidence builds and all workflows passed; no compatibility fallback was needed. The local resolver also updated dbt's sqlparse dependency to 0.6.0.
+- Fresh `out/v15-audit-{bi,ml,ml-causal}/.forge/v15/audit/` runs passed six/seven/seven stages respectively. Each passed **27 dbt models, 135 tests, zero failures/skips**, and all five independent Gold KPI reconciliations. All three strict Evidence sources/production builds passed. HTML hashes and exact dependency versions are in the ledger. Local Node 21.7.1 emitted known engine/deprecation warnings; CI uses Node 22 and also passed.
+- **233 .NET tests passed**, including legacy compatibility, deterministic controls and truthful Cosmos status. **89 distinct Python checks passed**, with **3 optional Google-client integrations explicitly skipped**. The 19 V1.5 checks passed against both ML fixtures, independently recomputing both operating points and verifying that changed test labels cannot change selection. Four notebook exports validated and the portable sklearn package executed independently. The V1.5 WPF smoke passed locally; GitHub Windows CI repeated both legacy and V1.5 smokes.
+- Actual secondary Spark ML **4.0.4** ran in WSL Ubuntu/Python 3.10.12/Java 17 using the upgraded dependency pins, recorded under `artifacts/v15-harden-spark-ml/`. This is a model comparison on the legal Gold mart, **not Spark↔DuckDB logical table parity**. The earlier same-session Spark continuation and hosted/cloud runs are retained as historical evidence, not re-certified.
+
+All four implementation workflows succeeded:
+
+| Workflow | Exact green run |
+| --- | --- |
+| factory-v15 | [33976180497](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180497) |
+| free-gcp-contracts | [33976180463](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180463) |
+| pipeline-studio-windows | [33976180457](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180457) |
+| validate | [33976180504](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180504) |
+
+The [logical parity TODO](docs/v1.5-hardening.md#logical-engine-parity-todo) specifies `engine_parity.json`: both real engine identities, row counts, keys, governed nulls, canonical logical schema/value encoding and SHA-256 hashes. No parity file or success claim was fabricated. Cosmos remains **generated/unverified**: its TaskGroup executes dbt against `cosmos.duckdb`, then a second plain build executes against `warehouse.duckdb`. Plain results cannot certify the Cosmos invocation; promotion requires actual task execution with complete, unambiguous invocation-bound results. The planner now enforces that boundary.
+
+Reproduce with fresh `out/v15-audit-*` locations, the existing V1.5 commands and run ID `audit`; run both ML examples and the BI example. Recapture retained results with:
+
+```powershell
+.tools/v15/Scripts/python.exe scripts/capture_v15_evidence.py --bi-root out/v15-audit-bi --ml-root out/v15-audit-ml --causal-ml-root out/v15-audit-ml-causal --spark-ml artifacts/v15-harden-spark-ml --previous-ledger artifacts/v15/pre-hardening-evidence.json --ci-runs artifacts/v15-audit-ci.json --run-id audit --output docs/v1.5-evidence.json
+```
+
+The previous ledger is preserved byte-for-byte in the ignored artifact path and in Git at `b44fd57:docs/v1.5-evidence.json`. Raw data, runtime state, npm dependencies and credentials remain outside Git. The following handoffs describe earlier implementation passes and retain their original scope.
+
+---
+
 # V1.5 continuation — 2026-09-05
 
 Implemented the Data Factory / ML Lab / BI Validation slice on branch `codex/v1.5-data-factory`. The first repository operation was `git fetch origin main`. Remote main matched the audited ZIP pin, `b9fe2b6f8708a57a91d6a6ba4241e4a4a1661b8f`; no reset or historical checkout was used. All 20 continuation-pack files were read, starting in the user's specified order. The user's direct request governed scope; embedded continuation prompts were treated as source material.

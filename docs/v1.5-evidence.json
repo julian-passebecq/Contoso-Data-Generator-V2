@@ -1,67 +1,102 @@
 {
   "baseMainSha": "b9fe2b6f8708a57a91d6a6ba4241e4a4a1661b8f",
-  "capturedAt": "2026-09-05T14:37:28.688008+00:00",
-  "contractVersion": "1.5-evidence-summary",
-  "localBi": {
+  "capturedAt": "2026-09-05T16:04:26.108585+00:00",
+  "causalMl": {
     "artifacts": [
       {
-        "path": "out/v15-release-bi/run_manifest.json",
-        "sha256": "6b264ab18de9cbc90c35f34ccf1a60533904b2c2d9860d6e53a3ded76c9445fe"
+        "path": "out/v15-audit-ml-causal/run_manifest.json",
+        "sha256": "27230f81fbdbabd9e441f7f6539a102cdfa980fc237931aa81b1b13ec9c7fd0a"
       },
       {
-        "path": "out/v15-release-bi/truth_manifest.json",
-        "sha256": "2cb89751b4c9e329a7be3fd947f87b6b145d1e2de8ebb063ecf5ed75555be807"
+        "path": "out/v15-audit-ml-causal/truth_manifest.json",
+        "sha256": "695616d5fa02f4f5ec051ef27684e2445fb05a9bd48e4ee421771a61801ca0c0"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/run_evidence.json",
-        "sha256": "607885e5e3c720f8695802e7b38cc257c009279190107cd50bd3562c87842def"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/run_evidence.json",
+        "sha256": "aeb2a82b10dbfee3c0c4b5a689b66c3a42c21d32ad9a9af3f31a92e65368a4e7"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/reconciliation.json",
-        "sha256": "b33fa99b067137eb0a9af8c79add9c13980ca523eac06e0b25246ecf8e700ef6"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/reconciliation.json",
+        "sha256": "7da313512297c2ff3960ac21b5fb118236d81ee9589a34628cc9df0e910ff62c"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/dbt_execution.json",
-        "sha256": "9e721c18c77c142b5a1ae3a6e9ab107c2d7ca05ff4879626af7baa7aea7fed0f"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/dbt_execution.json",
+        "sha256": "6bf68b792207b3837a9c85a9aa5bc60382e054417f68999994aaa7fa5ab5eee0"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/dbt/target/manifest.json",
-        "sha256": "0ba31492b8544776930b2cf46be59af0566e0c02987390376d78bd54223874b2"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/dbt/target/manifest.json",
+        "sha256": "c946b834273d056b2db157ee30975a83b28561bf389441029742a84087e0ca59"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/dbt/target/run_results.json",
-        "sha256": "b8f38b433a911e49d1f19787fa128f2b4fd892426be7778353f777fcb6546947"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/dbt/target/run_results.json",
+        "sha256": "cbe8ef3fcd246002c5157681f6463e53909ce3f5b5b292480455dc266391eb90"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/bi/report_contract.json",
-        "sha256": "0ffd936b511119da0829f8bfec81ff57d770663d40eb113a3c0cdb9adb70d4db"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/bi/report_contract.json",
+        "sha256": "eddf4b4a78347fbc5353c7322ef0828aef959acf05f4978e66c1f43b16269bd9"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/bi/build_evidence.json",
-        "sha256": "a4a841c5f16f3b37953f179bac82d090e5fa71ced992f14fc071ca15b274dfdb"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/bi/build_evidence.json",
+        "sha256": "443cda865a207c7cf29359154cb9b94e3de72e1a223dd1b905c53de18758f563"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/bi/evidence/build/index.html",
-        "sha256": "456b6a8edb85c9c903e09c834cbc4e2e522170c0f5c78d1e22df64eb1e0d7e8b"
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/bi/evidence/build/index.html",
+        "sha256": "507f6a69456ea375b3cdd4fc3451b5e7cd8c0bece3ca14c5aedf73da8d795974"
       },
       {
-        "path": "out/v15-release-bi/.forge/v15/release/bi/evidence/package-lock.json",
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/bi/evidence/package-lock.json",
         "sha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/feature_importance.parquet",
+        "sha256": "8ccd0428e3002ccddd94816c941862bc7f87c9db216df3686a87c183d9f124a3"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/features.json",
+        "sha256": "62c8f18da65ee06e56847b1e05b752b7f0fe20c76afe8df27a06f1909524cfe6"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/leakage_report.json",
+        "sha256": "445ac11f554e96fedab321eb892fd130b09f0dea04747ef28913541fdee6a93e"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/metrics.json",
+        "sha256": "83a0b9fd8025cbb521639bb26fd3fea6b7ced0aa930e9f66a90b0662c6934868"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/model_card.md",
+        "sha256": "7baef7b133592850ec8a49f3bb05387ceeffea2c7f0656d029ea5d21381787db"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/predictions.parquet",
+        "sha256": "093ca484643cb15385f56af06da8d9cb89495389b4490f0f8670cbab0a64f818"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/run_config.json",
+        "sha256": "912063a964787b7e374e63413d90a25446e00958f8961d7f2506aef8917bdfb4"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/spec.json",
+        "sha256": "272ccac0d9c1c949c77985c08bd6236ead6bb895545c6ec4c2ce32b1712b11f8"
+      },
+      {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/split_assignments.parquet",
+        "sha256": "d76495504ae57c87f281300febed96a696ce0f2996eb013c9a492d8944a2ca62"
       }
     ],
-    "completedAt": "2026-09-05T14:31:20.117808+00:00",
+    "completedAt": "2026-09-05T15:52:55.470871+00:00",
     "dbt": {
       "artifacts": {
-        "manifest.json": "0ba31492b8544776930b2cf46be59af0566e0c02987390376d78bd54223874b2",
-        "run_results.json": "b8f38b433a911e49d1f19787fa128f2b4fd892426be7778353f777fcb6546947"
+        "manifest.json": "c946b834273d056b2db157ee30975a83b28561bf389441029742a84087e0ca59",
+        "run_results.json": "cbe8ef3fcd246002c5157681f6463e53909ce3f5b5b292480455dc266391eb90"
       },
       "command": [
         "D:\\dotnet\\Contoso-Data-Generator-V2\\.tools\\v15\\Scripts\\dbt.exe",
         "build",
         "--project-dir",
-        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-bi\\.forge\\v15\\release\\dbt",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-audit-ml-causal\\.forge\\v15\\audit\\dbt",
         "--profiles-dir",
-        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-bi\\.forge\\v15\\release\\dbt",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-audit-ml-causal\\.forge\\v15\\audit\\dbt",
         "--no-partial-parse"
       ],
       "exitCode": 0,
@@ -74,18 +109,619 @@
     },
     "evidenceBuild": {
       "artifact": "bi/evidence/build/index.html",
-      "completedAt": "2026-09-05T14:35:53.386129+00:00",
+      "completedAt": "2026-09-05T15:58:10.939986+00:00",
       "nodeVersion": "v21.7.1",
       "npmVersion": "10.5.0",
       "packageLockSha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017",
-      "reportContractSha256": "0ffd936b511119da0829f8bfec81ff57d770663d40eb113a3c0cdb9adb70d4db",
-      "runId": "release",
-      "sha256": "456b6a8edb85c9c903e09c834cbc4e2e522170c0f5c78d1e22df64eb1e0d7e8b",
-      "startedAt": "2026-09-05T14:32:43.184183+00:00",
+      "reportContractSha256": "eddf4b4a78347fbc5353c7322ef0828aef959acf05f4978e66c1f43b16269bd9",
+      "runId": "audit",
+      "sha256": "507f6a69456ea375b3cdd4fc3451b5e7cd8c0bece3ca14c5aedf73da8d795974",
+      "startedAt": "2026-09-05T15:54:33.013049+00:00",
+      "status": "built"
+    },
+    "generationControls": {
+      "noiseLevel": 0.1,
+      "positiveOutcomeRate": 0.1,
+      "profile": "causal-v1",
+      "signalStrength": 0.5
+    },
+    "identity": {
+      "compiledManifestSha256": "27230f81fbdbabd9e441f7f6539a102cdfa980fc237931aa81b1b13ec9c7fd0a",
+      "datasetFingerprint": "8333b366a8a76ada6b1e4102fdc2a9a0bae9f97b041811ff70857cc27e90a8ad",
+      "projectSha256": "499532ca90da8e707e7b15d290ca1eefbc7284edfe84608dbaa5532f2a397ace",
+      "truthSha256": "695616d5fa02f4f5ec051ef27684e2445fb05a9bd48e4ee421771a61801ca0c0"
+    },
+    "ml": {
+      "artifact": {
+        "path": "out/v15-audit-ml-causal/.forge/v15/audit/ml/metrics.json",
+        "sha256": "83a0b9fd8025cbb521639bb26fd3fea6b7ced0aa930e9f66a90b0662c6934868"
+      },
+      "baselineThreshold": 0.5,
+      "completedAt": "2026-09-05T15:52:52.040089+00:00",
+      "curveArtifacts": "Full PR curves and validation threshold tradeoffs are in the hash-bound metrics artifact.",
+      "framework": "scikit-learn",
+      "identity": {
+        "datasetFingerprint": "8333b366a8a76ada6b1e4102fdc2a9a0bae9f97b041811ff70857cc27e90a8ad",
+        "featureSha256": "ceeb02d3b604cae4d0afb228b4e1ff20f11f089bb0b5d6f4fc158fd824386931"
+      },
+      "models": {
+        "dummy": {
+          "test": {
+            "average_precision": 0.12222222222222222,
+            "confusion_matrix": [
+              [
+                158,
+                0
+              ],
+              [
+                22,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.5,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.1,
+            "confusion_matrix": [
+              [
+                126,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.5,
+            "threshold": 0.5
+          }
+        },
+        "histogram_gradient_boosting": {
+          "test": {
+            "average_precision": 0.11734035938330517,
+            "confusion_matrix": [
+              [
+                157,
+                1
+              ],
+              [
+                22,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.45828538550057535,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.11129794353352482,
+            "confusion_matrix": [
+              [
+                124,
+                2
+              ],
+              [
+                14,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.5005668934240364,
+            "threshold": 0.5
+          }
+        },
+        "logistic_regression": {
+          "test": {
+            "average_precision": 0.1377378385732828,
+            "confusion_matrix": [
+              [
+                158,
+                0
+              ],
+              [
+                22,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.5195627157652474,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.10787805849815656,
+            "confusion_matrix": [
+              [
+                126,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.5124716553287982,
+            "threshold": 0.5
+          }
+        },
+        "random_forest": {
+          "test": {
+            "average_precision": 0.1255196050806493,
+            "confusion_matrix": [
+              [
+                158,
+                0
+              ],
+              [
+                22,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.4631760644418872,
+            "threshold": 0.5
+          },
+          "validation": {
+            "average_precision": 0.09875533399599243,
+            "confusion_matrix": [
+              [
+                126,
+                0
+              ],
+              [
+                14,
+                0
+              ]
+            ],
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "roc_auc": 0.48469387755102034,
+            "threshold": 0.5
+          }
+        }
+      },
+      "partitions": {
+        "test": {
+          "latestLabel": "2025-01-19T13:00:00+00:00",
+          "negative": 158,
+          "positive": 22,
+          "predictionEnd": "2025-01-05T13:00:00+00:00",
+          "predictionStart": "2024-11-06T14:00:00+00:00",
+          "prevalence": 0.12222222222222222,
+          "rows": 180
+        },
+        "train": {
+          "latestLabel": "2024-09-06T16:00:00+00:00",
+          "negative": 708,
+          "positive": 88,
+          "predictionEnd": "2024-08-23T16:00:00+00:00",
+          "predictionStart": "2024-01-04T10:00:00+00:00",
+          "prevalence": 0.11055276381909548,
+          "rows": 796
+        },
+        "validation": {
+          "latestLabel": "2024-11-06T13:00:00+00:00",
+          "negative": 126,
+          "positive": 14,
+          "predictionEnd": "2024-10-23T13:00:00+00:00",
+          "predictionStart": "2024-09-07T09:00:00+00:00",
+          "prevalence": 0.1,
+          "rows": 140
+        }
+      },
+      "selectedBy": "validation Average Precision only; test is held out",
+      "selectedModel": "histogram_gradient_boosting",
+      "thresholdAnalysis": {
+        "dummy": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.12222222222222222,
+            "confusion_matrix": [
+              [
+                0,
+                158
+              ],
+              [
+                0,
+                22
+              ]
+            ],
+            "f1": 0.21782178217821782,
+            "precision": 0.12222222222222222,
+            "recall": 1.0,
+            "roc_auc": 0.5,
+            "threshold": 0.11055276381909548
+          },
+          "threshold": 0.11055276381909548,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.1,
+            "confusion_matrix": [
+              [
+                0,
+                126
+              ],
+              [
+                0,
+                14
+              ]
+            ],
+            "f1": 0.18181818181818182,
+            "precision": 0.1,
+            "recall": 1.0,
+            "roc_auc": 0.5,
+            "threshold": 0.11055276381909548
+          }
+        },
+        "histogram_gradient_boosting": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.11734035938330517,
+            "confusion_matrix": [
+              [
+                92,
+                66
+              ],
+              [
+                15,
+                7
+              ]
+            ],
+            "f1": 0.14736842105263157,
+            "precision": 0.0958904109589041,
+            "recall": 0.3181818181818182,
+            "roc_auc": 0.45828538550057535,
+            "threshold": 0.07563245043365832
+          },
+          "threshold": 0.07563245043365832,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.11129794353352482,
+            "confusion_matrix": [
+              [
+                76,
+                50
+              ],
+              [
+                7,
+                7
+              ]
+            ],
+            "f1": 0.19718309859154928,
+            "precision": 0.12280701754385964,
+            "recall": 0.5,
+            "roc_auc": 0.5005668934240364,
+            "threshold": 0.07563245043365832
+          }
+        },
+        "logistic_regression": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.1377378385732828,
+            "confusion_matrix": [
+              [
+                116,
+                42
+              ],
+              [
+                14,
+                8
+              ]
+            ],
+            "f1": 0.2222222222222222,
+            "precision": 0.16,
+            "recall": 0.36363636363636365,
+            "roc_auc": 0.5195627157652474,
+            "threshold": 0.14728749374693847
+          },
+          "threshold": 0.14728749374693847,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.10787805849815656,
+            "confusion_matrix": [
+              [
+                89,
+                37
+              ],
+              [
+                8,
+                6
+              ]
+            ],
+            "f1": 0.21052631578947367,
+            "precision": 0.13953488372093023,
+            "recall": 0.42857142857142855,
+            "roc_auc": 0.5124716553287982,
+            "threshold": 0.14728749374693847
+          }
+        },
+        "random_forest": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.1255196050806493,
+            "confusion_matrix": [
+              [
+                24,
+                134
+              ],
+              [
+                5,
+                17
+              ]
+            ],
+            "f1": 0.19653179190751446,
+            "precision": 0.11258278145695365,
+            "recall": 0.7727272727272727,
+            "roc_auc": 0.4631760644418872,
+            "threshold": 0.03185999480365678
+          },
+          "threshold": 0.03185999480365678,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.09875533399599243,
+            "confusion_matrix": [
+              [
+                17,
+                109
+              ],
+              [
+                0,
+                14
+              ]
+            ],
+            "f1": 0.20437956204379562,
+            "precision": 0.11382113821138211,
+            "recall": 1.0,
+            "roc_auc": 0.48469387755102034,
+            "threshold": 0.03185999480365678
+          }
+        }
+      }
+    },
+    "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+    "reconciliation": {
+      "dbt": {
+        "failed": 0,
+        "models": 27,
+        "skipped": 0,
+        "status": "tested",
+        "tests": 135
+      },
+      "goldRowCounts": {
+        "bi_daily_customer_experience": 884,
+        "dim_carrier": 3,
+        "dim_customer": 242,
+        "dim_date": 374,
+        "dim_product": 48,
+        "dim_store": 4,
+        "fact_customer_experience": 1200,
+        "fact_return": 133,
+        "fact_sales": 2436,
+        "fact_shipment": 1199,
+        "fact_support": 171,
+        "kpi_customer_satisfaction": 1,
+        "ml_customer_dissatisfaction": 1199
+      },
+      "kpis": {
+        "average_review_rating": {
+          "actual": "3.763136",
+          "expected": "3.763136",
+          "matched": true
+        },
+        "gross_sales_amount": {
+          "actual": "1325360.44",
+          "expected": "1325360.44",
+          "matched": true
+        },
+        "on_time_delivery_rate": {
+          "actual": "0.581318",
+          "expected": "0.581318",
+          "matched": true
+        },
+        "order_count": {
+          "actual": "1200",
+          "expected": "1200",
+          "matched": true
+        },
+        "return_rate": {
+          "actual": "0.110833",
+          "expected": "0.110833",
+          "matched": true
+        }
+      },
+      "status": "reconciled"
+    },
+    "runId": "audit",
+    "runtimeVersions": {
+      "dbt-core": "1.11.14",
+      "dbt-duckdb": "1.10.1",
+      "duckdb": "1.4.5",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "scikit-learn": "1.7.2"
+    },
+    "stages": [
+      "bi",
+      "dbt",
+      "ml",
+      "reconcile",
+      "silver",
+      "validate-silver",
+      "verify"
+    ],
+    "startedAt": "2026-09-05T15:52:27.345752+00:00",
+    "status": "succeeded"
+  },
+  "contractVersion": "1.5-evidence-summary",
+  "cosmos": {
+    "dbtInvocations": 2,
+    "promotionGate": "Real task execution with complete, unambiguous invocation-bound model/test results.",
+    "status": "generated-unverified"
+  },
+  "engineParity": {
+    "designNote": "docs/v1.5-hardening.md#logical-engine-parity-todo",
+    "reason": "No canonical logical Spark/DuckDB comparison executed; separate KPI checks are not parity evidence.",
+    "status": "not-executed"
+  },
+  "githubActions": {
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 33976180504,
+        "headSha": "172525abccd8661aba801925ee7cc61ffa352d4f",
+        "name": "validate",
+        "status": "completed",
+        "url": "https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180504"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 33976180457,
+        "headSha": "172525abccd8661aba801925ee7cc61ffa352d4f",
+        "name": "pipeline-studio-windows",
+        "status": "completed",
+        "url": "https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180457"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 33976180463,
+        "headSha": "172525abccd8661aba801925ee7cc61ffa352d4f",
+        "name": "free-gcp-contracts",
+        "status": "completed",
+        "url": "https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180463"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 33976180497,
+        "headSha": "172525abccd8661aba801925ee7cc61ffa352d4f",
+        "name": "factory-v15",
+        "status": "completed",
+        "url": "https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions/runs/33976180497"
+      }
+    ],
+    "source": {
+      "path": "artifacts/v15-audit-ci.json",
+      "sha256": "d3792dce167862bed29b76714981a94120e43b23e6e258973d61496b632808b6"
+    }
+  },
+  "historicalEvidence": {
+    "capturedAt": "2026-09-05T14:37:28.688008+00:00",
+    "ledger": {
+      "path": "artifacts/v15/pre-hardening-evidence.json",
+      "sha256": "20e173f069f9ed2a18633b3348edfbbbcda1af5bde21a8d47d6ee2befe204a75"
+    },
+    "recapturedThisPass": false,
+    "scope": "Prior runtime/dependency versions; not re-certified by this hardening pass."
+  },
+  "localBi": {
+    "artifacts": [
+      {
+        "path": "out/v15-audit-bi/run_manifest.json",
+        "sha256": "35bd194b21cf2a64d212786414666269eed8c1beca21f14b86fd3f9c06aa19e2"
+      },
+      {
+        "path": "out/v15-audit-bi/truth_manifest.json",
+        "sha256": "2cb89751b4c9e329a7be3fd947f87b6b145d1e2de8ebb063ecf5ed75555be807"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/run_evidence.json",
+        "sha256": "fc3c21ab280ac0549bcaf0e20bf3c65c36392f5035d2f3d1914951e38894367b"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/reconciliation.json",
+        "sha256": "b33fa99b067137eb0a9af8c79add9c13980ca523eac06e0b25246ecf8e700ef6"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/dbt_execution.json",
+        "sha256": "6d56c61514e2b177770fd107f24b8adf93208e66fc8170f13a54ba6ac0cb0304"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/dbt/target/manifest.json",
+        "sha256": "412d25b0e97733f99cd13a8354c7e603016da8d27028875f07df7f0aa17e0010"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/dbt/target/run_results.json",
+        "sha256": "b5ab9772f624b252e55a63b8d9df7a10501c1d3da5bb4f80d1812ec8a9fa21db"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/bi/report_contract.json",
+        "sha256": "3fb0334f61a604c99f20c6f1f3d62006b11f15634db3b252c7ba4c4b9677d42d"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/bi/build_evidence.json",
+        "sha256": "629b67c935edf2c1a6618d1130835c31e91b1889f710319163bf7aa5adaa02d4"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/bi/evidence/build/index.html",
+        "sha256": "6e6a424d0cde1623d44cd3ed9a90e27de39c9042b476a58865dc8cb0051b9d0c"
+      },
+      {
+        "path": "out/v15-audit-bi/.forge/v15/audit/bi/evidence/package-lock.json",
+        "sha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017"
+      }
+    ],
+    "completedAt": "2026-09-05T15:51:50.235311+00:00",
+    "dbt": {
+      "artifacts": {
+        "manifest.json": "412d25b0e97733f99cd13a8354c7e603016da8d27028875f07df7f0aa17e0010",
+        "run_results.json": "b5ab9772f624b252e55a63b8d9df7a10501c1d3da5bb4f80d1812ec8a9fa21db"
+      },
+      "command": [
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\.tools\\v15\\Scripts\\dbt.exe",
+        "build",
+        "--project-dir",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-audit-bi\\.forge\\v15\\audit\\dbt",
+        "--profiles-dir",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-audit-bi\\.forge\\v15\\audit\\dbt",
+        "--no-partial-parse"
+      ],
+      "exitCode": 0,
+      "failed": 0,
+      "labelAsOf": "2025-02-01T00:00:00Z",
+      "models": 27,
+      "skipped": 0,
+      "status": "tested",
+      "tests": 135
+    },
+    "evidenceBuild": {
+      "artifact": "bi/evidence/build/index.html",
+      "completedAt": "2026-09-05T15:58:09.860789+00:00",
+      "nodeVersion": "v21.7.1",
+      "npmVersion": "10.5.0",
+      "packageLockSha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017",
+      "reportContractSha256": "3fb0334f61a604c99f20c6f1f3d62006b11f15634db3b252c7ba4c4b9677d42d",
+      "runId": "audit",
+      "sha256": "6e6a424d0cde1623d44cd3ed9a90e27de39c9042b476a58865dc8cb0051b9d0c",
+      "startedAt": "2026-09-05T15:54:32.639936+00:00",
       "status": "built"
     },
     "identity": {
-      "compiledManifestSha256": "6b264ab18de9cbc90c35f34ccf1a60533904b2c2d9860d6e53a3ded76c9445fe",
+      "compiledManifestSha256": "35bd194b21cf2a64d212786414666269eed8c1beca21f14b86fd3f9c06aa19e2",
       "datasetFingerprint": "9dffebc2987043f92c937e07dfee52eebb348d26d6e94156e7fa9514cb1d3609",
       "projectSha256": "c025755773f2a488127cacf3d4f466380919540f8e90ac00ba6763fcbc6c9be1",
       "truthSha256": "2cb89751b4c9e329a7be3fd947f87b6b145d1e2de8ebb063ecf5ed75555be807"
@@ -143,11 +779,11 @@
       },
       "status": "reconciled"
     },
-    "runId": "release",
+    "runId": "audit",
     "runtimeVersions": {
-      "dbt-core": "1.11.7",
+      "dbt-core": "1.11.14",
       "dbt-duckdb": "1.10.1",
-      "duckdb": "1.4.4",
+      "duckdb": "1.4.5",
       "pandas": "2.3.3",
       "pyarrow": "23.0.1",
       "scikit-learn": "1.7.2"
@@ -160,105 +796,105 @@
       "validate-silver",
       "verify"
     ],
-    "startedAt": "2026-09-05T14:30:56.610130+00:00",
+    "startedAt": "2026-09-05T15:51:29.588780+00:00",
     "status": "succeeded"
   },
   "localMl": {
     "artifacts": [
       {
-        "path": "out/v15-release-ml/run_manifest.json",
-        "sha256": "1574d8d3cb1a66b74922e5c214673aa11a7d53a013fd6169bf1b8251a837b377"
+        "path": "out/v15-audit-ml/run_manifest.json",
+        "sha256": "f01c50c1cac11c69b0c5f699c41325c473e203a9c3203b7565b373de6308a0d3"
       },
       {
-        "path": "out/v15-release-ml/truth_manifest.json",
+        "path": "out/v15-audit-ml/truth_manifest.json",
         "sha256": "b3ff8b776f07f243c0551946d77ab053e193eceb44d0626f6ca0264dad2bd715"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/run_evidence.json",
-        "sha256": "47c599e8b82c17ec2892bf9efd1a7ea81fc698e015acf6c0d63e774b449b48d9"
+        "path": "out/v15-audit-ml/.forge/v15/audit/run_evidence.json",
+        "sha256": "1f8665da53faedf0366e23d270e95c0aa0c85f1f29e3fc31caaf897f6d875979"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/reconciliation.json",
+        "path": "out/v15-audit-ml/.forge/v15/audit/reconciliation.json",
         "sha256": "d0f8df2bf58e10f2a02977c85c48677a285e4b186a7a0bad3f26df5012b621a3"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/dbt_execution.json",
-        "sha256": "93aa89be0c9e6e70208df6cf0ecfbd980a527812759e6757d42620b7ecc570e0"
+        "path": "out/v15-audit-ml/.forge/v15/audit/dbt_execution.json",
+        "sha256": "2bb2b38f1b8d07c01a86f71ee6c866c93cc27869ebb358695225be0583b1d2ec"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/dbt/target/manifest.json",
-        "sha256": "36815eefe30584a2329c4e44176b6255c2c9da1967f99d7715e9ebb7bd4fbad9"
+        "path": "out/v15-audit-ml/.forge/v15/audit/dbt/target/manifest.json",
+        "sha256": "184766c538464d089612ea82584c77ded483156ff502ab1bf56f84559d3bec6e"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/dbt/target/run_results.json",
-        "sha256": "4e1be875aff3f6ded14c9ab3321806c17058fe17421d20c2994a12b3fddba2f9"
+        "path": "out/v15-audit-ml/.forge/v15/audit/dbt/target/run_results.json",
+        "sha256": "c44e5b752a643ed73980caf450aa732d8f25585036618728c4d18a28cefbd702"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/bi/report_contract.json",
-        "sha256": "6d0b737a8086bedfb2ff5d634a23fa68894f0a4812590ecc713f07902f673abf"
+        "path": "out/v15-audit-ml/.forge/v15/audit/bi/report_contract.json",
+        "sha256": "2ede13243c7c87c467f8aaab6a8ae2edfac35aa8693c69bf42253248579e3f4e"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/bi/build_evidence.json",
-        "sha256": "91973cd700517f3335c883b4299dd07d5b37b59e49ae0f967f7bc41ba9b4f79b"
+        "path": "out/v15-audit-ml/.forge/v15/audit/bi/build_evidence.json",
+        "sha256": "5826db62670c2758ddb4677c11a827e8610cbd14cfa241f9de941ff13cfab4c1"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/bi/evidence/build/index.html",
-        "sha256": "fb0d553fcea497e802e171e2623180de02ccdcbf0c701f5efe6bd26e82473663"
+        "path": "out/v15-audit-ml/.forge/v15/audit/bi/evidence/build/index.html",
+        "sha256": "43f98bcdc4caf8e0b7329022b69c345092606935ed675abce79153a99ed2e723"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/bi/evidence/package-lock.json",
+        "path": "out/v15-audit-ml/.forge/v15/audit/bi/evidence/package-lock.json",
         "sha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/feature_importance.parquet",
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/feature_importance.parquet",
         "sha256": "8dc8bd859871d0538aba6f0a5fcbfc6b9de01b5a2c0eee53e61ba4f36e487437"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/features.json",
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/features.json",
         "sha256": "62c8f18da65ee06e56847b1e05b752b7f0fe20c76afe8df27a06f1909524cfe6"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/leakage_report.json",
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/leakage_report.json",
         "sha256": "6413df1524eb3decd5d23c29f2d9997e951f8910d806bd66b02a874015f75534"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/metrics.json",
-        "sha256": "d15f6cad2400de9bec3adcc680c7bcd5efb8c92c5f386d4cb49da71783a32cf3"
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/metrics.json",
+        "sha256": "0619351f095757e8f312fa8381f8a225663a77ad13d477cf64746a017740a2ea"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/model_card.md",
-        "sha256": "f3cf6de47af338daaa16d20136f726592e6a5d504a156834f2ff32a823489e04"
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/model_card.md",
+        "sha256": "2631af11c0c47bcd61019f377b753ad46e5a3653736d5361c5b677f17db16975"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/predictions.parquet",
-        "sha256": "e3da54ed179441981598d6b3a7323971d877294f752a88716cd3068b02d1612c"
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/predictions.parquet",
+        "sha256": "e7c6469f8f12f7888191af3f0b9af280880fa9e24f5ae38dabfad5e6a422d7a8"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/run_config.json",
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/run_config.json",
         "sha256": "912063a964787b7e374e63413d90a25446e00958f8961d7f2506aef8917bdfb4"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/spec.json",
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/spec.json",
         "sha256": "272ccac0d9c1c949c77985c08bd6236ead6bb895545c6ec4c2ce32b1712b11f8"
       },
       {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/split_assignments.parquet",
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/split_assignments.parquet",
         "sha256": "eb29cd92c3d65ba0401bef241ce7d241886cd52e40c34422fa9ba8074c2439d5"
       }
     ],
-    "completedAt": "2026-09-05T14:31:20.441712+00:00",
+    "completedAt": "2026-09-05T15:52:25.084535+00:00",
     "dbt": {
       "artifacts": {
-        "manifest.json": "36815eefe30584a2329c4e44176b6255c2c9da1967f99d7715e9ebb7bd4fbad9",
-        "run_results.json": "4e1be875aff3f6ded14c9ab3321806c17058fe17421d20c2994a12b3fddba2f9"
+        "manifest.json": "184766c538464d089612ea82584c77ded483156ff502ab1bf56f84559d3bec6e",
+        "run_results.json": "c44e5b752a643ed73980caf450aa732d8f25585036618728c4d18a28cefbd702"
       },
       "command": [
         "D:\\dotnet\\Contoso-Data-Generator-V2\\.tools\\v15\\Scripts\\dbt.exe",
         "build",
         "--project-dir",
-        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-ml\\.forge\\v15\\release\\dbt",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-audit-ml\\.forge\\v15\\audit\\dbt",
         "--profiles-dir",
-        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-release-ml\\.forge\\v15\\release\\dbt",
+        "D:\\dotnet\\Contoso-Data-Generator-V2\\out\\v15-audit-ml\\.forge\\v15\\audit\\dbt",
         "--no-partial-parse"
       ],
       "exitCode": 0,
@@ -271,28 +907,35 @@
     },
     "evidenceBuild": {
       "artifact": "bi/evidence/build/index.html",
-      "completedAt": "2026-09-05T14:35:54.007030+00:00",
+      "completedAt": "2026-09-05T15:58:10.936426+00:00",
       "nodeVersion": "v21.7.1",
       "npmVersion": "10.5.0",
       "packageLockSha256": "66243a92d8b503babd3795d570bfcfdd63e736a2db12b4734af27304ea2de017",
-      "reportContractSha256": "6d0b737a8086bedfb2ff5d634a23fa68894f0a4812590ecc713f07902f673abf",
-      "runId": "release",
-      "sha256": "fb0d553fcea497e802e171e2623180de02ccdcbf0c701f5efe6bd26e82473663",
-      "startedAt": "2026-09-05T14:32:32.513404+00:00",
+      "reportContractSha256": "2ede13243c7c87c467f8aaab6a8ae2edfac35aa8693c69bf42253248579e3f4e",
+      "runId": "audit",
+      "sha256": "43f98bcdc4caf8e0b7329022b69c345092606935ed675abce79153a99ed2e723",
+      "startedAt": "2026-09-05T15:54:32.286569+00:00",
       "status": "built"
     },
     "identity": {
-      "compiledManifestSha256": "1574d8d3cb1a66b74922e5c214673aa11a7d53a013fd6169bf1b8251a837b377",
+      "compiledManifestSha256": "f01c50c1cac11c69b0c5f699c41325c473e203a9c3203b7565b373de6308a0d3",
       "datasetFingerprint": "4089b948f30dd2d2a6ef9e5ace7245e29b773633897c050c2d0467c21a2eda21",
       "projectSha256": "3ae8fc22fe5d600b1a8bbf4576094aa21edb5358361858382e2b72380b036136",
       "truthSha256": "b3ff8b776f07f243c0551946d77ab053e193eceb44d0626f6ca0264dad2bd715"
     },
     "ml": {
       "artifact": {
-        "path": "out/v15-release-ml/.forge/v15/release/ml/metrics.json",
-        "sha256": "d15f6cad2400de9bec3adcc680c7bcd5efb8c92c5f386d4cb49da71783a32cf3"
+        "path": "out/v15-audit-ml/.forge/v15/audit/ml/metrics.json",
+        "sha256": "0619351f095757e8f312fa8381f8a225663a77ad13d477cf64746a017740a2ea"
       },
+      "baselineThreshold": 0.5,
+      "completedAt": "2026-09-05T15:52:21.718720+00:00",
+      "curveArtifacts": "Full PR curves and validation threshold tradeoffs are in the hash-bound metrics artifact.",
       "framework": "scikit-learn",
+      "identity": {
+        "datasetFingerprint": "4089b948f30dd2d2a6ef9e5ace7245e29b773633897c050c2d0467c21a2eda21",
+        "featureSha256": "cdead04605fdb167187f3b98ea3cd4df07b3d7dd995f6cea4204703f575feda1"
+      },
       "models": {
         "dummy": {
           "test": {
@@ -477,7 +1120,181 @@
         }
       },
       "selectedBy": "validation Average Precision only; test is held out",
-      "selectedModel": "logistic_regression"
+      "selectedModel": "logistic_regression",
+      "thresholdAnalysis": {
+        "dummy": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.09444444444444444,
+            "confusion_matrix": [
+              [
+                0,
+                163
+              ],
+              [
+                0,
+                17
+              ]
+            ],
+            "f1": 0.17258883248730963,
+            "precision": 0.09444444444444444,
+            "recall": 1.0,
+            "roc_auc": 0.5,
+            "threshold": 0.0942211055276382
+          },
+          "threshold": 0.0942211055276382,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.07142857142857142,
+            "confusion_matrix": [
+              [
+                0,
+                130
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            "f1": 0.13333333333333333,
+            "precision": 0.07142857142857142,
+            "recall": 1.0,
+            "roc_auc": 0.5,
+            "threshold": 0.0942211055276382
+          }
+        },
+        "histogram_gradient_boosting": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.3505190915022227,
+            "confusion_matrix": [
+              [
+                103,
+                60
+              ],
+              [
+                1,
+                16
+              ]
+            ],
+            "f1": 0.34408602150537637,
+            "precision": 0.21052631578947367,
+            "recall": 0.9411764705882353,
+            "roc_auc": 0.806207145434861,
+            "threshold": 0.012071889128559218
+          },
+          "threshold": 0.012071889128559218,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.15236273789103977,
+            "confusion_matrix": [
+              [
+                85,
+                45
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            "f1": 0.3076923076923077,
+            "precision": 0.18181818181818182,
+            "recall": 1.0,
+            "roc_auc": 0.7684615384615384,
+            "threshold": 0.012071889128559218
+          }
+        },
+        "logistic_regression": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.18754007883316906,
+            "confusion_matrix": [
+              [
+                103,
+                60
+              ],
+              [
+                1,
+                16
+              ]
+            ],
+            "f1": 0.34408602150537637,
+            "precision": 0.21052631578947367,
+            "recall": 0.9411764705882353,
+            "roc_auc": 0.765427643450018,
+            "threshold": 0.12136322464521697
+          },
+          "threshold": 0.12136322464521697,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.18588750122590347,
+            "confusion_matrix": [
+              [
+                91,
+                39
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            "f1": 0.3389830508474576,
+            "precision": 0.20408163265306123,
+            "recall": 1.0,
+            "roc_auc": 0.7792307692307692,
+            "threshold": 0.12136322464521697
+          }
+        },
+        "random_forest": {
+          "decisionRule": "probability >= threshold",
+          "objective": "maximum F1",
+          "selectedOn": "validation",
+          "test": {
+            "average_precision": 0.29296290408750947,
+            "confusion_matrix": [
+              [
+                100,
+                63
+              ],
+              [
+                0,
+                17
+              ]
+            ],
+            "f1": 0.35051546391752575,
+            "precision": 0.2125,
+            "recall": 1.0,
+            "roc_auc": 0.8224467701190906,
+            "threshold": 0.0489643038121299
+          },
+          "threshold": 0.0489643038121299,
+          "tieBreak": "closest to 0.5, then higher threshold",
+          "validation": {
+            "average_precision": 0.12380704678609955,
+            "confusion_matrix": [
+              [
+                85,
+                45
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            "f1": 0.3076923076923077,
+            "precision": 0.18181818181818182,
+            "recall": 1.0,
+            "roc_auc": 0.7261538461538461,
+            "threshold": 0.0489643038121299
+          }
+        }
+      }
     },
     "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
     "reconciliation": {
@@ -532,11 +1349,11 @@
       },
       "status": "reconciled"
     },
-    "runId": "release",
+    "runId": "audit",
     "runtimeVersions": {
-      "dbt-core": "1.11.7",
+      "dbt-core": "1.11.14",
       "dbt-duckdb": "1.10.1",
-      "duckdb": "1.4.4",
+      "duckdb": "1.4.5",
       "pandas": "2.3.3",
       "pyarrow": "23.0.1",
       "scikit-learn": "1.7.2"
@@ -550,7 +1367,7 @@
       "validate-silver",
       "verify"
     ],
-    "startedAt": "2026-09-05T14:30:46.120849+00:00",
+    "startedAt": "2026-09-05T15:51:52.497610+00:00",
     "status": "succeeded"
   },
   "notExecutedThisPass": [
@@ -565,52 +1382,19 @@
     "Kaggle hosting",
     "Databricks hosting"
   ],
-  "sameSessionSparkContinuation": {
-    "actualSparkApiMode": "connect-local",
-    "artifacts": [
-      {
-        "path": "artifacts/v15/connect-session/colab/spark_runtime.json",
-        "sha256": "e54d8fbd8c2166564a931179e9dff22235ad6cc43bd05952a3d45bb294a69c77"
-      },
-      {
-        "path": "artifacts/v15/connect-session/colab/spark_result_manifest.json",
-        "sha256": "4c0e31422c4463e8305ba6aa65cf364c69625fe47095c0991639f705da486b9a"
-      },
-      {
-        "path": "artifacts/v15/connect-session/spark_evidence.json",
-        "sha256": "deff3eebf300c311e7112aea3a2b81da0e8165aafba880558562640f53f19bf4"
-      },
-      {
-        "path": "artifacts/v15/connect-session/factory-session/run_evidence.json",
-        "sha256": "8ccb2279aab5f266102478cdaf70649b3c6c1ea253144464961c42e0b93c1e5e"
-      },
-      {
-        "path": "artifacts/v15/connect-session/factory-session/dbt_execution.json",
-        "sha256": "f9e72f8c81d8b39c4cccfd8f12340cf7248f50d97fe7a4926366467d01cc9372"
-      },
-      {
-        "path": "artifacts/v15/connect-session/factory-session/reconciliation.json",
-        "sha256": "8135dc0f323fb947096c1f9dbdbb6a159aef8a4df28ba62d82fb23f88aa6fc97"
-      },
-      {
-        "path": "artifacts/v15/connect-session/factory-session/ml/metrics.json",
-        "sha256": "ce03653a7b6b07c79103661a77faa443f593e1f8bd1e0e6965cdfb107046c746"
-      }
-    ],
-    "hostedColabExecution": false,
-    "isRemote": true,
-    "nativeBigQueryExecution": false,
-    "samePackageAndSession": true,
-    "sparkVersion": "4.0.4",
-    "status": "succeeded"
-  },
   "scope": "Actual local Windows and WSL runs. Plans remain not-executed. Raw outputs stay outside Git; hashes bind this summary to retained local files.",
   "sparkMl": {
     "artifact": {
-      "path": "artifacts/v15/spark-ml/metrics.json",
-      "sha256": "b1bae8cf4431d5b55ad265dcc85469961b0ccbce8aa4b6fe994e0fa6e702a418"
+      "path": "artifacts/v15-harden-spark-ml/metrics.json",
+      "sha256": "d98334ec73e853aebd610463ddfbdc5c45167455ca23bce32cd9168a73d813d1"
     },
+    "baselineThreshold": 0.5,
+    "completedAt": "2026-09-05T15:49:57.756878+00:00",
+    "curveArtifacts": "Full PR curves and validation threshold tradeoffs are in the hash-bound metrics artifact.",
     "framework": "spark-ml",
+    "identity": {
+      "featureSha256": "cdead04605fdb167187f3b98ea3cd4df07b3d7dd995f6cea4204703f575feda1"
+    },
     "models": {
       "dummy": {
         "test": {
@@ -795,6 +1579,181 @@
       }
     },
     "selectedBy": "validation Average Precision only",
-    "selectedModel": "logistic_regression"
+    "selectedModel": "logistic_regression",
+    "sparkVersion": "4.0.4",
+    "thresholdAnalysis": {
+      "dummy": {
+        "decisionRule": "probability >= threshold",
+        "objective": "maximum F1",
+        "selectedOn": "validation",
+        "test": {
+          "average_precision": 0.09444444444444444,
+          "confusion_matrix": [
+            [
+              0,
+              163
+            ],
+            [
+              0,
+              17
+            ]
+          ],
+          "f1": 0.17258883248730963,
+          "precision": 0.09444444444444444,
+          "recall": 1.0,
+          "roc_auc": 0.5,
+          "threshold": 0.0942211055276382
+        },
+        "threshold": 0.0942211055276382,
+        "tieBreak": "closest to 0.5, then higher threshold",
+        "validation": {
+          "average_precision": 0.07142857142857142,
+          "confusion_matrix": [
+            [
+              0,
+              130
+            ],
+            [
+              0,
+              10
+            ]
+          ],
+          "f1": 0.13333333333333333,
+          "precision": 0.07142857142857142,
+          "recall": 1.0,
+          "roc_auc": 0.5,
+          "threshold": 0.0942211055276382
+        }
+      },
+      "gradient_boosting": {
+        "decisionRule": "probability >= threshold",
+        "objective": "maximum F1",
+        "selectedOn": "validation",
+        "test": {
+          "average_precision": 0.36572648455553763,
+          "confusion_matrix": [
+            [
+              105,
+              58
+            ],
+            [
+              0,
+              17
+            ]
+          ],
+          "f1": 0.3695652173913043,
+          "precision": 0.22666666666666666,
+          "recall": 1.0,
+          "roc_auc": 0.8284012991699747,
+          "threshold": 0.13499448716472606
+        },
+        "threshold": 0.13499448716472606,
+        "tieBreak": "closest to 0.5, then higher threshold",
+        "validation": {
+          "average_precision": 0.15393402430686295,
+          "confusion_matrix": [
+            [
+              95,
+              35
+            ],
+            [
+              1,
+              9
+            ]
+          ],
+          "f1": 0.3333333333333333,
+          "precision": 0.20454545454545456,
+          "recall": 0.9,
+          "roc_auc": 0.7888461538461538,
+          "threshold": 0.13499448716472606
+        }
+      },
+      "logistic_regression": {
+        "decisionRule": "probability >= threshold",
+        "objective": "maximum F1",
+        "selectedOn": "validation",
+        "test": {
+          "average_precision": 0.198994680556362,
+          "confusion_matrix": [
+            [
+              104,
+              59
+            ],
+            [
+              1,
+              16
+            ]
+          ],
+          "f1": 0.34782608695652173,
+          "precision": 0.21333333333333335,
+          "recall": 0.9411764705882353,
+          "roc_auc": 0.7722843738722482,
+          "threshold": 0.1314435169535515
+        },
+        "threshold": 0.1314435169535515,
+        "tieBreak": "closest to 0.5, then higher threshold",
+        "validation": {
+          "average_precision": 0.16147954957499497,
+          "confusion_matrix": [
+            [
+              92,
+              38
+            ],
+            [
+              0,
+              10
+            ]
+          ],
+          "f1": 0.3448275862068966,
+          "precision": 0.20833333333333334,
+          "recall": 1.0,
+          "roc_auc": 0.7776923076923077,
+          "threshold": 0.1314435169535515
+        }
+      },
+      "random_forest": {
+        "decisionRule": "probability >= threshold",
+        "objective": "maximum F1",
+        "selectedOn": "validation",
+        "test": {
+          "average_precision": 0.2564687849413515,
+          "confusion_matrix": [
+            [
+              100,
+              63
+            ],
+            [
+              0,
+              17
+            ]
+          ],
+          "f1": 0.35051546391752575,
+          "precision": 0.2125,
+          "recall": 1.0,
+          "roc_auc": 0.803680981595092,
+          "threshold": 0.12994480116735516
+        },
+        "threshold": 0.12994480116735516,
+        "tieBreak": "closest to 0.5, then higher threshold",
+        "validation": {
+          "average_precision": 0.13693147309271952,
+          "confusion_matrix": [
+            [
+              83,
+              47
+            ],
+            [
+              0,
+              10
+            ]
+          ],
+          "f1": 0.29850746268656714,
+          "precision": 0.17543859649122806,
+          "recall": 1.0,
+          "roc_auc": 0.7553846153846153,
+          "threshold": 0.12994480116735516
+        }
+      }
+    }
   }
 }
