@@ -5,6 +5,7 @@ using DatabaseGenerator.Forge.Architecture;
 using DatabaseGenerator.Forge.Pipeline;
 using DatabaseGenerator.Forge.Specs;
 using DatabaseGenerator.Forge.Runtime;
+using DatabaseGenerator.Forge.Planning;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,6 +31,11 @@ public static class ForgeCommand
                 Console.WriteLine(JsonSerializer.Serialize(ArchitecturePresets.List(), ArchitectureJsonContext.Default.ListArchitecturePreset));
                 return 0;
             }
+            if (args.Length >= 2 && args[0] == "scenarios" && args[1] == "list")
+            {
+                Console.WriteLine(ScenarioCatalog.ToJson());
+                return 0;
+            }
             if (args.Length >= 2 && args[0] == "project" && args[1] == "init")
             {
                 var init = ParseOptions(args[2..]);
@@ -46,15 +52,17 @@ public static class ForgeCommand
                 return await ForgeEvidenceCommand.ImportAsync(evidenceOptions["root"], evidenceOptions["work-order"],
                     evidenceOptions["result"], evidenceOptions["output"], evidenceOptions.GetValueOrDefault("python", "python"));
             }
-            var compile = args.Length >= 2 && args[0] == "pipeline" && args[1] == "compile";
+            var legacyCompile = args.Length >= 2 && args[0] == "pipeline" && args[1] == "compile";
+            var compile = legacyCompile || args[0] == "compile";
+            var plan = args[0] == "plan";
             var validate = args[0] == "validate";
-            if (!compile && !validate && !string.Equals(args[0], "generate", StringComparison.OrdinalIgnoreCase))
+            if (!compile && !plan && !validate && !string.Equals(args[0], "generate", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown forge command '{args[0]}'.");
 
-            var options = ParseOptions(args[(compile ? 2 : 1)..]);
+            var options = ParseOptions(args[(legacyCompile ? 2 : 1)..]);
             if (!options.TryGetValue("project", out var projectPath))
                 throw new ArgumentException("--project is required.");
-            if (!options.TryGetValue("output", out var outputPath) && !validate)
+            if (!options.TryGetValue("output", out var outputPath) && !validate && !plan)
                 throw new ArgumentException("--output is required.");
             options.TryGetValue("lake", out var lakePath);
 
@@ -65,14 +73,23 @@ public static class ForgeCommand
                 studio ??= new StudioProjectSpec { SourceProject = spec };
                 studio.Architecture.PresetId = preset;
             }
-            if (compile || options.ContainsKey("pipeline"))
+            if (compile || plan || options.ContainsKey("pipeline") || options.ContainsKey("scenario"))
                 studio ??= new StudioProjectSpec { SourceProject = spec };
+            if (options.TryGetValue("scenario", out var scenario))
+            {
+                studio = ScenarioCatalog.Apply(studio!, scenario);
+                spec = studio.SourceProject;
+            }
             string? pipeline = null;
             if (options.TryGetValue("pipeline", out var pipelinePath)) pipeline = await File.ReadAllTextAsync(pipelinePath);
             else if (studio is not null)
             {
                 var sibling = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(projectPath))!, "pipeline.json");
-                if (File.Exists(sibling)) pipeline = await File.ReadAllTextAsync(sibling);
+                if (File.Exists(sibling))
+                {
+                    pipelinePath = sibling;
+                    pipeline = await File.ReadAllTextAsync(sibling);
+                }
             }
             var resolved = studio is null ? null : ArchitecturePresets.ToJson(ArchitecturePresets.Resolve(studio));
             if (pipeline is not null)
@@ -85,10 +102,25 @@ public static class ForgeCommand
                 Console.WriteLine($"Valid project contract: {spec.Name}");
                 return 0;
             }
+            if (plan)
+            {
+                var planned = PlanBuilder.Build(studio!, pipeline);
+                if (outputPath is not null)
+                {
+                    var destination = Path.GetFullPath(outputPath);
+                    if (string.Equals(destination, Path.GetFullPath(projectPath), OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ||
+                        pipelinePath is not null && string.Equals(destination, Path.GetFullPath(pipelinePath), OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                        throw new ArgumentException("Plan output must not replace its source project or pipeline.");
+                    ForgeIo.WriteText(destination, PlanBuilder.ToJson(planned));
+                    Console.WriteLine($"Resolved plan written to {destination}.");
+                }
+                else Console.WriteLine(ForgePlanPresentation.Describe(planned));
+                return 0;
+            }
             if (compile)
             {
                 studio ??= new StudioProjectSpec { SourceProject = spec };
-                ForgeStudioCommand.Compile(studio, outputPath!, pipeline);
+                ForgeStudioCommand.Compile(studio, outputPath!, pipeline, includePlan: !legacyCompile);
                 Console.WriteLine($"Compiled neutral pipeline into {Path.GetFullPath(outputPath!)}.");
                 return 0;
             }
@@ -130,9 +162,12 @@ public static class ForgeCommand
 
     private static void WriteHelp()
     {
-        Console.WriteLine("Contoso Forge — V1 generation and V1.2 architecture presets");
+        Console.WriteLine("Contoso Forge — generation, architecture planning and compilation");
         Console.WriteLine("Usage: databasegenerator forge generate --project project.json --output out [--lake lake]");
         Console.WriteLine("       databasegenerator forge presets list");
+        Console.WriteLine("       databasegenerator forge scenarios list");
+        Console.WriteLine("       databasegenerator forge plan --project project.json [--preset free-gcp-connect] [--scenario retail.customer_satisfaction_ml] [--pipeline pipeline.json] [--output plan.json]");
+        Console.WriteLine("       databasegenerator forge compile --project project.json --output compiled [--pipeline pipeline.json]");
         Console.WriteLine("       databasegenerator forge project init --output project [--preset free-gcp-lab]");
         Console.WriteLine("       databasegenerator forge validate --project project.json [--pipeline pipeline.json]");
         Console.WriteLine("       databasegenerator forge pipeline compile --project project.json --output compiled [--preset free-gcp-lab] [--pipeline pipeline.json]");

@@ -4,6 +4,10 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DatabaseGenerator.Forge.Pipeline;
+using DatabaseGenerator.Forge;
+using DatabaseGenerator.Forge.Planning;
+using System.Windows.Controls;
+using Polyline = System.Windows.Shapes.Polyline;
 
 namespace ContosoForge.PipelineStudio;
 
@@ -179,6 +183,7 @@ public partial class App : Application
         Require(rejected, "Editor did not enforce the shared raw-credential guard.");
         window.DiscardPendingEdits();
         window.SelectActivity(spark.Id);
+        window.PlanCurrent();
         window.CompileTo(Path.Combine(output, "compiled"));
         Require(window.AirflowPreview.Text.Contains("DAG", StringComparison.Ordinal), "Generated DAG preview is absent.");
         Require(window.IacPreview.Text.Contains("google_bigquery_dataset", StringComparison.Ordinal), "Generated BigQuery HCL preview is absent.");
@@ -206,5 +211,141 @@ public partial class App : Application
             ["cloudExecutionVerified"] = false, ["screenshot"] = "pipeline-studio.png"
         };
         File.WriteAllText(Path.Combine(output, "smoke-report.json"), report.ToJsonString(new() { WriteIndented = true }) + "\n");
+        RunPlannerSmoke(project, Path.Combine(output, "planner"));
+    }
+
+    private static void RunPlannerSmoke(string project, string output)
+    {
+        Directory.CreateDirectory(output);
+        var window = new MainWindow();
+        window.LoadProject(project);
+        var unplannedBlocked = false;
+        try { window.CompileTo(Path.Combine(output, "unplanned-compile")); }
+        catch (ArgumentException error) { unplannedBlocked = error.Message.Contains("Plan this revision", StringComparison.Ordinal); }
+        Require(unplannedBlocked && !Directory.Exists(Path.Combine(output, "unplanned-compile")), "An unreviewed initial plan compiled or wrote output.");
+        var classic = window.PlanCurrent();
+        Require(classic.ResolvedSettings.SparkApiMode == "classic", "The existing free-gcp-lab default changed to Connect.");
+        Require(window.Session.PlanJson == PlanBuilder.ToJson(PlanBuilder.Build(window.Session.Project, window.Session.PipelineJson)), "WPF diverged from the shared C# planner.");
+        Require(classic.CurrentExecutionStatus == "not-executed" && classic.OverallReadiness != "reconciled", "A new plan claimed this project had executed.");
+        var classicSource = JsonNode.Parse(window.Session.ProjectJson)!["sourceProject"]!.ToJsonString();
+        window.PresetBox.SelectedItem = "free-gcp-connect";
+        Require(window.Session.Plan is null, "A pending preset selection left a current plan.");
+        var pendingBlocked = false;
+        try { window.PlanCurrent(); } catch (ArgumentException error) { pendingBlocked = error.Message.Contains("pending", StringComparison.Ordinal); }
+        Require(pendingBlocked, "Plan silently excluded unapplied preset settings.");
+        window.ApplySelection();
+        var connect = window.PlanCurrent();
+        Require(connect.ResolvedSettings.SparkApiMode == "connect-local" && connect.ResolvedSettings.SparkVersion == "4.0.4", "The explicit Connect preset did not resolve Connect-local 4.0.4.");
+        Require(JsonNode.Parse(window.Session.ProjectJson)!["sourceProject"]!.ToJsonString() == classicSource, "Switching architecture changed business source data.");
+        Require(connect.Stages.Any(s => s.SparkApiMode == "connect-local") && connect.ManualCheckpoints.Count > 0, "The plan concealed Connect or its manual handoff.");
+        Require(window.Graph.Children.OfType<Border>().Count(b => b.Tag is PlanStage) == connect.Stages.Count, "The WPF canvas did not render actual resolved stages.");
+        Require(window.Graph.Children.OfType<Polyline>().Count(line => Equals(line.Tag, "plan-edge")) == connect.Edges.Count, "The WPF canvas lost resolved edges.");
+        var renderedText = DescendantText(window.Graph);
+        Require(renderedText.Contains("MANUAL", StringComparison.Ordinal) && renderedText.Contains("RECONCILED", StringComparison.Ordinal), "Resolved graph badges are absent.");
+        var summary = DescendantText(window.ArchitectureSummary);
+        Require(summary.Contains("CREDENTIALS AT EXECUTION", StringComparison.Ordinal) && summary.Contains("COSTS & QUOTAS", StringComparison.Ordinal) && summary.Contains("not-executed", StringComparison.Ordinal), "The architecture summary omitted credentials, costs or execution status.");
+        window.ScenarioBox.SelectedValue = ScenarioCatalog.MlScenarioId;
+        window.ApplySelection();
+        var ml = window.PlanCurrent();
+        Require(ml.BusinessScenario.MlEnabled && ml.GenerationProfile.Orders == 1200 && ml.GenerationProfile.TimeSpanDays == 365 && ml.ResolvedSettings.SparkApiMode == "connect-local", "ML scenario selection did not retain architecture and apply the learning profile.");
+        var mlArchitecture = ml.ArchitecturePreset;
+        window.ScenarioBox.SelectedValue = ScenarioCatalog.DefaultScenarioId;
+        window.ApplySelection();
+        Require(window.PlanCurrent().ArchitecturePreset == mlArchitecture, "Switching scenario changed the runtime architecture.");
+        window.OverridesEditor.Text = "{\"tableFormat\":\"delta\"}";
+        var invalidProject = window.Session.ProjectJson;
+        var invalidRejected = false;
+        try { window.ApplyOverrides(); } catch (ArgumentException error) { invalidRejected = error.Message.Contains("BigQuery", StringComparison.Ordinal); }
+        Require(invalidRejected && window.Session.ProjectJson == invalidProject, "An invalid native BigQuery/Delta override was applied or lacked a shared diagnostic.");
+        window.DiscardPendingEdits();
+        foreach (var preset in new[] { "local-fast", "open-lakehouse-iceberg" })
+        {
+            window.PresetBox.SelectedItem = preset;
+            window.ApplySelection();
+            var reference = window.PlanCurrent();
+            Require(reference.Stages.Any(s => s.ImplementationStatus is "reference-only" or "unsupported"), "An unimplemented architecture was falsely promoted.");
+            Require(DescendantText(window.Graph).Contains("REFERENCE", StringComparison.Ordinal) || DescendantText(window.Graph).Contains("UNSUPPORTED", StringComparison.Ordinal), "Reference capability was not displayed honestly.");
+            if (preset == "open-lakehouse-iceberg") Render(window, 1500, 1000, Path.Combine(output, "pipeline-studio-reference.png"));
+        }
+        window.PresetBox.SelectedItem = "free-gcp-connect";
+        window.ApplySelection();
+        window.ScenarioBox.SelectedValue = ScenarioCatalog.MlScenarioId;
+        window.ApplySelection();
+        window.PlanCurrent();
+        window.SaveTo(Path.Combine(output, "project-bundle", "pipeline.json"));
+        foreach (var sourcePath in new[] { window.Session.ProjectPath!, window.Session.PipelinePath! })
+        {
+            var sourceBytes = File.ReadAllBytes(sourcePath);
+            var sourceProtected = false;
+            try { window.Session.SavePlan(sourcePath); } catch (ArgumentException error) { sourceProtected = error.Message.Contains("source file", StringComparison.Ordinal); }
+            Require(sourceProtected && sourceBytes.AsSpan().SequenceEqual(File.ReadAllBytes(sourcePath)), "Saving a plan overwrote an open source document.");
+        }
+        window.Session.SavePlan(Path.Combine(output, "wpf-plan.json"));
+        var cliPath = Path.Combine(output, "cli-plan.json");
+        var cliArguments = new[] { "plan", "--project", window.Session.ProjectPath!, "--pipeline", window.Session.PipelinePath!, "--output", cliPath };
+        var result = System.Threading.Tasks.Task.Run(() => ForgeCommand.RunAsync(cliArguments)).GetAwaiter().GetResult();
+        Require(result == 0 && File.ReadAllText(cliPath) == window.Session.PlanJson, "Actual CLI and WPF plan JSON differ for the same project/pipeline.");
+        window.ParametersEditor.Text = "{\"new_input\":{\"type\":\"int\",\"default\":2,\"required\":false}}";
+        Require(window.Session.Plan is null, "Parameter editor changes did not invalidate the plan.");
+        window.ApplyParameters();
+        var staleBlocked = false;
+        try { window.CompileTo(Path.Combine(output, "stale-compile")); }
+        catch (ArgumentException error) { staleBlocked = error.Message.Contains("Plan this revision", StringComparison.Ordinal); }
+        Require(staleBlocked && !Directory.Exists(Path.Combine(output, "stale-compile")), "Compile accepted stale planning or wrote output before review.");
+        window.PlanCurrent();
+        window.CompileTo(Path.Combine(output, "compiled-current"));
+        var compiledPlan = Path.Combine(output, "compiled-current", "plan", "resolved_plan.json");
+        Require(window.Session.PlanJson == File.ReadAllText(compiledPlan), "Compile did not resolve and serialize the current edited revision.");
+        Require(window.Session.Pipeline.Parameters.ContainsKey("new_input"), "Compile dropped the applied parameter revision.");
+        var edited = window.Session.Pipeline.Activities.First();
+        window.SelectActivity(edited.Id);
+        window.NameBox.Text = "Preserve this authored activity";
+        window.ApplyNode();
+        window.PresetBox.SelectedItem = "free-gcp-lab";
+        window.ApplySelection();
+        Require(window.Session.Pipeline.Activities.First(a => a.Id == edited.Id).Name == "Preserve this authored activity", "Changing a preset discarded authored graph edits.");
+        window.SelectActivity(edited.Id);
+        window.NameBox.Text = "Verify source package";
+        window.ApplyNode();
+        window.PresetBox.SelectedItem = "free-gcp-connect";
+        window.ApplySelection();
+        window.PlanCurrent();
+        window.PreviewTabs.SelectedItem = window.PlanPreviewTab;
+        Render(window, 1500, 1000, Path.Combine(output, "pipeline-studio-plan.png"));
+        Render(window, 1150, 900, Path.Combine(output, "pipeline-studio-plan-minimum.png"));
+        var buttonBounds = window.PlanButton.TransformToAncestor(window.RootGrid).TransformBounds(new Rect(new Point(), window.PlanButton.RenderSize));
+        Require(buttonBounds.Right <= 1150 && buttonBounds.Bottom < 300, "The Plan action overflowed the minimum window layout.");
+        var report = new JsonObject
+        {
+            ["status"] = "passed", ["runtime"] = ".NET WPF on Windows", ["uiRendered"] = true,
+            ["coreAndCliPlanIdentical"] = true, ["explicitConnectPreset"] = true, ["classicDefaultPreserved"] = true,
+            ["scenarioArchitectureIndependent"] = true, ["resolvedStagesAndEdgesRendered"] = true, ["referenceAndManualBadgesVisible"] = true,
+            ["pendingPlanBlocked"] = true, ["editsInvalidatePlan"] = true, ["compileUsesCurrentPlan"] = true,
+            ["unplannedAndStaleCompileBlocked"] = true, ["planSaveProtectsSources"] = true,
+            ["invalidOverrideRejectedAtomically"] = true, ["authoredGraphPreserved"] = true, ["minimumLayoutFits"] = true,
+            ["cloudExecutionVerified"] = false, ["screenshots"] = new JsonArray("pipeline-studio-plan.png", "pipeline-studio-plan-minimum.png", "pipeline-studio-reference.png")
+        };
+        File.WriteAllText(Path.Combine(output, "planner-smoke-report.json"), report.ToJsonString(new() { WriteIndented = true }) + "\n");
+    }
+
+    private static string DescendantText(DependencyObject parent)
+    {
+        var values = new List<string>();
+        if (parent is TextBlock text) values.Add(text.Text);
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++) values.Add(DescendantText(VisualTreeHelper.GetChild(parent, index)));
+        return string.Join("\n", values);
+    }
+
+    private static void Render(MainWindow window, int width, int height, string path)
+    {
+        window.RootGrid.Measure(new Size(width, height));
+        window.RootGrid.Arrange(new Rect(0, 0, width, height));
+        window.RootGrid.UpdateLayout();
+        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(window.RootGrid);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = File.Create(path);
+        encoder.Save(stream);
     }
 }

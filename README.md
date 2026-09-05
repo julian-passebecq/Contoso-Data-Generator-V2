@@ -1,5 +1,8 @@
 # Contoso Data Generator V2
 
+V1.3.1 adds an offline C# architecture planner: choose a business scenario and preset, inspect the resolved DAG, manual checkpoints and evidence, then compile. The explicit free-gcp-connect preset preserves free-gcp-lab classic behavior. See [planning and CLI usage](docs/planning.md) and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
+
+
 
 DataGenerator is a tool for generating sample data, ready to be imported into PowerBI or Fabric OneLake for analysis. This is the V2 version, evolution of the [older one](https://github.com/sql-bi/Contoso-Data-Generator).
 

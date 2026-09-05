@@ -13,9 +13,11 @@ public sealed class StudioProjectSpec
 {
     [JsonRequired] public string Version { get; set; } = "1.2.0";
     [JsonRequired] public ProjectSpec SourceProject { get; set; } = new();
+    // Optional planner scenario; the source-system entity graph remains the V1 contract.
+    public string? BusinessScenario { get; set; }
     public ArchitectureSelection Architecture { get; set; } = new();
     public GcpOptions Gcp { get; set; } = new();
-    public GitOptions Git { get; set; } = new();
+    public GitOptions? Git { get; set; } = new();
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
@@ -81,7 +83,7 @@ public sealed class ResolvedProject
     public string Name { get; set; } = "";
     public ArchitectureSettings Settings { get; set; } = new();
     public GcpOptions Gcp { get; set; } = new();
-    public GitOptions Git { get; set; } = new();
+    public GitOptions? Git { get; set; } = new();
     public string DatasetFingerprint { get; set; } = "";
     public string ArtifactStatus { get; set; } = "generated-reference";
     public List<string> Notes { get; set; } = new();
@@ -110,9 +112,11 @@ public static class ProjectSpecReader
         if (version == "1.2.0")
         {
             var studio = JsonSerializer.Deserialize(json, ArchitectureJsonContext.Default.StudioProjectSpec)!;
-            if (studio.SourceProject is null || studio.Architecture is null || studio.Gcp is null || studio.Git is null)
+            if (studio.SourceProject is null || studio.Architecture is null || studio.Gcp is null)
                 throw new ArgumentException("Studio project objects cannot be null.");
             studio.SourceProject.Validate();
+            if (studio.BusinessScenario is not null)
+                _ = Planning.ScenarioCatalog.Get(studio.BusinessScenario);
             ArchitecturePresets.Resolve(studio);
             return (studio.SourceProject, studio);
         }

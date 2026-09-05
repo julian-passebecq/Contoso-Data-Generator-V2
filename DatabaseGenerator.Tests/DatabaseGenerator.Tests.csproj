@@ -21,4 +21,8 @@
     <ProjectReference Include="..\DatabaseGenerator\DatabaseGenerator.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Fixtures/v13-default*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -4,31 +4,35 @@
         Title="Contoso Forge · Pipeline Studio" Width="1500" Height="1000" MinWidth="1150" MinHeight="780"
         FontFamily="Segoe UI" FontSize="13" Background="#F2F6F8">
   <Grid x:Name="RootGrid" Background="#F2F6F8">
-    <Grid.RowDefinitions><RowDefinition Height="110" /><RowDefinition Height="*" /><RowDefinition Height="35" /></Grid.RowDefinitions>
-    <Border Background="#123347" Padding="23,14">
+    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="35" /></Grid.RowDefinitions>
+    <Border Background="#123347" Padding="23,14,23,16">
       <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="39" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="39" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="Contoso Forge" Foreground="White" FontSize="24" FontWeight="SemiBold" />
-          <TextBlock Text="PIPELINE STUDIO  /  V1.3" Foreground="#A3CDD1" Margin="21,10,0,0" FontSize="11" />
+          <TextBlock Text="PIPELINE STUDIO  /  V1.3.1" Foreground="#A3CDD1" Margin="21,10,0,0" FontSize="11" />
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" Text="LOCAL AUTHORING · LIVE EVIDENCE TRACKED SEPARATELY" Foreground="#A3CDD1" FontSize="10" Margin="0,11,0,0" />
-        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <WrapPanel Grid.Row="1" VerticalAlignment="Center">
           <Button Content="Open project" Click="OpenProject_Click" /><Button Content="Open pipeline" Click="OpenPipeline_Click" />
           <Button Content="Save bundle" Click="Save_Click" />
-          <TextBlock Text="Preset" Foreground="#B4D0DB" Margin="17,10,8,0" />
-          <ComboBox x:Name="PresetBox" Width="175" Margin="0" />
-          <TextBlock Text="Profile" Foreground="#B4D0DB" Margin="14,10,8,0" />
-          <ComboBox x:Name="CostBox" Width="190" Margin="0" />
-          <Button Content="Apply preset/profile" Click="ApplyArchitecture_Click" Margin="10,0,15,0" />
           <Button Content="Validate" Click="Validate_Click" />
-          <Button Content="Compile" Click="Compile_Click" Background="#B4E5DE" BorderBrush="#B4E5DE" FontWeight="SemiBold" />
+          <Button x:Name="PlanButton" Content="Plan" Click="Plan_Click" Background="#B4E5DE" BorderBrush="#B4E5DE" FontWeight="SemiBold" MinWidth="84" />
+          <Button Content="Save plan" Click="SavePlan_Click" />
+          <Button Content="Compile" Click="Compile_Click" FontWeight="SemiBold" />
           <Button Content="Discard pending edits" Click="Discard_Click" Margin="8,0,0,0" />
-        </StackPanel>
+        </WrapPanel>
+        <WrapPanel Grid.Row="2" Margin="0,12,0,0">
+          <StackPanel Margin="0,0,12,0"><TextBlock Text="BUSINESS SCENARIO" Foreground="#B4D0DB" FontSize="10" Margin="0,0,0,4" /><ComboBox x:Name="ScenarioBox" Width="275" Margin="0" DisplayMemberPath="DisplayName" SelectedValuePath="ScenarioId" /></StackPanel>
+          <StackPanel Margin="0,0,12,0"><TextBlock Text="ARCHITECTURE PRESET" Foreground="#B4D0DB" FontSize="10" Margin="0,0,0,4" /><ComboBox x:Name="PresetBox" Width="210" Margin="0" /></StackPanel>
+          <StackPanel Margin="0,0,12,0"><TextBlock Text="COST PROFILE" Foreground="#B4D0DB" FontSize="10" Margin="0,0,0,4" /><ComboBox x:Name="CostBox" Width="205" Margin="0" /></StackPanel>
+          <Button Content="Apply scenario / architecture" Click="ApplyArchitecture_Click" VerticalAlignment="Bottom" Margin="0,14,10,0" />
+          <TextBlock x:Name="PlanState" Text="Choose settings, then Plan." Foreground="#B4D0DB" VerticalAlignment="Bottom" Margin="0,0,0,8" FontSize="11" />
+        </WrapPanel>
       </Grid>
     </Border>
     <Grid Grid.Row="1" Margin="16">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="158" /><ColumnDefinition Width="*" /><ColumnDefinition Width="336" /></Grid.ColumnDefinitions>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="148" /><ColumnDefinition Width="*" /><ColumnDefinition Width="350" /></Grid.ColumnDefinitions>
       <Border Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7" Padding="14">
         <DockPanel>
           <StackPanel DockPanel.Dock="Top"><TextBlock Text="ACTIVITY TOOLBOX" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Muted}" Margin="0,2,0,16" />
@@ -39,12 +43,13 @@
         </DockPanel>
       </Border>
       <Grid Grid.Column="1" Margin="12,0">
-        <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="305" /><RowDefinition Height="12" /><RowDefinition Height="330" /></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="230" /><RowDefinition Height="12" /><RowDefinition Height="240" /></Grid.RowDefinitions>
         <Border Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7">
           <DockPanel>
             <Border DockPanel.Dock="Top" BorderBrush="#E1E9ED" BorderThickness="0,0,0,1" Padding="17,12">
-              <Grid><StackPanel><TextBlock x:Name="PipelineTitle" FontWeight="SemiBold" FontSize="17" /><TextBlock x:Name="GraphSubtitle" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,4,0,0" /></StackPanel>
-                <Button Content="Remove selected" HorizontalAlignment="Right" VerticalAlignment="Center" Click="Remove_Click" /></Grid>
+              <StackPanel><TextBlock x:Name="PipelineTitle" FontWeight="SemiBold" FontSize="17" /><TextBlock x:Name="GraphSubtitle" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,4,0,8" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal"><RadioButton x:Name="PlanView" Content="Resolved plan" GroupName="GraphView" IsChecked="True" Checked="GraphView_Changed" Margin="0,0,18,0" VerticalAlignment="Center" /><RadioButton x:Name="AuthoringView" Content="Edit pipeline" GroupName="GraphView" Checked="GraphView_Changed" Margin="0,0,18,0" VerticalAlignment="Center" /><Button Content="Remove selected" Click="Remove_Click" Padding="8,4" IsEnabled="{Binding IsChecked, ElementName=AuthoringView}" /></StackPanel>
+              </StackPanel>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><Canvas x:Name="Graph" Background="#F8FBFC" /></ScrollViewer>
           </DockPanel>
@@ -57,11 +62,13 @@
           <TabItem Header="IaC"><TextBox x:Name="IacPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
           <TabItem Header="Validation"><TextBox x:Name="ValidationPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
           <TabItem Header="Run manifest"><TextBox x:Name="ManifestPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
+          <TabItem x:Name="PlanPreviewTab" Header="Plan JSON"><TextBox x:Name="PlanPreview" Style="{StaticResource Code}" IsReadOnly="True" /></TabItem>
         </TabControl>
       </Grid>
       <Border Grid.Column="2" Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7" Padding="12">
-        <TabControl BorderThickness="0">
-          <TabItem Header="Selected activity">
+        <TabControl x:Name="InspectorTabs" BorderThickness="0">
+          <TabItem x:Name="ArchitectureTab" Header="Architecture"><ScrollViewer VerticalScrollBarVisibility="Auto" Margin="4,12,4,0"><StackPanel x:Name="ArchitectureSummary"><TextBlock Text="Plan the selected scenario and architecture to review resolved stages, evidence, credentials and costs." TextWrapping="Wrap" /></StackPanel></ScrollViewer></TabItem>
+          <TabItem x:Name="ActivityTab" Header="Activity">
             <DockPanel Margin="4,12,4,0">
               <Button DockPanel.Dock="Bottom" Content="Apply activity changes" Click="ApplyNode_Click" Background="#D8EEEB" Margin="0,8,0,0" />
               <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
@@ -108,6 +115,7 @@
               </StackPanel></ScrollViewer>
             </DockPanel>
           </TabItem>
+          <TabItem Header="Overrides"><DockPanel Margin="4,12,4,0"><Button DockPanel.Dock="Bottom" Content="Apply architecture overrides" Click="ApplyOverrides_Click" Background="#D8EEEB" Margin="0,8,0,0" /><TextBlock DockPanel.Dock="Top" Text="Optional architecture fields inherit the selected preset. The shared resolver checks compatibility. Future adapters remain reference-only until implemented." TextWrapping="Wrap" Margin="0,0,0,12" /><TextBox x:Name="OverridesEditor" Style="{StaticResource Code}" FontSize="11" /></DockPanel></TabItem>
         </TabControl>
       </Border>
     </Grid>

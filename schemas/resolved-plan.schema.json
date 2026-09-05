@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contoso.example/schemas/forge/resolved-plan-v1.json",
+  "title": "Contoso Forge offline resolved architecture plan",
+  "description": "Stage validation and evidence describe historical adapter coverage. currentExecutionStatus is always not-executed for an offline plan.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "projectName", "businessScenario", "generationProfile", "architecturePreset", "resolvedSettings", "stages", "edges", "manualCheckpoints", "requiredCredentials", "costAndQuotaNotes", "artifacts", "warnings", "overallReadiness", "overallImplementationStatus", "currentExecutionStatus", "evidenceScope"],
+  "properties": {
+    "contractVersion": {"const": "1.0.0"},
+    "projectName": {"type": "string", "minLength": 1},
+    "businessScenario": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "displayName", "profile", "mlEnabled"],
+      "properties": {
+        "id": {"enum": ["retail.customer_satisfaction", "retail.customer_satisfaction_ml"]},
+        "displayName": {"type": "string"}, "profile": {"type": "string"}, "mlEnabled": {"type": "boolean"}
+      }
+    },
+    "generationProfile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["orders", "customers", "products", "stores", "timeSpanDays", "timeSpanExplicit", "labelEmbargoDays", "seed", "startDate"],
+      "properties": {
+        "orders": {"type": "integer", "minimum": 12}, "customers": {"type": "integer", "minimum": 8},
+        "products": {"type": "integer", "minimum": 4}, "stores": {"type": "integer", "minimum": 2},
+        "timeSpanDays": {"type": "integer", "minimum": 1, "maximum": 3650}, "timeSpanExplicit": {"type": "boolean"},
+        "labelEmbargoDays": {"const": 14}, "seed": {"type": "integer", "minimum": 0}, "startDate": {"type": "string", "format": "date-time"}
+      }
+    },
+    "architecturePreset": {"type": "string"},
+    "resolvedSettings": {"$ref": "#/$defs/settings"},
+    "stages": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/stage"}},
+    "edges": {
+      "type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from", "to"], "properties": {"from": {"type": "string"}, "to": {"type": "string"}}}
+    },
+    "manualCheckpoints": {
+      "type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["afterStage", "reason"], "properties": {"afterStage": {"type": "string"}, "reason": {"type": "string"}}}
+    },
+    "requiredCredentials": {
+      "type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["scope", "requiredAtPlanTime", "requiredAtExecutionTime", "storage", "reason"], "properties": {
+        "scope": {"type": "string"}, "requiredAtPlanTime": {"const": false}, "requiredAtExecutionTime": {"type": "boolean"}, "storage": {"type": "string"}, "reason": {"type": "string"}
+      }}
+    },
+    "costAndQuotaNotes": {"$ref": "#/$defs/strings"},
+    "artifacts": {
+      "type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "purpose", "stageId"], "properties": {"path": {"type": "string"}, "purpose": {"type": "string"}, "stageId": {"type": "string"}}}
+    },
+    "warnings": {"$ref": "#/$defs/strings"},
+    "overallReadiness": {"enum": ["declared", "generated"]},
+    "overallImplementationStatus": {"$ref": "#/$defs/status"},
+    "currentExecutionStatus": {"const": "not-executed"},
+    "evidenceScope": {"type": "string"}
+  },
+  "$defs": {
+    "strings": {"type": "array", "items": {"type": "string"}},
+    "status": {"enum": ["executed", "runnable", "generated", "reference-only", "unsupported"]},
+    "level": {"enum": ["declared", "generated", "parses", "executes", "tested", "reconciled"]},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["engine", "runtime", "orchestrator", "dagSource", "storage", "fileFormat", "tableFormat", "warehouse", "iac", "costProfile"],
+      "properties": {
+        "engine": {"type": "string"}, "runtime": {"type": "string"}, "orchestrator": {"type": "string"}, "dagSource": {"type": "string"},
+        "storage": {"type": "string"}, "fileFormat": {"type": "string"}, "tableFormat": {"type": "string"}, "warehouse": {"type": "string"},
+        "iac": {"type": "string"}, "costProfile": {"type": "string"}, "sparkApiMode": {"type": "string"}, "sparkVersionPolicy": {"type": "string"},
+        "sparkVersion": {"type": "string"}, "sparkRemote": {"type": "string"}
+      }
+    },
+    "stage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "kind", "engine", "runtime", "inputs", "outputs", "executionMode", "implementationStatus", "validationLevel", "manual", "evidence", "reason", "compilerOperation", "compilerBoundary"],
+      "properties": {
+        "id": {"type": "string"}, "name": {"type": "string"}, "kind": {"type": "string"}, "engine": {"type": "string"}, "runtime": {"type": "string"},
+        "inputs": {"$ref": "#/$defs/strings"}, "outputs": {"$ref": "#/$defs/strings"}, "executionMode": {"type": "string"},
+        "implementationStatus": {"$ref": "#/$defs/status"}, "validationLevel": {"$ref": "#/$defs/level"}, "manual": {"type": "boolean"},
+        "evidence": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "reference", "scope", "validationLevel"], "properties": {
+          "id": {"type": "string"}, "reference": {"type": "string"}, "scope": {"type": "string"}, "validationLevel": {"$ref": "#/$defs/level"}
+        }}},
+        "reason": {"type": "string"}, "compilerOperation": {"type": "string"}, "compilerBoundary": {"type": "string"},
+        "source": {"type": "string"}, "sink": {"type": "string"}, "fileFormat": {"type": "string"}, "tableFormat": {"type": "string"},
+        "sparkApiMode": {"type": "string"}, "sparkVersion": {"type": "string"}
+      }
+    }
+  }
+}

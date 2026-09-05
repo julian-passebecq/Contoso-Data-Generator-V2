@@ -29,7 +29,7 @@ jobs:
         run: dotnet build ContosoForge.PipelineStudio/ContosoForge.PipelineStudio.csproj --configuration Release
       - name: Generate a neutral pipeline for editor loading
         run: dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge pipeline compile --project examples/free-gcp-lab.project.json --output out/studio-input
-      - name: Execute editor round-trip, validation, compilation and WPF rendering
+      - name: Execute editor and planner round-trip, CLI parity, truthful badges and WPF rendering
         run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/free-gcp-lab.project.json --pipeline out/studio-input/pipeline.json --smoke-output out/studio-smoke
       - uses: actions/upload-artifact@v4
         if: always()

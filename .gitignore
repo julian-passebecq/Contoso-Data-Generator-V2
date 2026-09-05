@@ -349,6 +349,8 @@ ASALocalRun/
 healthchecksdb
 
 # Contoso Forge generated runtime artifacts
+/.forge-live/
+/.forge-runtime/
 /out/
 /lake/*
 !/lake/.contoso-forge-lake

@@ -2,6 +2,7 @@
 using DatabaseGenerator.Forge.Export;
 using DatabaseGenerator.Forge.Generation;
 using DatabaseGenerator.Forge.Pipeline;
+using DatabaseGenerator.Forge.Planning;
 using DatabaseGenerator.Forge.Specs;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ public static class ForgeStudioCommand
         ForgeIo.WriteText(Path.Combine(root, "pipeline.json"), pipeline);
     }
 
-    public static void Compile(StudioProjectSpec project, string outputPath, string? pipelineJson = null)
+    public static void Compile(StudioProjectSpec project, string outputPath, string? pipelineJson = null, bool includePlan = false)
     {
         var root = Path.GetFullPath(outputPath);
         EnsureOutput(root);
@@ -47,6 +48,7 @@ public static class ForgeStudioCommand
         pipelineJson ??= PipelineCompiler.CreateDefault(resolved);
         var diagnostics = PipelineCompiler.Validate(pipelineJson);
         if (diagnostics.Count > 0) throw new ArgumentException(string.Join(Environment.NewLine, diagnostics));
+        var resolvedPlan = includePlan ? PlanBuilder.Build(project, pipelineJson) : null;
 
         // Stage all compiler outputs before replacing the previous compilation.
         var stage = Path.Combine(Path.GetTempPath(), "forge-compile-" + Guid.NewGuid().ToString("N"));
@@ -73,6 +75,8 @@ public static class ForgeStudioCommand
             BigQueryColabExporter.Export(stage, resolved, canonical);
             BigQueryAnalyticsExporter.Export(stage, resolved);
             FreeGcpInfrastructureExporter.Export(stage, resolved, canonical);
+            if (resolvedPlan is not null)
+                ForgeIo.WriteText(Path.Combine(stage, "plan", "resolved_plan.json"), PlanBuilder.ToJson(resolvedPlan));
             var files = Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories)
                 .Select(p => Path.GetRelativePath(stage, p).Replace('\\', '/'))
                 .Where(p => p != "truth_manifest.json").OrderBy(p => p, StringComparer.Ordinal).ToList();

@@ -71,7 +71,12 @@ public static class PipelineCompiler
         return JsonSerializer.Serialize(pipeline, PipelineJsonContext.Default.PipelineDefinition) + "\n";
     }
 
-    public static PipelineCompilationResult Compile(string pipelineJson, string resolvedProjectJson, string outputRoot)
+    /// <summary>Resolve the exact compiler operations without creating files or contacting runtimes.</summary>
+    public static PipelineExecutionPlan Inspect(string pipelineJson, string resolvedProjectJson) =>
+        Prepare(pipelineJson, resolvedProjectJson).Plan;
+
+    private static (PipelineDefinition Pipeline, PipelineExecutionPlan Plan, List<string> Order, Dictionary<string, string> Settings)
+        Prepare(string pipelineJson, string resolvedProjectJson)
     {
         var errors = new List<string>();
         var pipeline = PipelineValidation.Parse(pipelineJson, errors);
@@ -128,6 +133,12 @@ public static class PipelineCompiler
             }
         if (plan.Activities.Any(a => a.Status == "unsupported")) plan.ArtifactStatus = "unsupported";
         else if (plan.Activities.Any(a => a.Status == "manual-checkpoint")) plan.ArtifactStatus = "manual-checkpoint";
+        return (pipeline, plan, order, settings);
+    }
+
+    public static PipelineCompilationResult Compile(string pipelineJson, string resolvedProjectJson, string outputRoot)
+    {
+        var (pipeline, plan, order, settings) = Prepare(pipelineJson, resolvedProjectJson);
         var canonical = JsonSerializer.Serialize(pipeline, PipelineJsonContext.Default.PipelineDefinition) + "\n";
         var planJson = JsonSerializer.Serialize(plan, PipelineJsonContext.Default.PipelineExecutionPlan) + "\n";
         var root = Path.GetFullPath(outputRoot);

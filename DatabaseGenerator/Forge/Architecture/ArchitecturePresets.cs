@@ -15,6 +15,7 @@ public static class ArchitecturePresets
     public static List<ArchitecturePreset> List() => new()
     {
         Preset("free-gcp-lab", "Free GCP Lab", "spark", "google-colab", "airflow-minikube", "local", "none", "bigquery", "gcp-sandbox-no-card"),
+        ConnectPreset(),
         Preset("free-gcp-full", "GCP billing-enabled free-usage lab", "spark", "google-colab", "airflow-minikube", "gcs", "none", "bigquery", "gcp-free-tier-billing-enabled"),
         Preset("local-spark", "Existing V1 Spark / Docker reference", "spark", "docker", "airflow-docker", "local", "delta", "duckdb", "local"),
         Preset("local-fast", "Local DuckDB reference contract", "duckdb", "local-process", "local-sequential", "local", "none", "duckdb", "local"),
@@ -70,6 +71,17 @@ public static class ArchitecturePresets
 
     public static string ToJson(ResolvedProject project) => JsonSerializer.Serialize(project, ArchitectureJsonContext.Default.ResolvedProject);
 
+    private static ArchitecturePreset ConnectPreset()
+    {
+        var preset = Preset("free-gcp-connect", "Free GCP Connect", "spark", "google-colab-connect-local",
+            "airflow-minikube", "local", "none", "bigquery", "gcp-sandbox-no-card");
+        preset.Defaults.SparkApiMode = "connect-local";
+        preset.Defaults.SparkVersionPolicy = "colab-native";
+        preset.Defaults.SparkVersion = "4.0.4";
+        preset.CapabilityRequirements = new() { "batch", "manual-external-checkpoint", "truth-reconciliation" };
+        return preset;
+    }
+
     private static ArchitecturePreset Preset(string id, string name, string engine, string runtime,
         string orchestration, string storage, string tableFormat, string warehouse, string cost) => new()
     {
@@ -95,7 +107,7 @@ public static class ArchitecturePresets
             throw new ArgumentException($"Unsupported {name} '{value}'. Choices: {string.Join(", ", choices)}.");
     }
 
-    private static void Validate(ArchitectureSettings s, GcpOptions gcp, GitOptions git)
+    private static void Validate(ArchitectureSettings s, GcpOptions gcp, GitOptions? git)
     {
         Choice(s.Engine, "engine", "spark", "duckdb", "polars", "pandas");
         Choice(s.Runtime, "runtime", "google-colab", "google-colab-connect-local", "google-colab-connect-remote", "docker", "local-process", "databricks-spark", "fabric-spark", "kubernetes");
@@ -129,9 +141,14 @@ public static class ArchitecturePresets
                 !Regex.IsMatch(gcp.Location ?? "", "^[A-Za-z][A-Za-z0-9-]{0,62}$") || gcp.MaximumBytesBilled <= 0)
                 throw new ArgumentException("GCP requires valid projectId/dataset/location and a positive maximumBytesBilled.");
         }
+        // Local plans do not need a repository. Validate a supplied URL even when
+        // unused so credentials and unsafe references cannot enter saved projects.
+        if (s.DagSource != "github-gitsync" && (git is null || string.IsNullOrWhiteSpace(git.Repository))) return;
         if (git is null || !Uri.TryCreate(git.Repository, UriKind.Absolute, out var repository) ||
             repository.Scheme != "https" || repository.UserInfo.Length != 0 || repository.Query.Length != 0 || repository.Fragment.Length != 0)
             throw new ArgumentException("git.repository must be a credential-free HTTPS URL.");
+        if (git.Repository.Any(char.IsControl) || git.Repository.Contains("{{", StringComparison.Ordinal) || git.Repository.Contains("}}", StringComparison.Ordinal))
+            throw new ArgumentException("git.repository must not contain control characters or Helm template expressions.");
         if (!Regex.IsMatch(git.Branch ?? "", "^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$") || git.Branch!.Contains("..", StringComparison.Ordinal) ||
             !Regex.IsMatch(git.SubPath ?? "", "^[A-Za-z0-9][A-Za-z0-9._/-]{0,255}$") || git.SubPath!.Split('/').Contains("..") ||
             !Regex.IsMatch(git.ProjectSubPath ?? "", "^[A-Za-z0-9][A-Za-z0-9._/-]{0,255}$") || git.ProjectSubPath!.Split('/').Contains(".."))

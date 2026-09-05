@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using DatabaseGenerator.Forge.Architecture;
 using DatabaseGenerator.Forge.Pipeline;
+using DatabaseGenerator.Forge.Planning;
 using Microsoft.Win32;
 
 namespace ContosoForge.PipelineStudio;
@@ -19,7 +20,7 @@ public partial class MainWindow : Window
     private bool refreshing;
     private string? datasetSelectionId;
     private readonly Dictionary<string, string> baselines = new(StringComparer.Ordinal);
-    private static readonly string[] Panels = ["activity", "destination", "parameters", "preset/profile"];
+    private static readonly string[] Panels = ["activity", "destination", "parameters", "preset/profile", "overrides"];
     private static readonly string[] Kinds = ["source", "copy", "spark", "sql", "dbt", "validate", "ml", "sink", "manual-checkpoint", "handoff", "transform", "extract", "notebook", "load"];
     private static string? Optional(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     private static List<string> Ids(string value) => value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal).ToList();
@@ -28,6 +29,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         PresetBox.ItemsSource = ArchitecturePresets.List().Select(p => p.PresetId);
+        ScenarioBox.ItemsSource = ScenarioCatalog.List();
         CostBox.ItemsSource = new[] { "gcp-sandbox-no-card", "gcp-free-tier-billing-enabled", "local", "external" };
         KindBox.ItemsSource = Kinds;
         EngineBox.ItemsSource = new[] { "", "spark", "duckdb", "polars", "pandas" };
@@ -47,6 +49,15 @@ public partial class MainWindow : Window
             if (!refreshing && PresetBox.SelectedItem is string id)
                 CostBox.SelectedItem = ArchitecturePresets.Get(id).Defaults.CostProfile;
         };
+        foreach (var control in Panels.SelectMany(PanelControls))
+        {
+            if (control is TextBox text) text.TextChanged += (_, _) => EditorChanged();
+            else if (control is ComboBox combo)
+            {
+                combo.SelectionChanged += (_, _) => EditorChanged();
+                combo.AddHandler(TextBox.TextChangedEvent, new TextChangedEventHandler((_, _) => EditorChanged()));
+            }
+        }
     }
 
     public void LoadProject(string path)
@@ -72,6 +83,8 @@ public partial class MainWindow : Window
         RequireAppliedEdits("selecting an activity");
         selectedId = id;
         RefreshNode();
+        AuthoringView.IsChecked = true;
+        InspectorTabs.SelectedItem = ActivityTab;
         RenderGraph();
     }
 
@@ -85,6 +98,8 @@ public partial class MainWindow : Window
         if (selectedId is not null) node.DependsOn.Add(selectedId);
         Session.Pipeline.Activities.Add(node);
         selectedId = id;
+        AuthoringView.IsChecked = true;
+        InspectorTabs.SelectedItem = ActivityTab;
         Changed("Added " + id + ". Select an implementation; the compiler reports execution support.");
     }
 
@@ -184,8 +199,39 @@ public partial class MainWindow : Window
         RequireAppliedEdits("compiling");
         Session.Compile(output);
         RefreshPreviews();
+        PlanView.IsChecked = true;
+        RenderGraph();
+        RenderArchitecture();
         ValidationPreview.Text = "COMPILATION COMPLETE\n\n" + Session.Preview("local_plan.json");
         StatusText.Text = "Compiled to " + Session.CompilationRoot + " · Cloud execution remains pending.";
+    }
+
+    public ResolvedPlan PlanCurrent()
+    {
+        RequireAppliedEdits("planning");
+        var plan = Session.BuildPlan();
+        PlanView.IsChecked = true;
+        InspectorTabs.SelectedItem = ArchitectureTab;
+        PlanPreview.Text = Session.PlanJson;
+        RenderGraph();
+        RenderArchitecture();
+        PlanState.Text = "Plan current · execution not started";
+        StatusText.Text = "Plan resolved offline · " + plan.ArchitecturePreset + " · " + plan.Stages.Count + " stages · reference evidence is shown separately from this project.";
+        return plan;
+    }
+
+    public void ApplySelection()
+    {
+        Session.ApplyArchitecture(PresetBox.Text, CostBox.Text, ScenarioBox.SelectedValue as string);
+        selectedId = Session.Pipeline.Activities.Any(a => a.Id == selectedId) ? selectedId : Session.Pipeline.Activities.FirstOrDefault()?.Id;
+        Changed("Scenario and architecture applied. An untouched default graph follows the preset; authored graph edits are preserved.", "preset/profile");
+    }
+
+    public void ApplyOverrides()
+    {
+        Session.ApplyOverrides(OverridesEditor.Text);
+        selectedId = Session.Pipeline.Activities.Any(a => a.Id == selectedId) ? selectedId : Session.Pipeline.Activities.FirstOrDefault()?.Id;
+        Changed("Architecture overrides applied through the shared resolver.", "overrides");
     }
 
     public void SaveTo(string path)
@@ -212,7 +258,8 @@ public partial class MainWindow : Window
             }
         }
         finally { refreshing = false; }
-        ValidationPreview.Text = "This revision has changed. Validate and compile again.";
+        RenderArchitecture();
+        ValidationPreview.Text = "This revision has changed. Plan and compile again.";
         StatusText.Text = message + (preserved.Count == 0 ? "" : " Pending " + string.Join(", ", preserved.Keys) + " edits were preserved.");
     }
 
@@ -220,6 +267,7 @@ public partial class MainWindow : Window
     {
         refreshing = true;
         var resolved = ArchitecturePresets.Resolve(Session.Project);
+        ScenarioBox.SelectedValue = Session.Project.BusinessScenario ?? "retail.customer_satisfaction";
         PresetBox.SelectedItem = Session.Project.Architecture.PresetId;
         CostBox.SelectedItem = resolved.Settings.CostProfile;
         WarehouseBox.SelectedItem = resolved.Settings.Warehouse;
@@ -227,30 +275,38 @@ public partial class MainWindow : Window
         BigQueryDatasetBox.Text = Session.Project.Gcp.Dataset;
         LocationBox.Text = Session.Project.Gcp.Location;
         MaxBytesBox.Text = Session.Project.Gcp.MaximumBytesBilled.ToString(CultureInfo.InvariantCulture);
+        OverridesEditor.Text = JsonNode.Parse(Session.ProjectJson)!["architecture"]!["overrides"]!.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
         var datasetId = DatasetBox.SelectedItem as string;
         DatasetBox.ItemsSource = Session.Pipeline.Datasets.Select(d => d.Id).ToList();
         DatasetBox.SelectedItem = Session.Pipeline.Datasets.Any(d => d.Id == datasetId) ? datasetId : Session.Pipeline.Datasets.FirstOrDefault()?.Id;
-        refreshing = false;
         RefreshDataset();
         RefreshNode();
         RefreshPreviews();
         RenderGraph();
         foreach (var panel in Panels) baselines[panel] = Signature(panel);
+        RenderArchitecture();
+        refreshing = false;
     }
 
     private void RefreshPreviews()
     {
+        var previous = refreshing;
+        refreshing = true;
         PipelinePreview.Text = Session.PipelineJson;
         ParametersEditor.Text = JsonNode.Parse(Session.PipelineJson)!["parameters"]!.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
         ResolvedPreview.Text = Session.ResolvedJson;
         AirflowPreview.Text = Session.Preview("airflow/dags/contoso_forge_pipeline.py");
         IacPreview.Text = Session.Preview("infra/gcp/main.tf");
         ManifestPreview.Text = Session.Preview("run_manifest.json");
+        PlanPreview.Text = Session.PlanJson ?? "Plan this revision to inspect the shared ResolvedPlan contract.";
         baselines["parameters"] = Signature("parameters");
+        refreshing = previous;
     }
 
     private void RefreshNode()
     {
+        var previous = refreshing;
+        refreshing = true;
         var node = Session.Pipeline.Activities.FirstOrDefault(a => a.Id == selectedId);
         NodeId.Text = node?.Id ?? "Select an activity";
         NameBox.Text = node?.Name ?? "";
@@ -275,20 +331,26 @@ public partial class MainWindow : Window
         if (node is not null) foreach (var (key, value) in node.Parameters) parameters[key] = JsonNode.Parse(value.GetRawText());
         NodeParametersBox.Text = parameters.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
         baselines["activity"] = Signature("activity");
+        refreshing = previous;
     }
 
     private void RefreshDataset()
     {
+        var previous = refreshing;
+        refreshing = true;
         var dataset = Session.Pipeline.Datasets.FirstOrDefault(d => d.Id == DatasetBox.SelectedItem as string);
         DatasetPathBox.Text = dataset?.Path ?? "";
         DatasetTableBox.Text = dataset?.Table ?? "";
         DatasetConnectionBox.Text = dataset?.ConnectionRef ?? "";
         datasetSelectionId = DatasetBox.SelectedItem as string;
         baselines["destination"] = Signature("destination");
+        refreshing = previous;
     }
 
     private void RenderGraph()
     {
+        if (Graph is null) return;
+        if (PlanView.IsChecked == true) { RenderPlanGraph(); return; }
         Graph.Children.Clear();
         PipelineTitle.Text = Session.Pipeline.Name;
         GraphSubtitle.Text = Session.Pipeline.Activities.Count + " activities · select a node to edit · arrows follow contract dependencies";
@@ -328,6 +390,153 @@ public partial class MainWindow : Window
         }
     }
 
+    private void EditorChanged()
+    {
+        if (refreshing || !IsInitialized || PendingPanels().Count == 0) return;
+        Session.InvalidateCompilation();
+        PlanState.Text = "Plan out of date · apply edits";
+        PlanPreview.Text = "Pending editor text has changed. Apply or discard it, then Plan again.";
+        AirflowPreview.Text = IacPreview.Text = ManifestPreview.Text = "This revision has changed. Compile again to inspect current artifacts.";
+        RenderGraph();
+        RenderArchitecture();
+    }
+
+    public static string ValidationBadge(PlanStage stage) => stage.ImplementationStatus switch
+    {
+        "reference-only" => "REFERENCE",
+        "unsupported" => "UNSUPPORTED",
+        _ => stage.ValidationLevel switch
+        {
+            "reconciled" => "RECONCILED",
+            "tested" => "TESTED",
+            "executes" => "EXECUTED",
+            "parses" => "PARSES",
+            "generated" => "GENERATED ONLY",
+            _ => "DECLARED"
+        }
+    };
+
+    private void RenderPlanGraph()
+    {
+        Graph.Children.Clear();
+        var plan = Session.Plan;
+        PipelineTitle.Text = plan is null ? "Plan your data architecture" : plan.BusinessScenario.DisplayName;
+        GraphSubtitle.Text = plan is null ? "Choose a scenario and architecture, apply overrides, then select Plan." :
+            plan.Stages.Count + " resolved stages · badges describe implementation evidence · this project: " + plan.CurrentExecutionStatus;
+        if (plan is null)
+        {
+            Graph.Width = 760;
+            Graph.Height = 280;
+            var message = new TextBlock { Text = "Business scenario + architecture + overrides\n↓\nPlan → review capabilities → compile", FontSize = 19, Foreground = Brushes.SlateGray, LineHeight = 33, TextAlignment = TextAlignment.Center, Width = 660 };
+            Canvas.SetLeft(message, 45); Canvas.SetTop(message, 52); Graph.Children.Add(message);
+            return;
+        }
+        const double width = 252, height = 150, gap = 32, rowGap = 50;
+        var orderedStages = TopologicalStages(plan);
+        var positions = orderedStages.Select((stage, index) => (stage.Id, Point: new Point(24 + index % 3 * (width + gap), 27 + index / 3 * (height + rowGap))))
+            .ToDictionary(item => item.Id, item => item.Point, StringComparer.Ordinal);
+        Graph.Width = 884;
+        Graph.Height = Math.Max(280, 54 + Math.Ceiling(plan.Stages.Count / 3d) * (height + rowGap));
+        foreach (var edge in plan.Edges)
+        {
+            if (!positions.TryGetValue(edge.From, out var start) || !positions.TryGetValue(edge.To, out var end)) continue;
+            var sameRow = start.Y == end.Y;
+            var horizontal = sameRow && end.X - start.X <= width + gap + 1;
+            var a = horizontal ? new Point(start.X + width, start.Y + height / 2) : new Point(start.X + width / 2, sameRow ? start.Y : start.Y + height);
+            var b = horizontal ? new Point(end.X - 6, end.Y + height / 2) : new Point(end.X + width / 2, end.Y - 6);
+            var lane = sameRow ? start.Y - 15 : a.Y + rowGap / 2;
+            var points = horizontal ? new PointCollection { a, b } : new PointCollection { a, new(a.X, lane), new(b.X, lane), b };
+            Graph.Children.Add(new Polyline { Points = points, Stroke = new SolidColorBrush(Color.FromRgb(132, 158, 171)), StrokeThickness = 1.6, Tag = "plan-edge" });
+            Graph.Children.Add(new Polygon { Fill = new SolidColorBrush(Color.FromRgb(132, 158, 171)), Points = horizontal ? new PointCollection { b, new(b.X - 7, b.Y - 4), new(b.X - 7, b.Y + 4) } : new PointCollection { b, new(b.X - 4, b.Y - 7), new(b.X + 4, b.Y - 7) } });
+        }
+        foreach (var stage in plan.Stages)
+        {
+            var reference = stage.ImplementationStatus is "reference-only" or "unsupported";
+            var content = new StackPanel();
+            content.Children.Add(new TextBlock { Text = stage.Kind.ToUpperInvariant(), FontSize = 9, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(8, 126, 131)), TextTrimming = TextTrimming.CharacterEllipsis });
+            content.Children.Add(new TextBlock { Text = stage.Name, FontWeight = FontWeights.SemiBold, FontSize = 14, Margin = new Thickness(0, 5, 0, 5), TextWrapping = TextWrapping.Wrap, MaxHeight = 40 });
+            content.Children.Add(new TextBlock { Text = stage.Engine + " · " + stage.Runtime, FontSize = 11, TextWrapping = TextWrapping.Wrap, MaxHeight = 33 });
+            var badges = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+            badges.Children.Add(Badge(ValidationBadge(stage), reference ? "#FFF0D9" : "#E1F1EC"));
+            if (stage.Manual) badges.Children.Add(Badge("MANUAL", "#F0EAFB"));
+            content.Children.Add(badges);
+            var tooltip = stage.Reason + "\n\nImplementation: " + stage.ImplementationStatus + "\nExecution mode: " + stage.ExecutionMode +
+                "\nSource / sink: " + stage.Source + " / " + stage.Sink + "\nInputs: " + string.Join(", ", stage.Inputs) + "\nOutputs: " + string.Join(", ", stage.Outputs) +
+                "\nCompiler boundary: " + stage.CompilerBoundary + "\nEvidence: " + string.Join("; ", stage.Evidence.Select(e => e.Id + " (" + e.Scope + ")"));
+            var border = new Border { Child = content, Width = width, Height = height, Padding = new Thickness(13, 11, 13, 10), CornerRadius = new CornerRadius(6), Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(202, 217, 225)), BorderThickness = new Thickness(1), ToolTip = tooltip, Tag = stage };
+            Canvas.SetLeft(border, positions[stage.Id].X); Canvas.SetTop(border, positions[stage.Id].Y); Graph.Children.Add(border);
+        }
+    }
+
+    private static IReadOnlyList<PlanStage> TopologicalStages(ResolvedPlan plan)
+    {
+        var remaining = plan.Stages.ToList();
+        var emitted = new HashSet<string>(StringComparer.Ordinal);
+        var ordered = new List<PlanStage>();
+        while (remaining.Count > 0)
+        {
+            var next = remaining.FirstOrDefault(stage => plan.Edges.Where(edge => edge.To == stage.Id).All(edge => emitted.Contains(edge.From)))
+                ?? throw new ArgumentException("The resolved plan contains a cycle or an unknown dependency.");
+            ordered.Add(next);
+            emitted.Add(next.Id);
+            remaining.Remove(next);
+        }
+        return ordered;
+    }
+
+    private static Border Badge(string text, string color) => new()
+    {
+        Background = (Brush)new BrushConverter().ConvertFromString(color)!, CornerRadius = new CornerRadius(3), Padding = new Thickness(6, 3, 6, 3), Margin = new Thickness(0, 0, 6, 0),
+        Child = new TextBlock { Text = text, FontSize = 9, FontWeight = FontWeights.SemiBold }
+    };
+
+    private void RenderArchitecture()
+    {
+        ArchitectureSummary.Children.Clear();
+        var plan = Session.Plan;
+        if (plan is null)
+        {
+            ArchitectureSummary.Children.Add(new TextBlock { Text = "Plan required", FontSize = 19, FontWeight = FontWeights.SemiBold });
+            ArchitectureSummary.Children.Add(new TextBlock { Text = "Apply your scenario, architecture and overrides, then Plan. No credentials or runtime are needed to inspect the architecture.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0) });
+            PlanState.Text = PendingPanels().Count == 0 ? "Plan required" : "Plan out of date · apply edits";
+            return;
+        }
+        var settings = plan.ResolvedSettings;
+        SummarySection("RESOLVED ARCHITECTURE");
+        SummaryValue("Business scenario", plan.BusinessScenario.DisplayName + "\n" + plan.BusinessScenario.Id);
+        SummaryValue("Generation profile", plan.BusinessScenario.Profile + " · " + plan.GenerationProfile.Orders + " orders · " + plan.GenerationProfile.TimeSpanDays + " days");
+        SummaryValue("Architecture preset", plan.ArchitecturePreset);
+        SummaryValue("Engines", string.Join(", ", plan.Stages.Select(s => s.Engine).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct()));
+        SummaryValue("Runtimes", string.Join(", ", plan.Stages.Select(s => s.Runtime).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct()));
+        if (plan.Stages.Any(s => s.SparkApiMode is not null)) SummaryValue("Spark API / version", string.Join(", ", plan.Stages.Where(s => s.SparkApiMode is not null).Select(s => s.SparkApiMode + " / " + s.SparkVersion).Distinct()));
+        SummaryValue("Storage / file / table format", settings.Storage + " / " + settings.FileFormat + " / " + settings.TableFormat);
+        SummaryValue("Warehouse", settings.Warehouse ?? "none");
+        SummaryValue("Orchestration / DAG source", settings.Orchestrator + " / " + settings.DagSource);
+        SummaryValue("Infrastructure / cost profile", settings.Iac + " / " + settings.CostProfile);
+        SummarySection("READINESS & EVIDENCE");
+        SummaryValue("This project", plan.CurrentExecutionStatus + " · readiness: " + plan.OverallReadiness + "\nImplementation: " + plan.OverallImplementationStatus);
+        SummaryValue("Stage badges", "Reference implementation evidence is not execution proof for this newly planned project. Hover over a stage for its evidence scope.");
+        SummarySection("MANUAL CHECKPOINTS");
+        if (plan.ManualCheckpoints.Count == 0) SummaryValue("None", "No manual checkpoint is declared by this plan.");
+        foreach (var checkpoint in plan.ManualCheckpoints) SummaryValue(checkpoint.AfterStage, checkpoint.Reason);
+        SummarySection("CREDENTIALS AT EXECUTION");
+        if (plan.RequiredCredentials.Count == 0) SummaryValue("None", "This plan declares no external credentials.");
+        foreach (var credential in plan.RequiredCredentials) SummaryValue(credential.Scope, credential.Reason + "\nPlan time: " + (credential.RequiredAtPlanTime ? "required" : "not required") + " · " + credential.Storage);
+        SummarySection("COSTS & QUOTAS");
+        foreach (var note in plan.CostAndQuotaNotes) SummaryValue("", note);
+        if (plan.Warnings.Count > 0) SummarySection("WARNINGS");
+        foreach (var warning in plan.Warnings) SummaryValue("", warning);
+        PlanState.Text = "Plan current · execution not started";
+    }
+
+    private void SummarySection(string title) => ArchitectureSummary.Children.Add(new TextBlock { Text = title, FontSize = 10, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(8, 126, 131)), Margin = new Thickness(0, ArchitectureSummary.Children.Count == 0 ? 0 : 17, 0, 10) });
+    private void SummaryValue(string label, string value)
+    {
+        if (label.Length > 0) ArchitectureSummary.Children.Add(new TextBlock { Text = label, FontSize = 11, FontWeight = FontWeights.SemiBold, Foreground = Brushes.SlateGray, Margin = new Thickness(0, 0, 0, 3) });
+        ArchitectureSummary.Children.Add(new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap, FontSize = 12, Margin = new Thickness(0, 0, 0, 10) });
+    }
+
     private static int Number(string value, string label) => int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var result)
         ? result : throw new ArgumentException(label + " must be an integer.");
 
@@ -339,15 +548,17 @@ public partial class MainWindow : Window
         "destination" => [WarehouseBox, ProjectIdBox, BigQueryDatasetBox, LocationBox, MaxBytesBox, DatasetBox,
             DatasetPathBox, DatasetTableBox, DatasetConnectionBox],
         "parameters" => [ParametersEditor],
-        "preset/profile" => [PresetBox, CostBox],
+        "preset/profile" => [ScenarioBox, PresetBox, CostBox],
+        "overrides" => [OverridesEditor],
         _ => throw new ArgumentException("Unknown editor panel.")
     };
 
-    private static string ReadControl(Control control) => control switch { TextBox text => text.Text, ComboBox combo => combo.Text, _ => "" };
+    private static string ReadControl(Control control) => control switch { TextBox text => text.Text, ComboBox combo when combo.Name == "ScenarioBox" => combo.SelectedValue as string ?? "", ComboBox combo when !combo.IsEditable => combo.SelectedItem as string ?? "", ComboBox combo => combo.Text, _ => "" };
     private static void WriteControl(Control control, string value)
     {
         if (control is TextBox text) text.Text = value;
-        else if (control is ComboBox combo) combo.Text = value;
+        else if (control is ComboBox combo && combo.Name == "ScenarioBox") combo.SelectedValue = value;
+        else if (control is ComboBox other) other.Text = value;
     }
     private string Signature(string panel) => string.Join("\u001f", PanelControls(panel).Where(c => c != DatasetBox).Select(ReadControl));
     private List<string> PendingPanels() => Panels.Where(panel => baselines.TryGetValue(panel, out var baseline) && baseline != Signature(panel)).ToList();
@@ -397,18 +608,17 @@ public partial class MainWindow : Window
         var dialog = new OpenFolderDialog { Title = "Compile into an empty folder or an existing Forge output" };
         if (dialog.ShowDialog(this) == true) CompileTo(dialog.FolderName);
     });
-    private void ApplyArchitecture_Click(object sender, RoutedEventArgs e) => Guard(() =>
+    private void ApplyArchitecture_Click(object sender, RoutedEventArgs e) => Guard(ApplySelection);
+    private void ApplyOverrides_Click(object sender, RoutedEventArgs e) => Guard(ApplyOverrides);
+    private void Plan_Click(object sender, RoutedEventArgs e) => Guard(() => PlanCurrent());
+    private void SavePlan_Click(object sender, RoutedEventArgs e) => Guard(() =>
     {
-        var previous = Session.Project.Architecture;
-        var replacement = new ArchitectureSelection { PresetId = PresetBox.Text,
-            Overrides = PresetBox.Text == previous.PresetId ? previous.Overrides : new ArchitectureSettings() };
-        var previousCost = replacement.Overrides.CostProfile;
-        replacement.Overrides.CostProfile = CostBox.Text;
-        Session.Project.Architecture = replacement;
-        try { _ = Session.ResolvedJson; }
-        catch { replacement.Overrides.CostProfile = previousCost; Session.Project.Architecture = previous; throw; }
-        Changed("Preset/profile applied to the existing graph. Validate effective activity compatibility.", "preset/profile");
+        RequireAppliedEdits("saving a plan");
+        if (Session.Plan is null) PlanCurrent();
+        var dialog = new SaveFileDialog { Filter = "Resolved plan JSON|*.json", FileName = "resolved_plan.json", Title = "Save the current resolved architecture plan" };
+        if (dialog.ShowDialog(this) == true) { Session.SavePlan(dialog.FileName); StatusText.Text = "Saved resolved plan · " + dialog.FileName; }
     });
+    private void GraphView_Changed(object sender, RoutedEventArgs e) => RenderGraph();
     private void ApplyNode_Click(object sender, RoutedEventArgs e) => Guard(ApplyNode);
     private void ApplyDestination_Click(object sender, RoutedEventArgs e) => Guard(ApplyDestination);
     private void Validate_Click(object sender, RoutedEventArgs e) => Guard(() => ValidateGraph());

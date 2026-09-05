@@ -76,7 +76,45 @@ public sealed class GenerationTimeSpanTests
     {
         var spec = ForgeTestProject.CreateSmallSpec();
         spec.Generation.TimeSpanDays = days;
+        spec.Generation.Orders = Math.Max(spec.Generation.Orders, days);
         spec.Validate();
+    }
+
+    [Fact]
+    public void FewerOrdersThanExplicitDaysIsRejectedButHistoricalOmissionRemainsValid()
+    {
+        var spec = ForgeTestProject.CreateSmallSpec();
+        spec.Generation.Orders = 12;
+        spec.Generation.TimeSpanDays = 365;
+        Assert.Contains("orders >= timeSpanDays", Assert.Throws<ArgumentException>(spec.Validate).Message);
+        spec.Generation.TimeSpanDays = null;
+        spec.Validate();
+    }
+
+    [Theory]
+    [InlineData(365, 365)]
+    [InlineData(400, 365)]
+    public async Task ExplicitHorizonsCoverEveryRequestedDayDeterministically(int orders, int days)
+    {
+        var root = NewRoot();
+        try
+        {
+            var spec = ForgeTestProject.CreateSmallSpec();
+            spec.Generation.Orders = orders;
+            spec.Generation.TimeSpanDays = days;
+            var generator = new ForgeProjectGenerator();
+            var first = Path.Combine(root, "first");
+            var second = Path.Combine(root, "second");
+            await generator.GenerateAsync(spec, first);
+            await generator.GenerateAsync(spec, second);
+            AssertDateCycle(first, spec.Generation.StartDate, orders, days);
+            var distinctDays = CsvTable.Read(Path.Combine(first, "data/source/orders.csv")).Rows
+                .Select(row => DateTimeOffset.Parse(row["OrderDate"], CultureInfo.InvariantCulture).Date).Distinct().Count();
+            Assert.Equal(days, distinctDays);
+            Assert.Equal(Hash(first, "truth_manifest.json"), Hash(second, "truth_manifest.json"));
+            Assert.Equal(Hash(first, "data/source/orders.csv"), Hash(second, "data/source/orders.csv"));
+        }
+        finally { Directory.Delete(root, true); }
     }
 
     private static void AssertDateCycle(string root, string start, int count, int span)

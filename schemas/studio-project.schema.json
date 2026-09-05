@@ -12,6 +12,7 @@
     "version": {
       "const": "1.2.0"
     },
+    "businessScenario": {"enum": ["retail.customer_satisfaction", "retail.customer_satisfaction_ml"]},
     "sourceProject": {
       "$ref": "project-spec.schema.json"
     },
@@ -24,6 +25,7 @@
           "default": "free-gcp-lab",
           "enum": [
             "free-gcp-lab",
+            "free-gcp-connect",
             "free-gcp-full",
             "local-spark",
             "local-fast",
@@ -72,12 +74,12 @@
       }
     },
     "git": {
-      "type": "object",
+      "type": ["object", "null"],
       "additionalProperties": false,
       "properties": {
         "repository": {
           "type": "string",
-          "pattern": "^https://"
+          "pattern": "^(https://|$)"
         },
         "branch": {
           "type": "string",
