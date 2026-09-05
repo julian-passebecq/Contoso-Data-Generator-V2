@@ -1,4 +1,8 @@
-# Contoso Forge Pipeline Studio V1.4.0
+# Contoso Forge Pipeline Studio V1.5
+
+The ten product sections now follow Business → Data → Pipeline mode → Architecture → Orchestration → dbt → ML design → BI & Validation → Run → Monitor / Results. Business is the initial section. Open `examples/v15-local-ml.project.json` for the executable ML factory, or `examples/v15-local-bi.project.json` for BI without ML. Apply edits, Plan, choose a Python executable with `factory/requirements.txt` installed, then Run local into a new folder. Build Evidence records a separate real npm build; Open Evidence report serves it on loopback HTTP. Measured results are separate from historical planner evidence.
+
+V1.5 preserves the editor workflow below. Use `--factory-smoke-output <empty-directory>` with the ML example to test the ten sections, pending data/product edits, ML export graph changes, save/load/compile and actual WPF rendering. The legacy `--smoke-output` remains available unchanged. [Full execution commands, evidence and limitations](../docs/v1.5.md).
 
 Optional Windows WPF architecture planner and editor targeting .NET 8. It references the existing generator, uses the shared `PlanBuilder` and edits `PipelineDefinition` and `StudioProjectSpec` directly. The cross-platform solution and all existing command-line backends remain independent of this project.
 

@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     private bool refreshing;
     private string? datasetSelectionId;
     private readonly Dictionary<string, string> baselines = new(StringComparer.Ordinal);
-    private static readonly string[] Panels = ["activity", "destination", "parameters", "preset/profile", "overrides"];
+    private static readonly string[] Panels = ["activity", "destination", "parameters", "preset/profile", "overrides", "generation", "product"];
     private static readonly string[] Kinds = ["source", "copy", "spark", "sql", "dbt", "validate", "ml", "sink", "manual-checkpoint", "handoff", "transform", "extract", "notebook", "load"];
     private static string? Optional(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     private static List<string> Ids(string value) => value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal).ToList();
@@ -30,6 +30,10 @@ public partial class MainWindow : Window
         InitializeComponent();
         PresetBox.ItemsSource = ArchitecturePresets.List().Select(p => p.PresetId);
         ScenarioBox.ItemsSource = ScenarioCatalog.List();
+        PipelineModeBox.ItemsSource = ProductIntent.Modes;
+        MlTargetBox.ItemsSource = ProductIntent.MlTargets;
+        BiTargetBox.ItemsSource = new[] { "evidence", "evidence-and-dive" };
+        DbtIntegrationBox.ItemsSource = new[] { "plain", "cosmos" };
         CostBox.ItemsSource = new[] { "gcp-sandbox-no-card", "gcp-free-tier-billing-enabled", "local", "external" };
         KindBox.ItemsSource = Kinds;
         EngineBox.ItemsSource = new[] { "", "spark", "duckdb", "polars", "pandas" };
@@ -217,6 +221,7 @@ public partial class MainWindow : Window
         RenderArchitecture();
         PlanState.Text = "Plan current · execution not started";
         StatusText.Text = "Plan resolved offline · " + plan.ArchitecturePreset + " · " + plan.Stages.Count + " stages · reference evidence is shown separately from this project.";
+        RefreshProduct();
         return plan;
     }
 
@@ -276,6 +281,13 @@ public partial class MainWindow : Window
         LocationBox.Text = Session.Project.Gcp.Location;
         MaxBytesBox.Text = Session.Project.Gcp.MaximumBytesBilled.ToString(CultureInfo.InvariantCulture);
         OverridesEditor.Text = JsonNode.Parse(Session.ProjectJson)!["architecture"]!["overrides"]!.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        GenerationEditor.Text = JsonNode.Parse(Session.ProjectJson)!["sourceProject"]!["generation"]!.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        var product = Session.Project.Product ?? new ProductIntent();
+        PipelineModeBox.SelectedItem = product.PipelineMode;
+        MlTargetBox.SelectedItem = product.MlTarget;
+        BiTargetBox.SelectedItem = product.BiTarget;
+        DbtIntegrationBox.SelectedItem = product.DbtIntegration;
+        RefreshProduct();
         var datasetId = DatasetBox.SelectedItem as string;
         DatasetBox.ItemsSource = Session.Pipeline.Datasets.Select(d => d.Id).ToList();
         DatasetBox.SelectedItem = Session.Pipeline.Datasets.Any(d => d.Id == datasetId) ? datasetId : Session.Pipeline.Datasets.FirstOrDefault()?.Id;
@@ -393,6 +405,7 @@ public partial class MainWindow : Window
     private void EditorChanged()
     {
         if (refreshing || !IsInitialized || PendingPanels().Count == 0) return;
+        RunFactoryButton.IsEnabled = false;
         Session.InvalidateCompilation();
         PlanState.Text = "Plan out of date · apply edits";
         PlanPreview.Text = "Pending editor text has changed. Apply or discard it, then Plan again.";
@@ -550,6 +563,8 @@ public partial class MainWindow : Window
         "parameters" => [ParametersEditor],
         "preset/profile" => [ScenarioBox, PresetBox, CostBox],
         "overrides" => [OverridesEditor],
+        "generation" => [GenerationEditor],
+        "product" => [PipelineModeBox, MlTargetBox, BiTargetBox, DbtIntegrationBox],
         _ => throw new ArgumentException("Unknown editor panel.")
     };
 

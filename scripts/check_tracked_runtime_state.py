@@ -15,7 +15,7 @@ def forbidden_reason(path: str) -> str | None:
         return "user runtime or Kubernetes state directory"
     if any(lower[index:index + 2] == (".config", "gcloud") for index in range(len(lower) - 1)):
         return "Google Cloud user configuration directory"
-    if any(lower[index:index + 2] == (".forge", "state") for index in range(len(lower) - 1)):
+    if any(lower[index] == ".forge" and lower[index + 1] in {"state", "v15"} for index in range(len(lower) - 1)):
         return "generated pipeline run state directory"
     if lower and lower[0] in {"out", "artifacts"}:
         return "generated output or local execution evidence directory"

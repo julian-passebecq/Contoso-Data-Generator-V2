@@ -31,6 +31,8 @@ jobs:
         run: dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge pipeline compile --project examples/free-gcp-lab.project.json --output out/studio-input
       - name: Execute editor and planner round-trip, CLI parity, truthful badges and WPF rendering
         run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/free-gcp-lab.project.json --pipeline out/studio-input/pipeline.json --smoke-output out/studio-smoke
+      - name: Execute V1.5 business-first editor, pending edit and export checks
+        run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v15-local-ml.project.json --factory-smoke-output out/studio-smoke/factory
       - uses: actions/upload-artifact@v4
         if: always()
         with:

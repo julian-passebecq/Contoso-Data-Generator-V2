@@ -1,5 +1,9 @@
 # Scenario and architecture planning
 
+V1.5 adds optional `product` intent to the existing `1.2.0` Studio project envelope. Start with the business problem and data behavior, then select pipeline mode and deployment. `examples/v15-local-bi.project.json` and `examples/v15-local-ml.project.json` select the executed local factory. Its adapter readiness is backed by the [measured evidence ledger](v1.5-evidence.json); each new offline plan still says `currentExecutionStatus=not-executed`. The legacy local-fast graph without `product` retains its reference-only status. See [V1.5 commands, Studio flow and runtime boundaries](v1.5.md).
+
+The added `local-airflow` and `motherduck-lite` presets keep orchestration, host and execution evidence distinct. `airflowHost` and `executor` are optional architecture fields; GitHub Actions is not an accepted persistent Airflow host. Cosmos is an optional generated TaskGroup adapter with a plain build fallback. Every V1.5 plan includes BI & Validation even when ML is disabled; reports consume canonical Gold and contracts.
+
 Contoso Forge keeps generation, planning, compilation and execution separate. The C# generator simulates the business source system and preserves its independent truth manifest. The C# planner describes the chosen deployment. Compilation writes adapters and definitions. Runtime execution remains an explicit subsequent action.
 
 ```text

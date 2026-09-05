@@ -15,6 +15,7 @@ public sealed class StudioProjectSpec
     [JsonRequired] public ProjectSpec SourceProject { get; set; } = new();
     // Optional planner scenario; the source-system entity graph remains the V1 contract.
     public string? BusinessScenario { get; set; }
+    public Planning.ProductIntent? Product { get; set; }
     public ArchitectureSelection Architecture { get; set; } = new();
     public GcpOptions Gcp { get; set; } = new();
     public GitOptions? Git { get; set; } = new();
@@ -44,6 +45,8 @@ public sealed class ArchitectureSettings
     public string? SparkVersionPolicy { get; set; }
     public string? SparkVersion { get; set; }
     public string? SparkRemote { get; set; }
+    public string? AirflowHost { get; set; }
+    public string? Executor { get; set; }
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
@@ -78,6 +81,8 @@ public sealed class ArchitecturePreset
 
 public sealed class ResolvedProject
 {
+    public Planning.ProductIntent? Product { get; set; }
+    public string? BusinessScenario { get; set; }
     public string ContractVersion { get; set; } = "1.2";
     public string PresetId { get; set; } = "";
     public string Name { get; set; } = "";

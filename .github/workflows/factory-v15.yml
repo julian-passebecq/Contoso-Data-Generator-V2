@@ -1,0 +1,64 @@
+name: factory-v15
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-factory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve core tests and build the generator
+        run: dotnet test ContosoDGV2.sln --configuration Release
+      - name: Install bounded local runtime and artifact validators
+        run: python -m pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt jsonschema==4.23.0 nbformat==5.10.4
+      - name: Generate and validate the authored package before execution
+        run: |
+          dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project examples/v15-local-bi.project.json --output out/v15-bi
+          dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project examples/v15-local-ml.project.json --output out/v15-ml
+          dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project examples/v15-local-ml-causal.project.json --output out/v15-ml-causal
+          python scripts/validate_studio_artifacts.py --project out/v15-bi
+          python scripts/validate_studio_artifacts.py --project out/v15-ml
+          python scripts/validate_studio_artifacts.py --project out/v15-ml-causal
+      - name: Execute DuckDB, dbt, independent truth reconciliation and sklearn
+        run: |
+          python out/v15-bi/pipeline/run_local.py --root out/v15-bi --run-id ci
+          python out/v15-ml/pipeline/run_local.py --root out/v15-ml --run-id ci
+          python out/v15-ml-causal/pipeline/run_local.py --root out/v15-ml-causal --run-id ci
+          python scripts/test_v15.py --root out/v15-ml --state out/v15-ml/.forge/v15/ci -v
+          python scripts/test_v15.py --root out/v15-ml-causal --state out/v15-ml-causal/.forge/v15/ci -v
+          python out/v15-ml/factory/notebook_export.py --root out/v15-ml --state out/v15-ml/.forge/v15/ci
+      - name: Strict Evidence sources and production build with and without ML
+        run: |
+          python out/v15-bi/factory/build_evidence.py --state out/v15-bi/.forge/v15/ci
+          python out/v15-ml/factory/build_evidence.py --state out/v15-ml/.forge/v15/ci
+          python out/v15-ml-causal/factory/build_evidence.py --state out/v15-ml-causal/.forge/v15/ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v15-local-evidence
+          include-hidden-files: true
+          path: |
+            out/*/.forge/v15/ci/*.json
+            out/*/.forge/v15/ci/*.log
+            out/*/.forge/v15/ci/dbt/target/manifest.json
+            out/*/.forge/v15/ci/dbt/target/run_results.json
+            out/*/.forge/v15/ci/ml/
+            out/*/.forge/v15/ci/bi/*.json
+            out/*/.forge/v15/ci/bi/*.log
+            out/*/.forge/v15/ci/exports/

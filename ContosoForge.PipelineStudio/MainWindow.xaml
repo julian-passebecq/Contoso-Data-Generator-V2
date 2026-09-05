@@ -4,13 +4,13 @@
         Title="Contoso Forge · Pipeline Studio" Width="1500" Height="1000" MinWidth="1150" MinHeight="780"
         FontFamily="Segoe UI" FontSize="13" Background="#F2F6F8">
   <Grid x:Name="RootGrid" Background="#F2F6F8">
-    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="35" /></Grid.RowDefinitions>
+    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="210" /><RowDefinition Height="*" /><RowDefinition Height="35" /></Grid.RowDefinitions>
     <Border Background="#123347" Padding="23,14,23,16">
       <Grid>
         <Grid.RowDefinitions><RowDefinition Height="39" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="Contoso Forge" Foreground="White" FontSize="24" FontWeight="SemiBold" />
-          <TextBlock Text="PIPELINE STUDIO  /  V1.4.0" Foreground="#A3CDD1" Margin="21,10,0,0" FontSize="11" />
+          <TextBlock Text="DATA FACTORY · ML LAB · BI VALIDATION  /  V1.5" Foreground="#A3CDD1" Margin="21,10,0,0" FontSize="11" />
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" Text="LOCAL AUTHORING · LIVE EVIDENCE TRACKED SEPARATELY" Foreground="#A3CDD1" FontSize="10" Margin="0,11,0,0" />
         <WrapPanel Grid.Row="1" VerticalAlignment="Center">
@@ -22,28 +22,39 @@
           <Button Content="Compile" Click="Compile_Click" FontWeight="SemiBold" />
           <Button Content="Discard pending edits" Click="Discard_Click" Margin="8,0,0,0" />
         </WrapPanel>
-        <WrapPanel Grid.Row="2" Margin="0,12,0,0">
-          <StackPanel Margin="0,0,12,0"><TextBlock Text="BUSINESS SCENARIO" Foreground="#B4D0DB" FontSize="10" Margin="0,0,0,4" /><ComboBox x:Name="ScenarioBox" Width="275" Margin="0" DisplayMemberPath="DisplayName" SelectedValuePath="ScenarioId" /></StackPanel>
-          <StackPanel Margin="0,0,12,0"><TextBlock Text="ARCHITECTURE PRESET" Foreground="#B4D0DB" FontSize="10" Margin="0,0,0,4" /><ComboBox x:Name="PresetBox" Width="210" Margin="0" /></StackPanel>
-          <StackPanel Margin="0,0,12,0"><TextBlock Text="COST PROFILE" Foreground="#B4D0DB" FontSize="10" Margin="0,0,0,4" /><ComboBox x:Name="CostBox" Width="205" Margin="0" /></StackPanel>
-          <Button Content="Apply scenario / architecture" Click="ApplyArchitecture_Click" VerticalAlignment="Bottom" Margin="0,14,10,0" />
-          <TextBlock x:Name="PlanState" Text="Choose settings, then Plan." Foreground="#B4D0DB" VerticalAlignment="Bottom" Margin="0,0,0,8" FontSize="11" />
-        </WrapPanel>
+        <TextBlock Grid.Row="2" x:Name="PlanState" Text="Start with the business problem, then data behavior." Foreground="#B4D0DB" Margin="0,10,0,0" FontSize="11" />
       </Grid>
     </Border>
-    <Grid Grid.Row="1" Margin="16">
+    <TabControl Grid.Row="1" x:Name="ProductFlowTabs" SelectedIndex="0" Margin="16,12,16,0" Background="White">
+      <TabItem Header="Business"><StackPanel Margin="16,10">
+        <TextBlock Text="Which business decision should the data improve?" FontSize="18" FontWeight="SemiBold" />
+        <TextBlock Text="Retail / ecommerce / omnichannel · Customer satisfaction and fulfillment" Margin="0,8" />
+        <WrapPanel><ComboBox x:Name="ScenarioBox" Width="290" DisplayMemberPath="DisplayName" SelectedValuePath="ScenarioId" /><Button Content="Apply business scenario" Click="ApplyArchitecture_Click" /></WrapPanel>
+        <TextBlock Text="Understand fulfillment problems; optionally predict adverse customer outcomes at delivery. Generation remains deterministic C#." TextWrapping="Wrap" />
+      </StackPanel></TabItem>
+      <TabItem Header="Data"><DockPanel Margin="12"><StackPanel DockPanel.Dock="Left" Width="335" Margin="0,0,16,0"><TextBlock Text="History, quantities and data behavior" FontSize="17" FontWeight="SemiBold" /><TextBlock Text="Edit the existing generation contract. Fixed scenario exercises include duplicates, CDC, SCD2, late arrivals and quarantine. Optional generation.ml profile causal-v1 controls positiveOutcomeRate, signalStrength and noiseLevel for review/survey outcomes. Omit it to preserve legacy data." TextWrapping="Wrap" Margin="0,10" /><Button Content="Apply generation settings" Click="ApplyGeneration_Click" /></StackPanel><TextBox x:Name="GenerationEditor" Style="{StaticResource Code}" /></DockPanel></TabItem>
+      <TabItem Header="Pipeline mode"><StackPanel Margin="16,10"><TextBlock Text="Select the learning exercise" FontSize="18" FontWeight="SemiBold" /><WrapPanel><ComboBox x:Name="PipelineModeBox" Width="240" /><Button Content="Enable / apply V1.5 settings" Click="ApplyProduct_Click" /></WrapPanel><TextBlock Text="All V1.5 modes execute a reproducible batch replay. CDC/SCD2/backfill/quarantine selections focus the injected exercise; they do not claim a persistent incremental service." TextWrapping="Wrap" /></StackPanel></TabItem>
+      <TabItem Header="Architecture"><StackPanel Margin="16,10"><TextBlock Text="Choose where the business pipeline runs" FontSize="18" FontWeight="SemiBold" /><WrapPanel><ComboBox x:Name="PresetBox" Width="230" /><ComboBox x:Name="CostBox" Width="245" /><Button Content="Apply architecture" Click="ApplyArchitecture_Click" /></WrapPanel><TextBlock Text="Spark classic and true Connect remain available. Advanced engine/runtime/storage/format overrides stay in the existing inspector below." TextWrapping="Wrap" /></StackPanel></TabItem>
+      <TabItem Header="Orchestration"><StackPanel Margin="16,10"><TextBlock Text="Dependencies, retries and checkpoints" FontSize="18" FontWeight="SemiBold" /><TextBlock x:Name="OrchestrationDetails" TextWrapping="Wrap" Margin="0,10" /><TextBlock Text="Docker/Codespaces = development · Minikube/Helm + GitSync = Kubernetes proof · GitHub Actions = finite CI. Colab retains its manual checkpoint." TextWrapping="Wrap" /></StackPanel></TabItem>
+      <TabItem Header="dbt"><StackPanel Margin="16,10"><TextBlock Text="Silver → staging → intermediate → marts / Gold → tests → truth reconciliation" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" /><WrapPanel><ComboBox x:Name="DbtIntegrationBox" Width="190" /><Button Content="Apply dbt integration" Click="ApplyProduct_Click" /></WrapPanel><TextBlock Text="The DAG below shows dbt explicitly. Run results retain manifest.json, run_results.json, model/test status and lineage. Plain dbt build remains available when Cosmos is not selected." TextWrapping="Wrap" /></StackPanel></TabItem>
+      <TabItem Header="ML design"><DockPanel Margin="12"><StackPanel DockPanel.Dock="Left" Width="265" Margin="0,0,12,0"><TextBlock Text="Business-derived experiment" FontSize="17" FontWeight="SemiBold" /><ComboBox x:Name="MlTargetBox" /><TextBlock Text="scikit-learn is canonical; Spark ML is the educational alternative. Colab can keep a small feature mart in the same session." TextWrapping="Wrap" /><Button Content="Apply ML target" Click="ApplyProduct_Click" /></StackPanel><TextBox x:Name="MlDesignPreview" Style="{StaticResource Code}" IsReadOnly="True" /></DockPanel></TabItem>
+      <TabItem Header="BI &amp; Validation"><StackPanel Margin="16,10"><TextBlock Text="Verify useful business results, with or without ML" FontSize="18" FontWeight="SemiBold" /><WrapPanel><ComboBox x:Name="BiTargetBox" Width="245" /><Button Content="Apply BI target" Click="ApplyProduct_Click" /></WrapPanel><TextBlock Text="Evidence consumes Gold, the KPI catalog, semantic model, truth manifest, pipeline evidence, dbt lineage/tests and measured ML results. MotherDuck Dive reads Gold/marts only. Reports contain no independent KPI logic." TextWrapping="Wrap" /></StackPanel></TabItem>
+      <TabItem Header="Run"><DockPanel Margin="12"><StackPanel DockPanel.Dock="Left" Width="430"><TextBlock Text="Execute the planned local pipeline" FontSize="17" FontWeight="SemiBold" /><TextBlock Text="Python executable (install factory/requirements.txt first)" /><TextBox x:Name="PythonPathBox" Text="python" /><WrapPanel><Button x:Name="RunFactoryButton" Content="Run local" Click="RunFactory_Click" IsEnabled="False" /><Button x:Name="BuildEvidenceButton" Content="Build Evidence" Click="BuildEvidence_Click" IsEnabled="False" /></WrapPanel></StackPanel><TextBlock x:Name="RunGuidance" Text="Apply V1.5 settings and Plan to see runnable actions. Compile exports other targets and preserves their manual boundaries." TextWrapping="Wrap" Margin="20,0" /></DockPanel></TabItem>
+      <TabItem Header="Monitor / Results"><DockPanel Margin="12"><WrapPanel DockPanel.Dock="Top"><Button Content="Refresh measured results" Click="RefreshResults_Click" /><Button Content="Open Evidence report" Click="OpenEvidence_Click" /><TextBlock x:Name="RunLocation" VerticalAlignment="Center" /></WrapPanel><TextBox x:Name="ResultsPreview" Style="{StaticResource Code}" IsReadOnly="True" Text="No execution in this Studio session. Historical adapter evidence is shown separately in the plan." /></DockPanel></TabItem>
+    </TabControl>
+    <Grid Grid.Row="2" Margin="16">
       <Grid.ColumnDefinitions><ColumnDefinition Width="148" /><ColumnDefinition Width="*" /><ColumnDefinition Width="350" /></Grid.ColumnDefinitions>
       <Border Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7" Padding="14">
-        <DockPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
           <StackPanel DockPanel.Dock="Top"><TextBlock Text="ACTIVITY TOOLBOX" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Muted}" Margin="0,2,0,16" />
             <StackPanel x:Name="Toolbox" />
           </StackPanel>
-          <StackPanel VerticalAlignment="Bottom"><TextBlock Text="Add a node, then edit its properties and dependencies." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" />
+          <StackPanel Margin="0,16,0,0"><TextBlock Text="Add a node, then edit its properties and dependencies." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" />
             <TextBlock Text="Execution support is shown by the compiler plan." TextWrapping="Wrap" Margin="0,12,0,0" Foreground="{StaticResource Muted}" FontSize="12" /></StackPanel>
-        </DockPanel>
+        </StackPanel></ScrollViewer>
       </Border>
       <Grid Grid.Column="1" Margin="12,0">
-        <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="230" /><RowDefinition Height="12" /><RowDefinition Height="240" /></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="170" /><RowDefinition Height="12" /><RowDefinition Height="170" /></Grid.RowDefinitions>
         <Border Background="White" BorderBrush="#D9E4E9" BorderThickness="1" CornerRadius="7">
           <DockPanel>
             <Border DockPanel.Dock="Top" BorderBrush="#E1E9ED" BorderThickness="0,0,0,1" Padding="17,12">
@@ -119,6 +130,6 @@
         </TabControl>
       </Border>
     </Grid>
-    <Border Grid.Row="2" Background="#E4EEF1" Padding="20,8"><TextBlock x:Name="StatusText" FontSize="11" Text="Open a project to begin." /></Border>
+    <Border Grid.Row="3" Background="#E4EEF1" Padding="20,8"><TextBlock x:Name="StatusText" FontSize="11" Text="Open a project to begin." /></Border>
   </Grid>
 </Window>

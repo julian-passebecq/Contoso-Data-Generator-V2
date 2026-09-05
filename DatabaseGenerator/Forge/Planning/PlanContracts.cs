@@ -9,6 +9,7 @@ namespace DatabaseGenerator.Forge.Planning;
 /// <summary>Offline deployment intent. Evidence describes adapter history, never a run of this project.</summary>
 public sealed class ResolvedPlan
 {
+    public ProductDesign? Product { get; set; }
     public string ContractVersion { get; set; } = "1.0.0";
     public string ProjectName { get; set; } = "";
     public PlanScenarioSelection BusinessScenario { get; set; } = new();
@@ -125,5 +126,7 @@ public sealed class ScenarioDefinition
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(ResolvedPlan))]
+[JsonSerializable(typeof(MlExperimentDesign))]
+[JsonSerializable(typeof(ProductDesign))]
 [JsonSerializable(typeof(List<ScenarioDefinition>))]
 public partial class PlanningJsonContext : JsonSerializerContext { }

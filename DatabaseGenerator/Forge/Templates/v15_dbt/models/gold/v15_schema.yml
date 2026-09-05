@@ -1,0 +1,30 @@
+version: 2
+models:
+  - name: int_customer_experience
+    description: Preserved business joins at one row per order before the Gold consumer.
+    columns:
+      - name: order_key
+        data_tests: [not_null, unique]
+  - name: ml_customer_dissatisfaction
+    description: Delivery-time legal features; post-outcome fields are used only to define the mature 14-day target.
+    columns:
+      - name: order_key
+        data_tests: [not_null, unique]
+      - name: prediction_time
+        data_tests: [not_null]
+      - name: label_timestamp
+        data_tests: [not_null]
+      - name: is_dissatisfied_14d
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false
+  - name: bi_daily_customer_experience
+    description: Canonical daily/store presentation mart; report consumers do no business aggregation.
+    columns:
+      - name: order_day
+        data_tests: [not_null]
+      - name: store_key
+        data_tests: [not_null]

@@ -256,6 +256,9 @@ public sealed class ForgeProjectGenerator
             }
         }
 
+        if (spec.Generation.Ml is { } ml)
+            ApplyCausalOutcomes(data, ml, spec.Generation.Seed);
+
         // Exact duplicate source row. Silver must retain one record by ShipmentEventKey.
         data.DuplicateShipmentEventKey = data.ShipmentEvents[4].ShipmentEventKey;
         data.ShipmentEvents.Add(data.ShipmentEvents[4] with { });
@@ -283,6 +286,35 @@ public sealed class ForgeProjectGenerator
 
         ValidateForeignKeys(data);
         return data;
+    }
+
+    private static void ApplyCausalOutcomes(CustomerSatisfactionData data, MlGenerationSpec ml, int seed)
+    {
+        // Separate random stream: outcomes never change orders, shipments, CDC or features.
+        // Delivery delay exists at prediction time. Only subsequent reviews/surveys change.
+        var outcomeRng = new StableRandom(seed ^ 0x43A91D27);
+        var adverse = new Dictionary<long, bool>();
+        var orders = data.Orders.ToDictionary(o => o.OrderKey);
+        var firstProducts = data.OrderLines.GroupBy(l => l.OrderKey).ToDictionary(g => g.Key, g => g.First().ProductKey);
+        data.Reviews.Clear();
+        foreach (var shipment in data.Shipments)
+        {
+            // Delay is uniform over [-2, -1, 0, 1, 2] days in this scenario.
+            // Centered signal preserves the requested rate in expectation, not by relabeling.
+            var delay = (shipment.DeliveredAt - shipment.PromisedAt).TotalDays / 2.0;
+            var amplitude = Math.Min(ml.PositiveOutcomeRate, 1 - ml.PositiveOutcomeRate);
+            var probability = ml.PositiveOutcomeRate + ml.SignalStrength * (1 - ml.NoiseLevel) * amplitude * delay;
+            var draw = (outcomeRng.NextUInt64() >> 11) / 9007199254740992.0;
+            var positive = draw < probability;
+            adverse[shipment.OrderKey] = positive;
+            var order = orders[shipment.OrderKey];
+            data.Reviews.Add(new ReviewRow(600_001L + data.Reviews.Count, order.OrderKey, order.CustomerKey,
+                firstProducts[order.OrderKey], shipment.DeliveredAt.AddDays(2), positive ? 2 : 4,
+                positive ? "The experience needs improvement" : "Satisfied with the order", true));
+        }
+        for (var i = 0; i < data.SupportTickets.Count; i++)
+            data.SupportTickets[i] = data.SupportTickets[i] with { SatisfactionScore = adverse[data.SupportTickets[i].OrderKey] ? 2 : 4 };
+        // The existing invalid-review injector still runs afterward and is independently reconciled.
     }
 
     private static void ValidateForeignKeys(CustomerSatisfactionData data)

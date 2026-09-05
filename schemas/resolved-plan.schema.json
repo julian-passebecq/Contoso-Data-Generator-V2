@@ -7,6 +7,35 @@
   "additionalProperties": false,
   "required": ["contractVersion", "projectName", "businessScenario", "generationProfile", "architecturePreset", "resolvedSettings", "stages", "edges", "manualCheckpoints", "requiredCredentials", "costAndQuotaNotes", "artifacts", "warnings", "overallReadiness", "overallImplementationStatus", "currentExecutionStatus", "evidenceScope"],
   "properties": {
+    "product": {
+      "type": "object",
+      "required": [
+        "version",
+        "steps",
+        "biInputs",
+        "biTarget"
+      ],
+      "properties": {
+        "version": {
+          "const": "1.5"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10
+        },
+        "biInputs": {
+          "type": "array",
+          "minItems": 7
+        },
+        "biTarget": {
+          "enum": [
+            "evidence",
+            "evidence-and-dive"
+          ]
+        }
+      }
+    },
     "contractVersion": {"const": "1.0.0"},
     "projectName": {"type": "string", "minLength": 1},
     "businessScenario": {
@@ -59,6 +88,8 @@
       "type": "object", "additionalProperties": false,
       "required": ["engine", "runtime", "orchestrator", "dagSource", "storage", "fileFormat", "tableFormat", "warehouse", "iac", "costProfile"],
       "properties": {
+        "airflowHost": {"type": "string"},
+        "executor": {"type": "string"},
         "engine": {"type": "string"}, "runtime": {"type": "string"}, "orchestrator": {"type": "string"}, "dagSource": {"type": "string"},
         "storage": {"type": "string"}, "fileFormat": {"type": "string"}, "tableFormat": {"type": "string"}, "warehouse": {"type": "string"},
         "iac": {"type": "string"}, "costProfile": {"type": "string"}, "sparkApiMode": {"type": "string"}, "sparkVersionPolicy": {"type": "string"},

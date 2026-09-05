@@ -41,6 +41,7 @@ public sealed class ProjectSpec
                 "and must start with a letter or digit.");
         if (Generation.Seed < 0)
             throw new ArgumentException("generation.seed must be zero or greater.");
+        Generation.Ml?.Validate();
         if (Generation.Orders < 12)
             throw new ArgumentException("generation.orders must be at least 12 so every V1 injector has a stable target.");
         if (Generation.TimeSpanDays is < 1 or > 3650)
@@ -110,8 +111,30 @@ public sealed class GenerationSpec
     // requested days. Omission preserves V1 dates and the serialized fingerprint.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? TimeSpanDays { get; set; }
+    // Explicit opt-in: omission preserves all legacy source bytes and fingerprints.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public MlGenerationSpec Ml { get; set; }
     [JsonRequired]
     public List<string> Formats { get; set; } = new() { "CSV" };
+}
+
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed class MlGenerationSpec
+{
+    [JsonRequired]
+    public string Profile { get; set; } = "causal-v1";
+    public double PositiveOutcomeRate { get; set; } = 0.10;
+    public double SignalStrength { get; set; } = 0.5;
+    public double NoiseLevel { get; set; } = 0.1;
+
+    public void Validate()
+    {
+        if (Profile != "causal-v1")
+            throw new ArgumentException("generation.ml.profile must explicitly select causal-v1.");
+        foreach (var (name, value) in new[] { ("positiveOutcomeRate", PositiveOutcomeRate), ("signalStrength", SignalStrength), ("noiseLevel", NoiseLevel) })
+            if (!double.IsFinite(value) || value < 0 || value > 1)
+                throw new ArgumentException($"generation.ml.{name} must be finite and between 0 and 1.");
+    }
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]

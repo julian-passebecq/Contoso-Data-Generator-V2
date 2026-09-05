@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contoso.example/schemas/forge/product-intent-v1.5.json",
+  "title": "Contoso Forge V1.5 optional product intent",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.5" },
+    "pipelineMode": { "enum": ["full-batch", "incremental-cdc", "scd2", "late-arrival-backfill", "quality-quarantine", "ml-features"] },
+    "mlTarget": { "enum": ["local-sklearn", "colab-sklearn", "colab-spark-ml", "kaggle-sklearn", "bqml-export", "databricks-export"] },
+    "biTarget": { "enum": ["evidence", "evidence-and-dive"] },
+    "dbtIntegration": { "enum": ["plain", "cosmos"] },
+    "labelAsOf": { "type": ["string", "null"], "format": "date-time", "pattern": "Z$" },
+    "materializationLimitMb": { "type": "integer", "minimum": 16, "maximum": 4096 }
+  }
+}

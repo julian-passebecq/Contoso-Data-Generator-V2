@@ -29,11 +29,16 @@ public partial class App : Application
                 RunSmoke(window, output, project);
                 Shutdown(0);
             }
+            else if (options.TryGetValue("--factory-smoke-output", out var factoryOutput))
+            {
+                RunFactorySmoke(window, factoryOutput);
+                Shutdown(0);
+            }
             else window.Show();
         }
         catch (Exception error)
         {
-            if (options.TryGetValue("--smoke-output", out var output))
+            if (options.TryGetValue("--smoke-output", out var output) || options.TryGetValue("--factory-smoke-output", out output))
             {
                 Directory.CreateDirectory(output);
                 File.WriteAllText(Path.Combine(output, "failure.txt"), error.ToString());
@@ -48,8 +53,8 @@ public partial class App : Application
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         for (var index = 0; index < args.Length; index += 2)
         {
-            if (index + 1 == args.Length || args[index] is not ("--project" or "--pipeline" or "--smoke-output"))
-                throw new ArgumentException("Options: --project <project.json> --pipeline <pipeline.json> --smoke-output <empty-directory>");
+            if (index + 1 == args.Length || args[index] is not ("--project" or "--pipeline" or "--smoke-output" or "--factory-smoke-output"))
+                throw new ArgumentException("Options: --project <project.json> --pipeline <pipeline.json> --smoke-output <empty-directory> --factory-smoke-output <empty-directory>");
             result.Add(args[index], Path.GetFullPath(args[index + 1]));
         }
         return result;
@@ -334,6 +339,54 @@ public partial class App : Application
         if (parent is TextBlock text) values.Add(text.Text);
         for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++) values.Add(DescendantText(VisualTreeHelper.GetChild(parent, index)));
         return string.Join("\n", values);
+    }
+
+    private static void RunFactorySmoke(MainWindow window, string output)
+    {
+        if (Directory.Exists(output) && Directory.EnumerateFileSystemEntries(output).Any())
+            throw new ArgumentException("Smoke output must be an empty directory.");
+        Directory.CreateDirectory(output);
+        Require(window.Session.Project.Product is not null, "Load a V1.5 example for the factory smoke.");
+        var steps = window.ProductFlowTabs.Items.Cast<TabItem>().Select(t => t.Header.ToString()).ToArray();
+        Require(steps.SequenceEqual(new ProductDesign().Steps), "The ten business-first steps are not in product order.");
+        Require(window.ProductFlowTabs.SelectedIndex == 0, "The Studio did not start at Business.");
+        Require(!window.RunFactoryButton.IsEnabled, "An unplanned project enabled execution.");
+        var plan = window.PlanCurrent();
+        Require(plan.CurrentExecutionStatus == "not-executed" && window.RunFactoryButton.IsEnabled, "An executable local plan was misrepresented.");
+        window.MlTargetBox.SelectedItem = "kaggle-sklearn";
+        Require(!window.RunFactoryButton.IsEnabled && window.Session.Plan is null, "A pending product edit retained a runnable plan.");
+        window.ApplyProductSettings();
+        Require(window.Session.Pipeline.Activities.Any(a => a.Implementation == "factory-export-ml"), "The ML target did not update the untouched default graph.");
+        window.MlTargetBox.SelectedItem = "local-sklearn";
+        window.ApplyProductSettings();
+        window.PlanCurrent();
+        Require(window.MlDesignPreview.Text.Contains("14", StringComparison.Ordinal) && window.MlDesignPreview.Text.Contains("leakage", StringComparison.OrdinalIgnoreCase), "The derived ML legality contract is absent.");
+        window.GenerationEditor.Text += " ";
+        Require(!window.RunFactoryButton.IsEnabled, "Pending data changes retained execution.");
+        window.DiscardPendingEdits();
+        window.PlanCurrent();
+        window.SaveTo(Path.Combine(output, "bundle/pipeline.json"));
+        window.LoadProject(Path.Combine(output, "bundle/project.json"));
+        window.LoadPipeline(Path.Combine(output, "bundle/pipeline.json"));
+        window.PlanCurrent();
+        window.CompileTo(Path.Combine(output, "compiled"));
+        Require(window.Session.PlanJson == PlanBuilder.ToJson(PlanBuilder.Build(window.Session.Project, window.Session.PipelineJson)), "Factory WPF/core plans differ.");
+        Require(File.Exists(Path.Combine(output, "compiled/factory/run.py")), "Factory runtime was not compiled.");
+        for (var index = 0; index < steps.Length; index++)
+        {
+            window.ProductFlowTabs.SelectedIndex = index;
+            Render(window, 1500, 1000, Path.Combine(output, $"step-{index + 1:00}.png"));
+        }
+        Render(window, 1150, 900, Path.Combine(output, "minimum.png"));
+        var bounds = window.ProductFlowTabs.TransformToAncestor(window.RootGrid).TransformBounds(new Rect(new Point(), window.ProductFlowTabs.RenderSize));
+        Require(bounds.Right <= 1150, "Product steps exceed the minimum window width.");
+        File.WriteAllText(Path.Combine(output, "factory-smoke-report.json"), new JsonObject
+        {
+            ["status"] = "passed", ["uiRendered"] = true, ["tenStepsInOrder"] = true,
+            ["businessFirst"] = true, ["pendingDataAndProductEditsBlockRun"] = true,
+            ["targetChangesDefaultGraph"] = true, ["saveLoadCompile"] = true,
+            ["corePlanIdentical"] = true, ["actualPipelineExecution"] = "tested separately through generated neutral runner"
+        }.ToJsonString(new() { WriteIndented = true }) + "\n");
     }
 
     private static void Render(MainWindow window, int width, int height, string path)
