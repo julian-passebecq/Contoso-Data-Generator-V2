@@ -60,12 +60,16 @@ jobs:
         with:
           version: v3.19.0
       - name: Validate shared HCL separately with each engine and render Helm
-        run: python scripts/validate_free_gcp_infra.py --project out/free-gcp --iac dual-validate --require-tools
+        run: |
+          python scripts/validate_free_gcp_infra.py --project out/free-gcp --iac dual-validate --require-tools
+          python -c 'import json,pathlib; p=json.loads(pathlib.Path("examples/free-gcp-lab.project.json").read_text()); p["product"]={"version":"1.6"}; pathlib.Path("out/free-gcp-v16-project.json").write_text(json.dumps(p))'
+          dotnet run --project DatabaseGenerator --configuration Release --no-build -- forge generate --project out/free-gcp-v16-project.json --output out/free-gcp-v16
+          python scripts/validate_free_gcp_infra.py --project out/free-gcp-v16 --iac none --require-tools
       - name: Parse generated DAG with pinned Airflow 3
         env:
           AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
         run: |
-          python -m pip install apache-airflow==3.2.2 apache-airflow-providers-standard --constraint https://raw.githubusercontent.com/apache/airflow/constraints-3.2.2/constraints-3.12.txt
+          python -m pip install apache-airflow==3.3.1 apache-airflow-providers-standard --constraint https://raw.githubusercontent.com/apache/airflow/constraints-3.3.1/constraints-3.12.txt
           python scripts/parse_studio_dag.py --project out/free-gcp
       - uses: actions/upload-artifact@v4
         if: always()

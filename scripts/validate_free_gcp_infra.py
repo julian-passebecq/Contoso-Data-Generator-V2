@@ -107,7 +107,8 @@ def validate_helm(executable, source, chart_source=None):
                 rendered = check.pop("stdout")
                 check["manifestSha256"] = hashlib.sha256(rendered.encode()).hexdigest()
                 check["resourceCount"] = len(re.findall(r"^kind:", rendered, re.MULTILINE))
-                check["airflow3ImagePresent"] = "apache/airflow:3.2.2" in rendered
+                version = json.loads((source / "validation_status.json").read_text(encoding="utf-8-sig"))["airflowVersion"]
+                check["airflow3ImagePresent"] = version in ("3.2.2", "3.3.1") and "apache/airflow:" + version in rendered
                 check["gitSyncPresent"] = "GITSYNC_REPO" in rendered
                 if not check["airflow3ImagePresent"] or not check["gitSyncPresent"]:
                     check["exitCode"] = -1
