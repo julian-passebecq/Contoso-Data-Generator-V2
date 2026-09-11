@@ -1,0 +1,226 @@
+[
+  {
+    "path": ".github/workflows/journeys-v17.yml",
+    "sha256": "AA901A24FFE32864D95AEDD753D55035C86C705225B92892FA4DE147D2F35936"
+  },
+  {
+    "path": ".github/workflows/pipeline-studio-windows.yml",
+    "sha256": "F28D01F9AB30E70B929705151F307F65EAEE6948F1AC5C0F63671167623147B8"
+  },
+  {
+    "path": "AGENTS.md",
+    "sha256": "EE0CF4C772FB2897B312E52084F9124C99675088523217CC809D441570CB46E5"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/App.xaml.cs",
+    "sha256": "ACCE317898684F45CC7237390CEB9E1A4718BFAFC7D8E94C276BCD96868E86CE"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/FactoryStudio.cs",
+    "sha256": "C2A628E7CCF58F17802A24BD130DB9D60D928F0BECC994331B00878549C3357B"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/HistorySmoke.cs",
+    "sha256": "C5988F50C092D30AFB6F16A0D4409BF00D72C724B6B0D2904595C55609B7A9E9"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/HistoryStudio.cs",
+    "sha256": "22C69AA724C5E7E8E5F8AC2A3A6A187C4F66AB0173C92B787AFE96AC222C5518"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/JourneyStudio.cs",
+    "sha256": "6E55857B9E531BBFE429DA6BA64B38BEA8795C5249525E77CC8408A84FC081EF"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/MainWindow.xaml",
+    "sha256": "E30CE71F87EED05570D40C12856B79241B553B024614D12C3F377940BA517D9F"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/MainWindow.xaml.cs",
+    "sha256": "37A75AE68F9FAF517D0E240DBA51BF02FB72E02A68432CE0FB65E1FAFC250D11"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/README.md",
+    "sha256": "9B70E759CBE338B3906C44F602D094B31E6376618C08453F9D0F02D7C113CF43"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RepairSmoke.cs",
+    "sha256": "E00C7028C3CA9206C033F2F157603EFBAE6302A02A01CC2F4C2BB728C211726A"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RunCatalog.cs",
+    "sha256": "BA5962F9F06CAB92F832D779FDDA2959D1BF9F25A054B48F87085B56F83580C6"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RunEvidence.cs",
+    "sha256": "9C5141D9C21603A3F8F9F9E253EDF8DDEDA624793C78B3DAEA6E50ECF037FF5A"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RuntimeRequirements.cs",
+    "sha256": "C8DBFB9111101307D484047ACD29C5226CC74FFBDB1ADC1F59BDB85C45E44F8B"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/StudioRuntime.cs",
+    "sha256": "4FFC112B99E5327812B21C6539DB2BDC97BB375F9B499386F09977B0ED7D72D5"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/StudioSession.cs",
+    "sha256": "ED0613AFC2B85357D6BC025C2B0987449D7D6919A5114798CB2F5C83E610CAEF"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/DatabaseGenerator.Tests.csproj",
+    "sha256": "2D7F4A1605BB3806FC054302EB2A8A4CF9D64A057248015067949F2DB8123C8A"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/StudioRunTests.cs",
+    "sha256": "CC540DDFB6075752B30815B9F9E45DC6556D6CB6FD707A297B0268E5AFC5B4F0"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/StudioRuntimeRequirementsTests.cs",
+    "sha256": "02C1FE5EAC1EC5688310D9650613F4A975EA60F2238B60CAAB69E4B3C88A7C61"
+  },
+  {
+    "path": "DatabaseGenerator/Forge/Templates/v17/journey_report.py",
+    "sha256": "BFBC3769F4139A908353C20347150E6BF9FEF1F6ABB9BC7785F219B68D7B21D1"
+  },
+  {
+    "path": "DatabaseGenerator/Forge/Templates/v17/run.py",
+    "sha256": "695EF5B943D44A33D9F497A4EC2FA362362F090C50C089B890DD8CF827FB0CEC"
+  },
+  {
+    "path": "docs/project-status.md",
+    "sha256": "660699F172CA6BFE97C1C2BA043E576942F3E1F522A8C7067B54E277F051FBA9"
+  },
+  {
+    "path": "HANDOFF.md",
+    "sha256": "79C238125AE2BFAE617920587618A3BA454805A53F6716C6EA191F292BC2F336"
+  },
+  {
+    "path": "NEXT_PASS_PLAN.md",
+    "sha256": "29F16DA2E1FE14A4B83D8893BB671B91FEB3B7D9AA39DFDFB508E019CB040593"
+  },
+  {
+    "path": "projectmanagement/ARCHITECTURE.md",
+    "sha256": "5C3A4D31C92A0900644853A4845C15AC15EB5448BEAB04855E97B4616608D5DC"
+  },
+  {
+    "path": "projectmanagement/BACKLOG.md",
+    "sha256": "013081710C0DBAB4D60BDFFE2289E1B4DE3A29EBFAC9BD94398B4879D49BB026"
+  },
+  {
+    "path": "projectmanagement/BRANCHES.md",
+    "sha256": "2BE70240625C1492C26202DABED8FE2E3930B369CC03CCF4963B8B551197C2DF"
+  },
+  {
+    "path": "projectmanagement/PROMPTS.md",
+    "sha256": "CC74515D768D29203CA020F1C0F42D1DF17D2216723CC0F0491FD2E97CF62698"
+  },
+  {
+    "path": "projectmanagement/README.md",
+    "sha256": "EB0918BB2BE67063757C20A47595188CA3D5DEC84AD33864C4F4F0A13E999E8C"
+  },
+  {
+    "path": "projectmanagement/reports/S001-dev.md",
+    "sha256": "722000930AE1ED6DE0B3CAFC9B5D058198677A44F190E631C283E111372CD73B"
+  },
+  {
+    "path": "projectmanagement/reports/S001-qa.md",
+    "sha256": "D7F148BBA0E25ECE7AD8C29CD3DC28DDDF4A36F8B0B1764C47B88CE7B19B3FCB"
+  },
+  {
+    "path": "projectmanagement/reports/S001-repair-01-dev.md",
+    "sha256": "D123ED8FF7CC5CA57AA93BF95ED99350181150BB6219B4485E753F8958A5BD52"
+  },
+  {
+    "path": "projectmanagement/reports/S001-repair-01-qa.md",
+    "sha256": "AF6826C5DB34CC92C0C0AAD6D65F2085DF7D8DCBD585CEC1C9A69DD6622A70ED"
+  },
+  {
+    "path": "projectmanagement/reviews/2026-09-08-baseline-files.json",
+    "sha256": "86E4D89A8FE701FC17796271F8A322AEDE62924C8E619BCC6514B286C98ADB72"
+  },
+  {
+    "path": "projectmanagement/reviews/2026-09-08-baseline.md",
+    "sha256": "7419DECC3B8815BA01D26FCCD554742AE0B16EE5012BB10BBAEEBE0747ED3A5C"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-final-files.json",
+    "sha256": "B4474D6F70A8F199E18AE7A8DF51686ACBA00DF3AA174632ED87A2A08784C42C"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-lead-evidence.json",
+    "sha256": "25D81926EB6B6F24F112E15BAF9EC9326A5F18B1481912B718C8A7407E7386D1"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-lead.md",
+    "sha256": "BA2281B65C2F20DC172D30E3513D2D9AE91C15A395F8E165FB551DF2BA273C74"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-qa-final-files.json",
+    "sha256": "E6A0FD9B1B1B8B19707521105A9F30AE6182835863282F04FB70300E8CE3061F"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-qa-start-files.json",
+    "sha256": "F2C93D1295B69787BD282766D2FDDC00A33D4CAABFC85771EBD3520C48B4186B"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-repair-01-final-files.json",
+    "sha256": "4AC90F179D2D8063230472FB3D8E10FF9E6ED68BD4CE3C4DC8C5BDD121D85023"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-repair-01-qa-start-files.json",
+    "sha256": "B98671FA2994DD1E475BA6E449D96DC29D6B049CC7751C635A520D29C91745FE"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-repair-01-start-files.json",
+    "sha256": "39BC6FA34ACF579841F2D05B6160EE1D41EDBE9F7DF2AEDE2D11E872D915867F"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-start-files.json",
+    "sha256": "C1A150DF651DE291DC8F8F0C7463762341C5F2BD050AFB88CBFA009CA7B03D64"
+  },
+  {
+    "path": "projectmanagement/reviews/S001-validation-files.json",
+    "sha256": "D8B24456F4EBDC3E7F00F40F70A75E8C82478A6668D66E26530A6C682C635540"
+  },
+  {
+    "path": "projectmanagement/sprints/S001-repair-01.md",
+    "sha256": "D44C743D39F2E5F14DA65BB69A3CBDD473D498972D8926ABEEEE62C12C0B6EE3"
+  },
+  {
+    "path": "projectmanagement/sprints/S001-trusted-local-runs.md",
+    "sha256": "91B3EB01ECE670BE8E7A45939DA6DFBA3A9E1F95F07BDD4FFF204D979132740D"
+  },
+  {
+    "path": "projectmanagement/STATUS.md",
+    "sha256": "6E578E43940CB541888971AF7711FE06E9E3CC5C61601FB918560F91290E4661"
+  },
+  {
+    "path": "projectmanagement/templates/REPORT.md",
+    "sha256": "C66118F152D9C621CECF109F8B6F94003BF2994DFC90F50EE000754536E85495"
+  },
+  {
+    "path": "projectmanagement/TEST-REGISTER.md",
+    "sha256": "0F9F1670F2503F8D69D22787BCBB7B10F0EB72D84E3A6ABE3EF139A67AC038CB"
+  },
+  {
+    "path": "projectmanagement/TESTING.md",
+    "sha256": "CC05C4F3294186464F49F7BF44384E267751C84440BE9F0BFAA52A87B751924D"
+  },
+  {
+    "path": "projectmanagement/WORKFLOW.md",
+    "sha256": "4447790FDEAF7B480D7A76C678253D66B1AB90B0F999A663D675A66B505FAB0A"
+  },
+  {
+    "path": "README.md",
+    "sha256": "559595D682E8093D6F971E3064039C692EB36C28BE4BB0D8B4CF295238104DF7"
+  },
+  {
+    "path": "scripts/test_studio_dependencies.py",
+    "sha256": "71D0FD5A73166400529D6B9EC75D9AFF1683D1B20455B62AEE687D2D61644D5C"
+  },
+  {
+    "path": "scripts/test_studio_report.py",
+    "sha256": "8DCCA6FA948A7D27625268CB7B5EBA2B4000A218DA2B72AFA437902D18F06296"
+  }
+]

@@ -1,3 +1,17 @@
+> Current direction (2026-09-11): the user requested a single-Pro-AI takeover and preservation push. Start with [the takeover guide](handover/README.md). Prior role-switching prompts and no-push checkpoints below are historical. S001 acceptance remains pending.
+
+# Current status — 8 September 2026
+
+**Next work is now governed by [projectmanagement/STATUS.md](projectmanagement/STATUS.md).** The tech-lead review identified additional receipt/revision/dependency gaps and scoped S001 with three continuous development passes, independent light QA and lead acceptance. The stabilization record below is historical input to that sprint.
+
+Local Studio stabilization is implemented; see the new implementation section in [docs/project-status.md](docs/project-status.md) and the acceptance/evidence notes in [NEXT_PASS_PLAN.md](NEXT_PASS_PLAN.md). The audit and older implementation handoffs below retain their original scope. This is an uncommitted local change, not a release, push or merge.
+
+For the next AI implementation pass, follow [NEXT_PASS_PLAN.md](NEXT_PASS_PLAN.md). It scopes local Studio stabilization and preserves the completed audit as the baseline.
+
+Start with the [project overview and audit](docs/project-status.md). V1.7 is in open PR #4 at `c6e602c`; all eight exact-commit workflows passed. Fresh local checks confirmed the core engine and reports, while additional review reproduced an atomic-edit bug and stale report status, plus a local Python setup failure. The deferred local checks were subsequently resumed: all 36 V1.7 regression tests passed, all 13 journey receipts were verified, the Spark-ML export completed, and real local MLJAR trained three candidates. The audit records remaining interactive/cloud scope and keeps the reproduced defects open.
+
+The implementation handoffs below are historical context. Their pending-CI language predates the verified results above.
+
 # Contoso Forge V1.7 implementation handoff
 
 V1.7 starts from fetched `origin/main` at verified PR #3 merge `ea7c47a6db64de0e91b69b2259c7d48f744e15cc`, on `codex/v1.7-modular-journeys-external-labs`. The [execution guide](docs/v1.7.md) documents contracts, examples, commands, adapter limits and future work. This release supersedes the proposed FastAPI plan and extends the same C# planner/compiler.

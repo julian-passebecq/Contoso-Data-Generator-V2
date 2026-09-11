@@ -1,4 +1,12 @@
+> Current direction (2026-09-11): the user requested a single-Pro-AI takeover and preservation push. Start with [the takeover guide](handover/README.md). Prior role-switching prompts and no-push checkpoints below are historical. S001 acceptance remains pending.
+
 # Contoso Data Generator V2
+
+**Current development instructions:** [Project management](projectmanagement/README.md) — architecture, active sprint, backlog, model handoffs and independent test/review gates.
+
+**Current project overview:** [8 September 2026 audit](docs/project-status.md) — architecture assessment, verified working paths, reproduced bugs, priorities and deferred tests.
+
+**Next implementation pass:** [AI stabilization plan](NEXT_PASS_PLAN.md) — ordered fixes, acceptance criteria and focused validation.
 
 Contoso Forge V1.7 adds goal-driven journeys, first-class `stopAfter`, independent Bronze/Silver stages, selected KPI semantics, bounded MLJAR on Kaggle, optional MotherDuck and Hugging Face publication, and safe DuckDB/Polars wrangling. Start with the [V1.7 guide](docs/v1.7.md) and [current handoff](HANDOFF.md). The existing C# planner/compiler remains authoritative.
 

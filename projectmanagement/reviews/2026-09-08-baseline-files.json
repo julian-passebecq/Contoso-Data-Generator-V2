@@ -1,0 +1,49 @@
+{
+  "observedAtUtc": "2026-09-08T19:15:37.4239309Z",
+  "head": "c6e602ce153ecf5f2a3d2ffc9a046e8cfb246296",
+  "branch": "codex/v1.7-modular-journeys-external-labs",
+  "scope": "Existing changed application/workflow/test bytes reviewed and tested during leadership bootstrap; excludes management docs and historical docs",
+  "workingTree": "dirty; not a clean release",
+  "files": [
+    {
+      "path": ".github/workflows/journeys-v17.yml",
+      "sha256": "aa901a24ffe32864d95aedd753d55035c86c705225b92892fa4de147d2f35936"
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/App.xaml.cs",
+      "sha256": "049b45d1fba319c061063153ad9f1d03ae6f1097c0d7c8892d01f4c1febc6e6f"
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/FactoryStudio.cs",
+      "sha256": "d21e1163e54982a279544000c71446c5ca2cbf015fbe35f62231606be5258471"
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/JourneyStudio.cs",
+      "sha256": "6e55857b9e531bbfe429da6ba64b38bea8795c5249525e77cc8408a84fc081ef"
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/MainWindow.xaml",
+      "sha256": "55c0506cbcde3df0959fcd488016364068753f94c698d1d8536733550cf45548"
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/MainWindow.xaml.cs",
+      "sha256": "8dff09f67c8e4782489a75be87f5d4a2251ff0a6ead063cf1010f0da2a81d4f2"
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/StudioSession.cs",
+      "sha256": "ed0613afc2b85357d6bc025c2b0987449d7d6919a5114798cb2f5c83e610caef"
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/StudioRuntime.cs",
+      "sha256": "53ec68030678ed0857dc498bacf9d5afea3bc4ffd4576cce8a04f9d6fda155ae"
+    },
+    {
+      "path": "DatabaseGenerator/Forge/Templates/v17/journey_report.py",
+      "sha256": "bfbc3769f4139a908353c20347150e6bf9fef1f6abb9bc7785f219b68d7b21d1"
+    },
+    {
+      "path": "scripts/test_studio_report.py",
+      "sha256": "8dcca6fa948a7d27625268cb7b5eba2b4000a218da2b72afa437902d18f06296"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+[
+  {
+    "path": ".github/workflows/journeys-v17.yml",
+    "sha256": "aa901a24ffe32864d95aedd753d55035c86c705225b92892fa4de147d2f35936"
+  },
+  {
+    "path": ".github/workflows/pipeline-studio-windows.yml",
+    "sha256": "f28d01f9ab30e70b929705151f307f65eaee6948f1ac5c0f63671167623147b8"
+  },
+  {
+    "path": "AGENTS.md",
+    "sha256": "ee0cf4c772fb2897b312e52084f9124c99675088523217cc809d441570cb46e5"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/App.xaml.cs",
+    "sha256": "acce317898684f45cc7237390ceb9e1a4718bfafc7d8e94c276bcd96868e86ce"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/FactoryStudio.cs",
+    "sha256": "c2a628e7ccf58f17802a24bd130db9d60d928f0becc994331b00878549c3357b"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/HistorySmoke.cs",
+    "sha256": "c5988f50c092d30afb6f16a0d4409bf00d72c724b6b0d2904595c55609b7a9e9"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/HistoryStudio.cs",
+    "sha256": "22c69aa724c5e7e8e5f8ac2a3a6a187c4f66ab0173c92b787afe96ac222c5518"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/JourneyStudio.cs",
+    "sha256": "6e55857b9e531bbfe429da6ba64b38bea8795c5249525e77cc8408a84fc081ef"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/MainWindow.xaml",
+    "sha256": "e30ce71f87eed05570d40c12856b79241b553b024614d12c3f377940ba517d9f"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/MainWindow.xaml.cs",
+    "sha256": "37a75ae68f9faf517d0e240dba51bf02fb72e02a68432ce0fb65e1fafc250d11"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/README.md",
+    "sha256": "9b70e759cbe338b3906c44f602d094b31e6376618c08453f9d0f02d7c113cf43"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RepairSmoke.cs",
+    "sha256": "e00c7028c3ca9206c033f2f157603efbae6302a02a01cc2f4c2bb728c211726a"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RunCatalog.cs",
+    "sha256": "ba5962f9f06cab92f832d779fdda2959d1bf9f25a054b48f87085b56f83580c6"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RunEvidence.cs",
+    "sha256": "9c5141d9c21603a3f8f9f9e253edf8ddeda624793c78b3daea6e50ecf037ff5a"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RuntimeRequirements.cs",
+    "sha256": "c8dbfb9111101307d484047acd29c5226cc74ffbdb1adc1f59bdb85c45e44f8b"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/StudioRuntime.cs",
+    "sha256": "4ffc112b99e5327812b21c6539db2bdc97bb375f9b499386f09977b0ed7d72d5"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/StudioSession.cs",
+    "sha256": "ed0613afc2b85357d6bc025c2b0987449d7d6919a5114798cb2f5c83e610caef"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/DatabaseGenerator.Tests.csproj",
+    "sha256": "2d7f4a1605bb3806fc054302eb2a8a4cf9d64a057248015067949f2db8123c8a"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/StudioRunTests.cs",
+    "sha256": "cc540ddfb6075752b30815b9f9e45dc6556d6cb6fd707a297b0268e5afc5b4f0"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/StudioRuntimeRequirementsTests.cs",
+    "sha256": "02c1fe5eac1ec5688310d9650613f4a975ea60f2238b60caab69e4b3c88a7c61"
+  },
+  {
+    "path": "DatabaseGenerator/Forge/Templates/v17/journey_report.py",
+    "sha256": "bfbc3769f4139a908353c20347150e6bf9fef1f6abb9bc7785f219b68d7b21d1"
+  },
+  {
+    "path": "DatabaseGenerator/Forge/Templates/v17/run.py",
+    "sha256": "695ef5b943d44a33d9f497a4ec2fa362362f090c50c089b890dd8cf827fb0cec"
+  },
+  {
+    "path": "HANDOFF.md",
+    "sha256": "79c238125ae2bfae617920587618a3ba454805a53f6716c6ea191f292bc2f336"
+  },
+  {
+    "path": "NEXT_PASS_PLAN.md",
+    "sha256": "29f16da2e1fe14a4b83d8893bb671b91feb3b7d9aa39dfdfb508e019cb040593"
+  },
+  {
+    "path": "README.md",
+    "sha256": "559595d682e8093d6f971e3064039c692eb36c28be4bb0d8b4cf295238104df7"
+  },
+  {
+    "path": "docs/project-status.md",
+    "sha256": "660699f172ca6bfe97c1c2ba043e576942f3e1f522a8c7067b54e277f051fba9"
+  },
+  {
+    "path": "scripts/test_studio_dependencies.py",
+    "sha256": "71d0fd5a73166400529d6b9ec75d9aff1683d1b20455b62aee687d2d61644d5c"
+  },
+  {
+    "path": "scripts/test_studio_report.py",
+    "sha256": "8dcca6fa948a7d27625268cb7b5eba2b4000a218da2b72afa437902d18f06296"
+  }
+]

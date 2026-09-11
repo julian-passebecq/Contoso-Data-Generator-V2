@@ -32,6 +32,15 @@ def planned(root):
     return [a["operation"][8:] for a in plan]
 
 
+def available_versions():
+    # Optional metadata is descriptive, never a requirement for an unused stage.
+    versions = {}
+    for name in ("duckdb", "pandas", "polars", "pyarrow", "dbt-core", "scikit-learn"):
+        try: versions[name] = metadata.version(name)
+        except metadata.PackageNotFoundError: versions[name] = "unavailable"
+    return versions
+
+
 def execute(root, run_id, stage):
     root = Path(root).resolve()
     stages = planned(root)
@@ -81,7 +90,7 @@ def execute(root, run_id, stage):
             if result.get("blocksDownstream"):
                 evidence.update(status=result["status"], completedAt=now())
             elif stage == stages[-1]: evidence.update(status="succeeded", completedAt=now())
-            evidence["runtimeVersions"] = {name: metadata.version(name) for name in ("duckdb", "pandas", "polars", "pyarrow", "dbt-core", "scikit-learn")}
+            evidence["runtimeVersions"] = available_versions()
             version = metadata.version("pyspark" if engine == "spark" else engine) if stage != "verify" or engine != "spark" else "not-started"
             evidence["engine"] = {"name": engine, "version": version, "runtime": settings["runtime"]}
             evidence["python"] = sys.version

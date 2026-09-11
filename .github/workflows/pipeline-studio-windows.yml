@@ -5,11 +5,15 @@ on:
     paths:
       - 'ContosoForge.PipelineStudio/**'
       - 'DatabaseGenerator/Forge/**'
+      - 'DatabaseGenerator.Tests/**'
+      - 'scripts/test_studio_dependencies.py'
       - '.github/workflows/pipeline-studio-windows.yml'
   pull_request:
     paths:
       - 'ContosoForge.PipelineStudio/**'
       - 'DatabaseGenerator/Forge/**'
+      - 'DatabaseGenerator.Tests/**'
+      - 'scripts/test_studio_dependencies.py'
       - '.github/workflows/pipeline-studio-windows.yml'
   workflow_dispatch:
 
@@ -44,3 +48,75 @@ jobs:
         with:
           name: pipeline-studio-windows-smoke
           path: out/studio-smoke/
+
+  trusted-local-runtime:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        journey: [bronze, kpi, ml]
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Minimal Bronze runtime (unused engines and ML deliberately absent)
+        if: matrix.journey == 'bronze'
+        run: python -m pip install duckdb==1.4.5 pyarrow==23.0.1
+      - name: Pinned KPI and ML runtime
+        if: matrix.journey != 'bronze'
+        run: python -m pip install -r DatabaseGenerator/Forge/Templates/v15/requirements.txt
+      - name: Receipt, identity, corruption and concurrent catalog regressions
+        if: matrix.journey == 'bronze'
+        timeout-minutes: 5
+        run: dotnet test DatabaseGenerator.Tests --configuration Release --filter FullyQualifiedName~StudioRun --logger trx --results-directory artifacts/s001-runtime/tests
+      - name: Build desktop and bounded Bronze project
+        run: |
+          dotnet build ContosoForge.PipelineStudio --configuration Release
+          New-Item -ItemType Directory -Force out/s001-runtime | Out-Null
+          $example = if ('${{ matrix.journey }}' -eq 'ml') { 'examples/v17-specific-ml.project.json' } else { 'examples/v17-kpi-duckdb.project.json' }
+          $project = Get-Content $example -Raw | ConvertFrom-Json
+          if ('${{ matrix.journey }}' -eq 'bronze') { $project.product.stopAfter = 'bronze' }
+          $project | ConvertTo-Json -Depth 100 | Set-Content out/s001-runtime/journey.project.json
+      - name: Actual asynchronous WPF execution, process ownership and reopen
+        timeout-minutes: 20
+        run: dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project out/s001-runtime/journey.project.json --execution-smoke-output out/s001-runtime/desktop
+      - name: Dispatch regression with missing optional metadata
+        timeout-minutes: 5
+        run: |
+          $smoke = Get-Content out/s001-runtime/desktop/execution-smoke.json -Raw | ConvertFrom-Json
+          $root = Split-Path (Split-Path (Split-Path $smoke.firstState))
+          python scripts/test_studio_dependencies.py --root $root -v
+      - name: Repair regressions through actual history handler and local Spark preflight
+        if: matrix.journey == 'kpi'
+        timeout-minutes: 3
+        run: |
+          $smoke = Get-Content out/s001-runtime/desktop/execution-smoke.json -Raw | ConvertFrom-Json
+          dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --reopen-smoke-state $smoke.firstState --repair-smoke-output out/s001-runtime/repair
+      - name: Separate Studio process reopens the built report read-only
+        if: matrix.journey != 'bronze'
+        timeout-minutes: 3
+        run: |
+          $smoke = Get-Content out/s001-runtime/desktop/execution-smoke.json -Raw | ConvertFrom-Json
+          dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --reopen-smoke-state $smoke.firstState --history-smoke-output out/s001-runtime/restart
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s001-windows-runtime-${{ matrix.journey }}
+          include-hidden-files: true
+          path: |
+            artifacts/s001-runtime/
+            out/s001-runtime/**/*.json
+            out/s001-runtime/**/*.log
+            out/s001-runtime/**/*.txt
+            out/s001-runtime/**/*.png

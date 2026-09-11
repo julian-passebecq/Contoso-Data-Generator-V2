@@ -104,10 +104,11 @@ public sealed class StudioSession
         InvalidateCompilation();
     }
 
-    public void ApplyProduct(ProductIntent product)
+    public void ApplyProduct(ProductIntent product, string? scenarioId = null)
     {
         var draft = JsonSerializer.Deserialize(ProjectJson, ArchitectureJsonContext.Default.StudioProjectSpec)!;
         var original = PipelineDocument.Write(PipelineDocument.Read(PipelineCompiler.CreateDefault(ResolvedJson)));
+        if (scenarioId is not null) draft = ScenarioCatalog.Apply(draft, scenarioId);
         draft.Product = product;
         var resolved = ArchitecturePresets.ToJson(ArchitecturePresets.Resolve(draft));
         var replacement = PipelineJson == original ? PipelineDocument.Read(PipelineCompiler.CreateDefault(resolved)) : Pipeline;

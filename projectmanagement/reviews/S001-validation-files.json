@@ -1,0 +1,78 @@
+[
+  {
+    "path": ".github/workflows/journeys-v17.yml",
+    "sha256": "AA901A24FFE32864D95AEDD753D55035C86C705225B92892FA4DE147D2F35936"
+  },
+  {
+    "path": ".github/workflows/pipeline-studio-windows.yml",
+    "sha256": "3AFFE5956A4F0523CF3587BC6BB70F42B546CF0C5BFA8A18DBFBADB6A7A6AC76"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/App.xaml.cs",
+    "sha256": "095BA964C0661D749E38BB3F5FCD7EC43BD5F493A6D00A4CDED47A44218061BC"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/FactoryStudio.cs",
+    "sha256": "1764D3E28EE88F732540728282200C817D1089A8EAEE00BEE6B5E111F958E70F"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/HistorySmoke.cs",
+    "sha256": "4FF86B99885D40376035B3C5713DA4ED6492D1147084C80D6DCF7D22E49C0549"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/HistoryStudio.cs",
+    "sha256": "831CBA9978C5EB1173EA11371671339A637D12D255B705B56286E3EC419F680D"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/JourneyStudio.cs",
+    "sha256": "6E55857B9E531BBFE429DA6BA64B38BEA8795C5249525E77CC8408A84FC081EF"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/MainWindow.xaml",
+    "sha256": "BF9CFDABE10313D51B3D51E0A6D54861A91A2BB26712BB187423175E06DD66C9"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/MainWindow.xaml.cs",
+    "sha256": "54220027CA12C7644C1137739552C92520EB6AB9F3A26FE73836375DE85FB04A"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RunCatalog.cs",
+    "sha256": "A28926AFADC12AF9FC6C87F46275ACE03C5564792AB020EB2FD17D7FDD124C09"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/RunEvidence.cs",
+    "sha256": "12EA5ED7FE4A454BCCB6FB47F3CE485ADDE94214E3E798E9F25899371053DD02"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/StudioRuntime.cs",
+    "sha256": "4FFC112B99E5327812B21C6539DB2BDC97BB375F9B499386F09977B0ED7D72D5"
+  },
+  {
+    "path": "ContosoForge.PipelineStudio/StudioSession.cs",
+    "sha256": "ED0613AFC2B85357D6BC025C2B0987449D7D6919A5114798CB2F5C83E610CAEF"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/DatabaseGenerator.Tests.csproj",
+    "sha256": "B804ABA94671B271FEB266F3885E69E84C59A92FA8B76CC7E8FFEF7FDA984F2F"
+  },
+  {
+    "path": "DatabaseGenerator.Tests/StudioRunTests.cs",
+    "sha256": "CC4DA8F8C4C10747F7BB8468FD16AFF0C8166CBD37162A08B8D979BE7237174A"
+  },
+  {
+    "path": "DatabaseGenerator/Forge/Templates/v17/journey_report.py",
+    "sha256": "BFBC3769F4139A908353C20347150E6BF9FEF1F6ABB9BC7785F219B68D7B21D1"
+  },
+  {
+    "path": "DatabaseGenerator/Forge/Templates/v17/run.py",
+    "sha256": "695EF5B943D44A33D9F497A4EC2FA362362F090C50C089B890DD8CF827FB0CEC"
+  },
+  {
+    "path": "scripts/test_studio_dependencies.py",
+    "sha256": "71D0FD5A73166400529D6B9EC75D9AFF1683D1B20455B62AEE687D2D61644D5C"
+  },
+  {
+    "path": "scripts/test_studio_report.py",
+    "sha256": "8DCCA6FA948A7D27625268CB7B5EBA2B4000A218DA2B72AFA437902D18F06296"
+  }
+]

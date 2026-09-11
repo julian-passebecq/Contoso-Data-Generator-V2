@@ -1,0 +1,138 @@
+{
+  "checkedAtUtc": "2026-09-08T21:19:25.1148619Z",
+  "head": "c6e602ce153ecf5f2a3d2ffc9a046e8cfb246296",
+  "branch": "codex/v1.7-modular-journeys-external-labs",
+  "sourceScope": "20 developer-final production/workflow/test/doc entries; management records intentionally updated after QA",
+  "checked": 20,
+  "mismatches": 0,
+  "findings": [
+    "S001-L001",
+    "S001-L002"
+  ],
+  "probeCommand": "dotnet run --project artifacts/s001-lead/probe/Probe.csproj --configuration Release",
+  "probeExitCode": 0,
+  "probeMeaning": "Expected defect reproductions succeeded; product not accepted",
+  "probeLog": "artifacts/s001-lead/lead-probes.txt",
+  "files": [
+    {
+      "path": ".github/workflows/journeys-v17.yml",
+      "expectedSha256": "AA901A24FFE32864D95AEDD753D55035C86C705225B92892FA4DE147D2F35936",
+      "actualSha256": "AA901A24FFE32864D95AEDD753D55035C86C705225B92892FA4DE147D2F35936",
+      "matches": true
+    },
+    {
+      "path": ".github/workflows/pipeline-studio-windows.yml",
+      "expectedSha256": "3AFFE5956A4F0523CF3587BC6BB70F42B546CF0C5BFA8A18DBFBADB6A7A6AC76",
+      "actualSha256": "3AFFE5956A4F0523CF3587BC6BB70F42B546CF0C5BFA8A18DBFBADB6A7A6AC76",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/App.xaml.cs",
+      "expectedSha256": "9C7DF81F1AE077ECBD677D4F91A4FF2197AFE5447FE9986FF8548DDC7964FAA6",
+      "actualSha256": "9C7DF81F1AE077ECBD677D4F91A4FF2197AFE5447FE9986FF8548DDC7964FAA6",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/FactoryStudio.cs",
+      "expectedSha256": "1F66960690785A76F5C62766F983F161B6AB874AB2F86A375AF74F5D7C0D1706",
+      "actualSha256": "1F66960690785A76F5C62766F983F161B6AB874AB2F86A375AF74F5D7C0D1706",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/HistorySmoke.cs",
+      "expectedSha256": "C5988F50C092D30AFB6F16A0D4409BF00D72C724B6B0D2904595C55609B7A9E9",
+      "actualSha256": "C5988F50C092D30AFB6F16A0D4409BF00D72C724B6B0D2904595C55609B7A9E9",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/HistoryStudio.cs",
+      "expectedSha256": "F6997D57FEC7145C1DCC0CDFD6A2BF2B5B3A105226CF8E91FEE62E2A1BDC4957",
+      "actualSha256": "F6997D57FEC7145C1DCC0CDFD6A2BF2B5B3A105226CF8E91FEE62E2A1BDC4957",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/JourneyStudio.cs",
+      "expectedSha256": "6E55857B9E531BBFE429DA6BA64B38BEA8795C5249525E77CC8408A84FC081EF",
+      "actualSha256": "6E55857B9E531BBFE429DA6BA64B38BEA8795C5249525E77CC8408A84FC081EF",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/MainWindow.xaml",
+      "expectedSha256": "E30CE71F87EED05570D40C12856B79241B553B024614D12C3F377940BA517D9F",
+      "actualSha256": "E30CE71F87EED05570D40C12856B79241B553B024614D12C3F377940BA517D9F",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/MainWindow.xaml.cs",
+      "expectedSha256": "A08AADDF7FE93770EDEEC122C0C9F4D1FA19341EF776E5BDF67F7574C523F7E6",
+      "actualSha256": "A08AADDF7FE93770EDEEC122C0C9F4D1FA19341EF776E5BDF67F7574C523F7E6",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/README.md",
+      "expectedSha256": "02ED68E1F0CA5F130ED1929F563969F9086D213F9B63F4F58D2E15175721FBB8",
+      "actualSha256": "02ED68E1F0CA5F130ED1929F563969F9086D213F9B63F4F58D2E15175721FBB8",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/RunCatalog.cs",
+      "expectedSha256": "BA5962F9F06CAB92F832D779FDDA2959D1BF9F25A054B48F87085B56F83580C6",
+      "actualSha256": "BA5962F9F06CAB92F832D779FDDA2959D1BF9F25A054B48F87085B56F83580C6",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/RunEvidence.cs",
+      "expectedSha256": "9C5141D9C21603A3F8F9F9E253EDF8DDEDA624793C78B3DAEA6E50ECF037FF5A",
+      "actualSha256": "9C5141D9C21603A3F8F9F9E253EDF8DDEDA624793C78B3DAEA6E50ECF037FF5A",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/StudioRuntime.cs",
+      "expectedSha256": "4FFC112B99E5327812B21C6539DB2BDC97BB375F9B499386F09977B0ED7D72D5",
+      "actualSha256": "4FFC112B99E5327812B21C6539DB2BDC97BB375F9B499386F09977B0ED7D72D5",
+      "matches": true
+    },
+    {
+      "path": "ContosoForge.PipelineStudio/StudioSession.cs",
+      "expectedSha256": "ED0613AFC2B85357D6BC025C2B0987449D7D6919A5114798CB2F5C83E610CAEF",
+      "actualSha256": "ED0613AFC2B85357D6BC025C2B0987449D7D6919A5114798CB2F5C83E610CAEF",
+      "matches": true
+    },
+    {
+      "path": "DatabaseGenerator.Tests/DatabaseGenerator.Tests.csproj",
+      "expectedSha256": "B804ABA94671B271FEB266F3885E69E84C59A92FA8B76CC7E8FFEF7FDA984F2F",
+      "actualSha256": "B804ABA94671B271FEB266F3885E69E84C59A92FA8B76CC7E8FFEF7FDA984F2F",
+      "matches": true
+    },
+    {
+      "path": "DatabaseGenerator.Tests/StudioRunTests.cs",
+      "expectedSha256": "CC540DDFB6075752B30815B9F9E45DC6556D6CB6FD707A297B0268E5AFC5B4F0",
+      "actualSha256": "CC540DDFB6075752B30815B9F9E45DC6556D6CB6FD707A297B0268E5AFC5B4F0",
+      "matches": true
+    },
+    {
+      "path": "DatabaseGenerator/Forge/Templates/v17/journey_report.py",
+      "expectedSha256": "BFBC3769F4139A908353C20347150E6BF9FEF1F6ABB9BC7785F219B68D7B21D1",
+      "actualSha256": "BFBC3769F4139A908353C20347150E6BF9FEF1F6ABB9BC7785F219B68D7B21D1",
+      "matches": true
+    },
+    {
+      "path": "DatabaseGenerator/Forge/Templates/v17/run.py",
+      "expectedSha256": "695EF5B943D44A33D9F497A4EC2FA362362F090C50C089B890DD8CF827FB0CEC",
+      "actualSha256": "695EF5B943D44A33D9F497A4EC2FA362362F090C50C089B890DD8CF827FB0CEC",
+      "matches": true
+    },
+    {
+      "path": "scripts/test_studio_dependencies.py",
+      "expectedSha256": "71D0FD5A73166400529D6B9EC75D9AFF1683D1B20455B62AEE687D2D61644D5C",
+      "actualSha256": "71D0FD5A73166400529D6B9EC75D9AFF1683D1B20455B62AEE687D2D61644D5C",
+      "matches": true
+    },
+    {
+      "path": "scripts/test_studio_report.py",
+      "expectedSha256": "8DCCA6FA948A7D27625268CB7B5EBA2B4000A218DA2B72AFA437902D18F06296",
+      "actualSha256": "8DCCA6FA948A7D27625268CB7B5EBA2B4000A218DA2B72AFA437902D18F06296",
+      "matches": true
+    }
+  ]
+}

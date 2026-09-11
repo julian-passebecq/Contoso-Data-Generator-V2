@@ -13,10 +13,12 @@ namespace ContosoForge.PipelineStudio;
 
 public partial class App : Application
 {
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         var options = Parse(e.Args);
+        var smokeDirectory = options.FirstOrDefault(p => p.Key.EndsWith("smoke-output", StringComparison.Ordinal)).Value;
+        if (smokeDirectory is not null) RunCatalog.UserDataDirectory = Path.Combine(smokeDirectory, "user-data");
         var project = options.GetValueOrDefault("--project") ?? FindExample();
         var window = new MainWindow();
         MainWindow = window;
@@ -39,11 +41,32 @@ public partial class App : Application
                 RunJourneySmoke(window, journeyOutput);
                 Shutdown(0);
             }
+            else if (options.TryGetValue("--repair-smoke-output", out var repairOutput))
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                window.Show();
+                await RunRepairSmoke(window, options["--reopen-smoke-state"], repairOutput);
+                Shutdown(0);
+            }
+            else if (options.TryGetValue("--history-smoke-output", out var historyOutput))
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                window.Show();
+                await RunHistorySmoke(window, options["--reopen-smoke-state"], historyOutput);
+                Shutdown(0);
+            }
+            else if (options.TryGetValue("--execution-smoke-output", out var executionOutput))
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                window.Show();
+                await RunExecutionSmoke(window, executionOutput, project!);
+                Shutdown(0);
+            }
             else window.Show();
         }
         catch (Exception error)
         {
-            if (options.TryGetValue("--smoke-output", out var output) || options.TryGetValue("--factory-smoke-output", out output) || options.TryGetValue("--journey-smoke-output", out output))
+            if (options.TryGetValue("--smoke-output", out var output) || options.TryGetValue("--factory-smoke-output", out output) || options.TryGetValue("--journey-smoke-output", out output) || options.TryGetValue("--execution-smoke-output", out output) || options.TryGetValue("--history-smoke-output", out output) || options.TryGetValue("--repair-smoke-output", out output))
             {
                 Directory.CreateDirectory(output);
                 File.WriteAllText(Path.Combine(output, "failure.txt"), error.ToString());
@@ -58,7 +81,7 @@ public partial class App : Application
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         for (var index = 0; index < args.Length; index += 2)
         {
-            if (index + 1 == args.Length || args[index] is not ("--project" or "--pipeline" or "--smoke-output" or "--factory-smoke-output" or "--journey-smoke-output"))
+            if (index + 1 == args.Length || args[index] is not ("--project" or "--pipeline" or "--smoke-output" or "--factory-smoke-output" or "--journey-smoke-output" or "--execution-smoke-output" or "--history-smoke-output" or "--reopen-smoke-state" or "--repair-smoke-output"))
                 throw new ArgumentException("Options: --project <project.json> --pipeline <pipeline.json> --smoke-output <empty-directory> --factory-smoke-output <empty-directory>");
             result.Add(args[index], Path.GetFullPath(args[index + 1]));
         }
@@ -404,7 +427,52 @@ public partial class App : Application
     {
         Directory.CreateDirectory(output);
         Require(window.Session.Project.Product?.Version == "1.7", "Load a V1.7 journey.");
+        window.Session.ApplyScenario(ScenarioCatalog.DefaultScenarioId);
+        window.Session.Project.SourceProject.Generation.Orders = 60;
+        window.DiscardPendingEdits();
+        var beforeProject = window.Session.ProjectJson;
+        var beforePipeline = window.Session.PipelineJson;
+        window.PlanCurrent();
+        window.GoalBox.SelectedItem = "specific-ml";
+        window.AnalysisEditor.Text = "{";
+        var rejected = false;
+        try { window.ApplyJourneySettings(); } catch (System.Text.Json.JsonException) { rejected = true; }
+        Require(rejected && window.Session.ProjectJson == beforeProject && window.Session.PipelineJson == beforePipeline,
+            "Rejected journey changed the applied project or pipeline.");
+        Require(window.AnalysisEditor.Text == "{" && window.Session.Plan is null && !window.RunFactoryButton.IsEnabled,
+            "Rejected edits lost text or retained a runnable plan.");
+        window.DiscardPendingEdits();
         Require(window.ProductFlowTabs.Items.Cast<TabItem>().Take(8).Select(t => t.Header.ToString()).SequenceEqual(ProductIntent.JourneySteps), "Goal-first journey ordering differs from product design.");
+        foreach (var editor in new[] { window.PublishEditor, window.RecipeEditor })
+        {
+            window.GoalBox.SelectedItem = "specific-ml";
+            editor.Text = "{";
+            rejected = false;
+            try { window.ApplyJourneySettings(); } catch (System.Text.Json.JsonException) { rejected = true; }
+            Require(rejected && window.Session.ProjectJson == beforeProject && window.Session.PipelineJson == beforePipeline && editor.Text == "{", "Malformed journey JSON mutated applied state.");
+            window.DiscardPendingEdits();
+        }
+        window.GoalBox.SelectedItem = "specific-ml";
+        window.AnalysisEditor.Text = "{\"kind\":\"sklearn\",\"runtime\":\"local\",\"algorithm\":\"unsupported\"}";
+        rejected = false;
+        try { window.ApplyJourneySettings(); } catch (ArgumentException) { rejected = true; }
+        Require(rejected && window.Session.ProjectJson == beforeProject && window.Session.PipelineJson == beforePipeline, "Semantic rejection mutated applied state.");
+        window.DiscardPendingEdits();
+        window.GoalBox.SelectedItem = "specific-ml";
+        window.ApplyJourneySettings();
+        Require(window.Session.Project.SourceProject.Generation.Orders == 1200, "ML profile was not applied.");
+        var applied = window.Session.ProjectJson;
+        window.ApplyJourneySettings();
+        Require(window.Session.ProjectJson == applied, "Repeated application changed the profile.");
+        window.SaveTo(Path.Combine(output, "ml-bundle/pipeline.json"));
+        window.LoadProject(Path.Combine(output, "ml-bundle/project.json"));
+        Require(window.Session.ProjectJson == applied && window.PlanCurrent().OverallImplementationStatus == "runnable", "ML did not round trip to a runnable plan.");
+        var defaultPipeline = window.Session.PipelineJson;
+        window.Session.Pipeline.Name = "Authored journey name";
+        var authored = window.Session.PipelineJson;
+        window.ApplyJourneySettings();
+        Require(window.Session.PipelineJson == authored, "Journey application replaced an authored graph.");
+        window.Session.Pipeline = PipelineDocument.Read(defaultPipeline);
         window.PlanCurrent();
         window.StopAfterBox.SelectedItem = "bronze";
         Require(!window.RunFactoryButton.IsEnabled, "Pending stop stage retained execution.");
@@ -423,6 +491,150 @@ public partial class App : Application
         }
         File.WriteAllText(Path.Combine(output, "journey-smoke-report.json"), new JsonObject { ["status"] = "passed", ["goalFirst"] = true,
             ["stopAfterRoundTrip"] = true, ["pendingEditsBlockRun"] = true, ["uiRendered"] = true, ["externalExecuted"] = false }.ToJsonString());
+    }
+
+    private static async Task RunExecutionSmoke(MainWindow window, string output, string project)
+    {
+        output = Path.GetFullPath(output);
+        Directory.CreateDirectory(output);
+        var python = window.PythonPathBox.Text;
+        var seen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var child = StudioRuntime.Execute(python, new[] { "-u", "-c", "import time,sys; print('early',flush=True); time.sleep(2); sys.stderr.write('x'*100000); print('done')" },
+            chunk => { if (chunk.Contains("early")) seen.TrySetResult(); }, Path.Combine(output, "stream.log"));
+        await seen.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Require(!child.IsCompleted, "Output was buffered until exit.");
+        await child;
+        Require(new FileInfo(Path.Combine(output, "stream.log")).Length > 100000, "Full logs were truncated.");
+        var missingDependency = false;
+        try { await StudioRuntime.ValidatePython(python, new[] { "contoso_intentionally_missing_dependency" }); }
+        catch (InvalidOperationException) { missingDependency = true; }
+        Require(missingDependency, "Missing dependencies passed preflight.");
+        missingDependency = false;
+        try { await StudioRuntime.ValidatePython(python, [], distributions: ["contoso_intentionally_missing_metadata"]); }
+        catch (InvalidOperationException) { missingDependency = true; }
+        Require(missingDependency, "Required distribution metadata passed preflight.");
+        var actualPython = await StudioRuntime.ValidatePython(python, Array.Empty<string>());
+        Require(StudioRuntime.SuggestedPython() == actualPython, "Validated interpreter was not remembered.");
+        var savedPath = Environment.GetEnvironmentVariable("PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("PATH", "");
+            var missingNode = false;
+            try { await StudioRuntime.ValidatePython(actualPython, Array.Empty<string>(), report: true); }
+            catch (InvalidOperationException) { missingNode = true; }
+            Require(missingNode, "Report preflight accepted missing Node/npm.");
+            await StudioRuntime.ValidatePython(actualPython, new[] { "duckdb", "pyarrow" });
+        }
+        finally { Environment.SetEnvironmentVariable("PATH", savedPath); }
+        window.PlanCurrent();
+        var before = window.Session.ProjectJson;
+        window.PythonPathBox.Text = Path.Combine(output, "missing python.exe");
+        var failed = false;
+        try { await window.RunFactoryAsync(Path.Combine(output, "invalid")); }
+        catch (InvalidOperationException) { failed = true; }
+        Require(failed && !Directory.Exists(Path.Combine(output, "invalid")) && window.Session.ProjectJson == before, "Invalid Python generated sources or changed the project.");
+        window.PythonPathBox.Text = python;
+        var run = window.RunFactoryAsync(Path.Combine(output, "r s"));
+        var busyRejected = false;
+        try { await window.BuildEvidenceAsync(); } catch (InvalidOperationException) { busyRejected = true; }
+        Require(busyRejected, "Concurrent report build was accepted.");
+        busyRejected = false;
+        try { window.LoadProject(project); } catch (InvalidOperationException) { busyRejected = true; }
+        Require(busyRejected, "Project switched during execution.");
+        await run;
+        var firstState = window.RunLocation.Text;
+        Require(window.ResultsPreview.IsVisible, "Execution progress is hidden behind the Run tab.");
+        if (window.Session.Project.Product?.StopAfter == "bronze")
+        {
+            Require(!window.BuildEvidenceButton.IsEnabled && !Directory.Exists(Path.Combine(firstState, "bi")), "Bronze-only execution exposed a report.");
+            await window.ImportRun(firstState);
+            Require(window.ResultsPreview.Text.Contains("Historical run") && window.ResultsPreview.Text.Contains("succeeded"), "Bronze history was not inspected honestly.");
+            Require(new RunCatalog(RunCatalog.DefaultPath).List().Any(e => e.RunId == Path.GetFileName(firstState)), "Run was not registered.");
+            window.BeforeExecutionForTest = run => {
+                var source = Directory.GetFiles(Path.Combine(run.Root, "data/source"), "*.csv")[0];
+                File.AppendAllText(source, "tampered source"); return Task.CompletedTask;
+            };
+            failed = false;
+            try { await window.RunFactoryAsync(Path.Combine(output, "failed execution")); } catch (InvalidOperationException) { failed = true; }
+            window.BeforeExecutionForTest = null;
+            Require(failed && !window.BuildEvidenceButton.IsEnabled && window.ResultsPreview.Text.Contains("Run failed"), "Runtime failure was presented as success.");
+            var failedState = window.RunLocation.Text;
+            Require(new RunCatalog(RunCatalog.DefaultPath).List().Any(e => e.RunId == Path.GetFileName(failedState)), "Failed generated run disappeared from history.");
+            await window.ImportRun(failedState);
+            Require(window.ResultsPreview.Text.Contains("Unverified evidence"), "Incomplete failed evidence was accepted.");
+            window.Close();
+            File.WriteAllText(Path.Combine(output, "execution-smoke.json"), new JsonObject { ["status"] = "passed", ["firstState"] = firstState,
+                ["failedState"] = failedState, ["failedExecutionRetained"] = true,
+                ["streaming"] = true, ["preflight"] = true, ["progressVisible"] = true, ["bronzeOnly"] = true }.ToJsonString());
+            return;
+        }
+        Require(window.BuildEvidenceButton.IsEnabled, "Successful report run has no build action.");
+        await window.BuildEvidenceAsync();
+        window.PreviewStartedForTest = () => {
+            window.Close();
+            Require(window.IsVisible, "Studio closed during preview startup.");
+            var rejected = false;
+            try { window.LoadProject(project); } catch (InvalidOperationException) { rejected = true; }
+            Require(rejected, "Project switched during preview startup.");
+            return Task.CompletedTask;
+        };
+        var url = await window.OpenEvidenceAsync(false);
+        window.PreviewStartedForTest = null;
+        using var http = new System.Net.Http.HttpClient();
+        Require((await http.GetStringAsync(url)).Contains("Governed results"), "Report did not load over loopback.");
+        Render(window, 1500, 1000, Path.Combine(output, "completed-run.png"));
+        // Tampering after a successful build must be rejected without an intervening rebuild.
+        var indexPath = Path.Combine(firstState, "bi/evidence/build/index.html");
+        var indexBytes = File.ReadAllBytes(indexPath);
+        File.AppendAllText(indexPath, "tampered index");
+        failed = false;
+        try { await window.OpenEvidenceAsync(false); } catch (InvalidOperationException) { failed = true; }
+        finally { File.WriteAllBytes(indexPath, indexBytes); }
+        Require(failed, "After-success index tampering was previewed.");
+        var originalReceipt = File.ReadAllBytes(Path.Combine(firstState, "bi/build_evidence.json"));
+        var page = Path.Combine(firstState, "bi/evidence/pages/index.md");
+        var originalPage = File.ReadAllText(page);
+        File.AppendAllText(page, "\nTampered test input\n");
+        failed = false;
+        try { await window.BuildEvidenceAsync(); } catch (InvalidOperationException) { failed = true; }
+        finally { File.WriteAllText(page, originalPage); }
+        Require(failed, "Tampered report input was accepted.");
+        failed = false;
+        try { await window.OpenEvidenceAsync(false); } catch (InvalidOperationException) { failed = true; }
+        Require(failed, "Failed rebuild exposed a previously built report as current.");
+        File.WriteAllBytes(Path.Combine(firstState, "bi/build_evidence.json"), originalReceipt); // Restore the test fixture for read-only reopening checks.
+        window.StopAfterBox.SelectedItem = "bronze";
+        window.ApplyJourneySettings();
+        Require(window.RunLocation.Text == "" && !window.BuildEvidenceButton.IsEnabled, "Applied revision retained unlabeled old results.");
+        await window.ImportRun(firstState);
+        Require(window.ResultsPreview.Text.Contains("Historical run") && !window.BuildEvidenceButton.IsEnabled, "Imported run enabled a mutating action.");
+        url = await window.OpenEvidenceAsync(false);
+        Require((await http.GetStringAsync(url)).Contains("Governed results"), "Reopened evidence did not load.");
+        Render(window, 1500, 1000, Path.Combine(output, "history-run.png"));
+        window.Close();
+        var closed = false;
+        try { await http.GetStringAsync(url); } catch (System.Net.Http.HttpRequestException) { closed = true; }
+        Require(closed, "Active preview survived close.");
+        window = new MainWindow();
+        window.LoadProject(project); window.Show();
+        await window.ImportRun(firstState);
+        url = await window.OpenEvidenceAsync(false);
+        Require((await http.GetStringAsync(url)).Contains("Governed results"), "New Studio instance could not reopen the report.");
+        window.LoadProject(project);
+        Require(window.RunLocation.Text == "" && !window.BuildEvidenceButton.IsEnabled, "Project switch retained old results.");
+        window.StopAfterBox.SelectedItem = "bronze";
+        window.ApplyJourneySettings();
+        window.PlanCurrent();
+        await window.RunFactoryAsync(Path.Combine(output, "second run"));
+        var secondState = window.RunLocation.Text;
+        Require(secondState != firstState && !window.BuildEvidenceButton.IsEnabled && !Directory.Exists(Path.Combine(secondState, "bi")), "Bronze run exposed the previous report.");
+        window.Close();
+        var serverStopped = false;
+        try { await http.GetStringAsync(url); } catch (System.Net.Http.HttpRequestException) { serverStopped = true; }
+        Require(serverStopped, "Owned report server survived project switch/close.");
+        File.WriteAllText(Path.Combine(output, "execution-smoke.json"), new JsonObject { ["status"] = "passed", ["firstState"] = firstState,
+            ["secondState"] = secondState, ["streaming"] = true, ["preflight"] = true, ["loopbackReport"] = true,
+            ["serverCleanup"] = true, ["folderDialogManual"] = "not exercised; shared execution seam used" }.ToJsonString());
     }
 
     private static void Render(MainWindow window, int width, int height, string path)

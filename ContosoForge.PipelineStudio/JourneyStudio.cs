@@ -105,13 +105,12 @@ public partial class MainWindow
     public void ApplyJourneySettings()
     {
         var current = Session.Project.Product ?? new();
-        if (GoalBox.Text is "specific-ml" or "automl" && Session.Project.BusinessScenario != ScenarioCatalog.MlScenarioId)
-            Session.ApplyScenario(ScenarioCatalog.MlScenarioId);
         Session.ApplyProduct(new ProductIntent { Version = "1.7", Goal = GoalBox.Text, StopAfter = StopAfterBox.Text,
             SelectedKpis = Ids(SelectedKpisBox.Text), Analysis = JsonSerializer.Deserialize<AnalysisIntent>(AnalysisEditor.Text, journeyJson),
             PublishTargets = JsonSerializer.Deserialize<List<PublishTarget>>(PublishEditor.Text, journeyJson), Recipe = JsonSerializer.Deserialize<WranglingRecipe>(RecipeEditor.Text, journeyJson),
             PipelineMode = current.PipelineMode, MlTarget = current.MlTarget, BiTarget = current.BiTarget, DbtIntegration = current.DbtIntegration,
-            LabelAsOf = current.LabelAsOf, MaterializationLimitMb = current.MaterializationLimitMb });
+            LabelAsOf = current.LabelAsOf, MaterializationLimitMb = current.MaterializationLimitMb },
+            GoalBox.Text is "specific-ml" or "automl" ? ScenarioCatalog.MlScenarioId : null);
         Changed("Journey applied. Plan to review the selected stage boundary and runtime support.", "product");
     }
 }

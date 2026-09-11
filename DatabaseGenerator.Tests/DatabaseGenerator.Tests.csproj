@@ -22,6 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="../ContosoForge.PipelineStudio/RunEvidence.cs" Link="Studio/RunEvidence.cs" />
+    <Compile Include="../ContosoForge.PipelineStudio/RuntimeRequirements.cs" Link="Studio/RuntimeRequirements.cs" />
+    <Compile Include="../ContosoForge.PipelineStudio/RunCatalog.cs" Link="Studio/RunCatalog.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Fixtures/v13-default*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

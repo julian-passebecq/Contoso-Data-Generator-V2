@@ -28,6 +28,15 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        PythonPathBox.Text = StudioRuntime.SuggestedPython();
+        Closing += (_, e) => { if (factoryRunning || openingReport) { e.Cancel = true; StatusText.Text = "Wait for execution to finish before closing Studio. Cancellation is not yet supported."; } };
+        ProductFlowTabs.SelectionChanged += (_, e) =>
+        {
+            if (e.Source != ProductFlowTabs) return;
+            var results = (ProductFlowTabs.SelectedItem as TabItem)?.Header?.ToString() is "Results" or "Monitor / Results" or "Run";
+            Grid.SetRowSpan(ProductFlowTabs, results ? 2 : 1);
+            EditorWorkspace.Visibility = results ? Visibility.Collapsed : Visibility.Visible;
+        };
         InitializeJourneys();
         PresetBox.ItemsSource = ArchitecturePresets.List().Select(p => p.PresetId);
         ScenarioBox.ItemsSource = ScenarioCatalog.List();
@@ -67,8 +76,10 @@ public partial class MainWindow : Window
 
     public void LoadProject(string path)
     {
+        if (factoryRunning || openingReport) throw new InvalidOperationException("Wait for the current run or report build before opening a project.");
         RequireAppliedEdits("opening a project");
         Session.LoadProject(path);
+        ResetFactoryResults();
         selectedId = Session.Pipeline.Activities.FirstOrDefault()?.Id;
         RefreshAll();
         StatusText.Text = "Loaded " + System.IO.Path.GetFullPath(path);
@@ -76,8 +87,10 @@ public partial class MainWindow : Window
 
     public void LoadPipeline(string path)
     {
+        if (factoryRunning || openingReport) throw new InvalidOperationException("Wait for execution before opening a pipeline.");
         RequireAppliedEdits("opening a pipeline");
         Session.LoadPipeline(path);
+        ResetFactoryResults();
         selectedId = Session.Pipeline.Activities.FirstOrDefault()?.Id;
         RefreshAll();
         StatusText.Text = "Loaded neutral pipeline · " + System.IO.Path.GetFullPath(path);
@@ -252,6 +265,7 @@ public partial class MainWindow : Window
         var preserved = PendingPanels().Where(panel => panel != appliedPanel)
             .ToDictionary(panel => panel, panel => (Baseline: baselines[panel], Values: PanelControls(panel).Select(ReadControl).ToArray()));
         Session.InvalidateCompilation();
+        if (!factoryRunning) ResetFactoryResults();
         RefreshAll();
         refreshing = true;
         try
@@ -592,11 +606,11 @@ public partial class MainWindow : Window
 
     private void Guard(Action action)
     {
-        try { action(); }
-        catch (Exception error) when (error is ArgumentException or JsonException or IOException or UnauthorizedAccessException or InvalidOperationException or KeyNotFoundException)
+        try { if (factoryRunning || openingReport) throw new InvalidOperationException("Wait for the owned operation before changing Studio state."); action(); }
+        catch (Exception error) when (error is ArgumentException or JsonException or InvalidDataException or IOException or UnauthorizedAccessException or InvalidOperationException or KeyNotFoundException)
         {
             ValidationPreview.Text = error.Message;
-            StatusText.Text = "Action failed. See Validation for the compiler/editor diagnostic.";
+            StatusText.Text = "Action failed: " + error.Message;
             PreviewTabs.SelectedIndex = 5;
         }
     }

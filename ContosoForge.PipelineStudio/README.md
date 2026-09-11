@@ -31,3 +31,31 @@ dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.Pipel
 ```
 
 Use an empty smoke output directory. Optional `--pipeline` exercises an existing generated pipeline. The smoke retains every V1.3 editor assertion: add/remove, BigQuery/Connect edits, pending text protection, companion-file collision protection, malformed contract rejection, save/reload, cycles, credentials and existing compiler previews. It also exercises Plan, actual CLI/core JSON parity, independent scenario/preset selection, reference and manual badges, resolved edges, stale-plan protection, atomic invalid overrides, authored graph preservation and compilation of the current plan. It renders the real hidden WPF visual tree at 1,500 and 1,150 pixel widths. `smoke-report.json` and `planner/planner-smoke-report.json` record assertions and leave cloud execution unverified. The dedicated Windows CI workflow runs this independently of `ContosoDGV2.sln`.
+
+## Local run history (S001)
+
+Results now has **List local runs**, **Inspect selected**, **Import folder**, and **Locate moved folder**. Select a V1.7 generated root or its `.forge/v15/<run-directory>` state. Imported results are read-only: Studio reads JSON and hashes, and does not invoke bundle scripts, rebuild reports, resume stages, or change project files. Applying another editor revision clears the selected result; its files and catalog locator remain available for reopening. An owned run captures its input revision, graph, run ID, root and validated interpreter before execution.
+
+The per-user locator index is `%LOCALAPPDATA%/ContosoForge/runs.json` (schema version 1). It stores root, run ID, label and registration time, never authoritative outcomes. Writers use a bounded exclusive sibling lock, reread/merge, durable temporary write and atomic replacement. Duplicate IDs at different roots remain separate entries. A damaged or unsupported catalog is left untouched and folder import still works. Preserve that file for diagnosis; moving it aside explicitly allows Studio to start a new index. Locating a moved folder adds its locator and validates existing identities without repairing hashes.
+
+History displays recorded run/build outcomes and verification diagnostics. A persisted `running` status means **last recorded running; live execution unconfirmed**. A successful report preview requires matching run and snapshot identities, root manifest/source hashes, report contract and input hashes, the recorded artifact location, and its index hash. Linked paths are rejected, including links in otherwise unhashed preview assets. The build receipt binds `index.html`; other built assets are not hash-verified. Local receipts are unsigned and do not protect against coordinated rewriting of all evidence.
+
+Owned V1.5/V1.6 previews retain their version-specific snapshot contract. History import supports V1.7 only. Closing while a run/build or preview startup is active is blocked; switching results or closing an active preview stops the owned loopback server. Execution cancellation remains unavailable.
+
+Run the actual asynchronous desktop tests with fresh outputs:
+
+```powershell
+dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v17-kpi-duckdb.project.json --execution-smoke-output out/s001-kpi
+dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --project examples/v17-specific-ml.project.json --execution-smoke-output out/s001-ml
+$run = Get-Content out/s001-kpi/execution-smoke.json -Raw | ConvertFrom-Json
+dotnet ContosoForge.PipelineStudio/bin/Release/net8.0-windows/ContosoForge.PipelineStudio.dll --reopen-smoke-state $run.firstState --history-smoke-output artifacts/s001-restart
+dotnet test DatabaseGenerator.Tests --configuration Release --filter FullyQualifiedName~StudioRunTests
+```
+
+Smoke entrypoints isolate interpreter preferences and catalog writes below their output directory. They exercise the shared button APIs, real WPF rendering, subprocesses and loopback HTTP; native folder-picker and default-browser interaction remain separate manual checks. The Windows workflow runs Bronze with only DuckDB/PyArrow, plus full KPI and ML desktop/report/restart jobs. Optional V1.7 package versions are recorded as `unavailable` when metadata is absent; missing required imports or selected-engine metadata fail preflight before generation. Report packaging also requires pandas through the shared CSV helper.
+
+History validates each selected locator before changing selection or stopping its preview. Invalid IDs or rejected paths produce a status diagnostic and preserve the previous selection; catalog and evidence bytes are not repaired automatically. Corrupt catalog JSON remains recoverable through explicit folder import.
+
+Runtime requirements combine compiled operations with the Silver engine and analysis kind/runtime independently. Included local Spark ML requires PySpark even with DuckDB Silver; Colab export or a stop before analysis does not add that requirement. Shared export imports and mandatory engine metadata remain checked.
+
+The Windows KPI gate also runs `--reopen-smoke-state <built-state> --repair-smoke-output <fresh-output>` to exercise actual invalid-locator handlers, preview preservation, corrupt-catalog recovery, real missing-PySpark preflight, pending edits, export/early-stop controls and a recovered Bronze run. This negative test requires an interpreter without PySpark and isolates all preferences/catalog changes.

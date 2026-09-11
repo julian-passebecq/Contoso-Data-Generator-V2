@@ -43,6 +43,8 @@ jobs:
         run: python scripts/run_v17.py --output out/v17-ci --spark --automl-python "$(which python)" --build-evidence
       - name: Tamper, stale, timeout, temporal, wrangling and external adapter contracts
         run: python scripts/test_v17.py --gate out/v17-ci -v 2>&1 | tee artifacts/v17/python-tests.log
+      - name: Report snapshot, formatting and failed-build regressions
+        run: python scripts/test_studio_report.py --root out/v17-ci/duckdb -v
       - name: Capture measured release evidence
         run: python scripts/capture_v17_evidence.py --gate out/v17-ci --output artifacts/v17/evidence.json
       - uses: actions/upload-artifact@v4
