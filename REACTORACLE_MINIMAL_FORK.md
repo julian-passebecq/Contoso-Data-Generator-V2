@@ -99,7 +99,10 @@ ReactOracle Data Factory
         v
 Contoso Forge Lite
         |
-        +--> optional source Neon/PostgreSQL
+        | Parquet + truth/provenance
+        v
+MotherDuck / DuckLake
+  Raw / Bronze / Silver / Gold / Features
         |
         v
 Airflow
@@ -107,29 +110,33 @@ Airflow
         v
 Spark on Oracle K3s
         |
+        | publish validated outputs back to the durable lakehouse
         v
-Bronze / Silver / Gold / feature set
+MotherDuck / DuckLake Gold + Features
+        |
+        +--> BI / SQL consumers
         |
         v
 Kaggle + MLJAR
         |
-        +--> metrics/predictions -> Neon
+        +--> historical predictions -> lakehouse
+        +--> compact metrics / serving state -> optional Neon
         +--> model/artifacts -> artifact storage
-        |
-        v
-dbt / BI
 ```
 
-## Neon source option
+## Durable output target
 
-A dedicated Neon database/project can be used to simulate a real operational PostgreSQL source for small and medium generated datasets. Airflow would then extract from Neon into the Oracle/Spark pipeline.
+The canonical generated-data path for ReactOracle is Parquet into MotherDuck / DuckLake.
 
-This remains optional:
+The Oracle VM is compute, not durable business-data storage. Raw, Bronze, Silver, Gold and feature tables must survive VM shutdown or rebuild.
 
-- small/medium scenario: generator -> Neon source -> Airflow -> Spark
-- large scenario: generator -> Parquet/object/file output -> Airflow -> Spark
+Neon remains an optional exercise/serving component:
 
-Do not force large synthetic datasets through Postgres only to preserve the architecture diagram.
+- PostgreSQL source simulation when we specifically want to learn JDBC/incremental ingestion;
+- small ML metrics / latest-prediction serving tables;
+- ReactOracle operational metadata.
+
+Do not make Neon the canonical generated-data store and do not force large analytical tables through PostgreSQL.
 
 ## ReactOracle V1 vs V2
 
@@ -140,12 +147,13 @@ Do not force large synthetic datasets through Postgres only to preserve the arch
 1. submit generator spec;
 2. track run;
 3. validate manifest;
-4. optionally load source Neon;
+4. publish generated Parquet into MotherDuck / DuckLake;
 5. trigger Airflow;
 6. process with Spark;
-7. publish an ML feature package;
-8. launch Kaggle/MLJAR;
+7. publish validated Bronze/Silver/Gold/features back to the durable lakehouse;
+8. launch Kaggle/MLJAR from a bounded feature package;
 9. import metrics/predictions;
-10. surface results in ReactOracle and BI.
+10. retain historical analytical results in the lakehouse and optional compact serving metadata in Neon;
+11. expose Gold tables to BI / SQL consumers.
 
 The fork should be intentionally boring: one generator, one contract, strong deterministic tests, no second control plane.
