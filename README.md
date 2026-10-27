@@ -1,8 +1,21 @@
 # Contoso Data Generator V2
 
+**Contoso Forge is a reproducible data-engineering lab built on [SQLBI's Contoso Data Generator V2](https://github.com/sql-bi/Contoso-Data-Generator-V2).** The upstream project supplies the original sample-data generator; this repository adds the Forge project contracts, pipeline generation, local execution adapters, data-quality scenarios and reconciliation evidence. [The original MIT attribution](LICENSE) is retained.
+
+The lab starts with deterministic synthetic retail data and carries it through Bronze, Silver and Gold layers. It makes duplicate handling, change data capture, slowly changing dimensions and expected KPI results inspectable.
+
+| Review goal | Start here |
+| --- | --- |
+| Run the local Docker lab without cloud credentials | [Local quick start](#local-quick-start) |
+| Inspect the additions to the upstream generator | [Forge source](DatabaseGenerator/Forge/), [tests](DatabaseGenerator.Tests/), [project schemas](schemas/) |
+| Compare DuckDB, pandas, Polars and actual Spark results | [V1.6 execution guide](docs/v1.6.md), [logical parity contract](docs/v1.6-canonical-encoding.md) |
+| Check what was executed and what remains unverified | [Dated V1.6 evidence](docs/v1.6-evidence.json), [CI runs](https://github.com/julian-passebecq/Contoso-Data-Generator-V2/actions) |
+
+Recorded results apply to their named source commits and synthetic datasets. Generated cloud plans are configuration, and require their own execution evidence before being described as deployed.
+
+## Current implementation
+
 Contoso Forge V1.6 adds real local Polars and pandas engines alongside DuckDB, with measured logical parity across all 13 Silver tables and a separate actual Spark 4.0.4 parity gate. The shared dbt Gold, KPI reconciliation, ML Lab and Evidence flow remains intact, as do legacy deterministic generation, Spark classic/Connect and cloud boundaries. Start with the [V1.6 execution guide](docs/v1.6.md), [canonical parity contract](docs/v1.6-canonical-encoding.md), [release evidence](docs/v1.6-evidence.json), [planning and CLI usage](docs/planning.md), and [Pipeline Studio](ContosoForge.PipelineStudio/README.md).
-
-
 
 DataGenerator is a tool for generating sample data, ready to be imported into PowerBI or Fabric OneLake for analysis. This is the V2 version, evolution of the [older one](https://github.com/sql-bi/Contoso-Data-Generator).
 
